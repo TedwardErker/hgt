@@ -27,6 +27,7 @@ We
 
 create 
 
+finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 ** 2005 lidar
 create lax
 #+begin_src sh :session b
@@ -36,23 +37,9 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 #+begin_src R
   library(lidR)
-  l <- readLAS("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/tile001.las")
+  l <- readLAS("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/tile014.las")
   plot(l, trim = 1000)
 #+end_src
-
-#+RESULTS:
-#+begin_example
-Loading required package: raster
-Loading required package: sp
-
-WARNING: lidR version 2.0.3 is a major reengineering of former lidR versions 1.x.y.
-It comes with many new features and internals improvements but is also *incompatible* with previous versions.
-If you were a user of lidR versions 1.x.y please read the NEWS file at <https://github.com/Jean-Romain/lidR/blob/master/NEWS.md> before using this new version.
-Ask for help on <https://gis.stackexchange.com/>. Report bugs on <https://github.com/Jean-Romain/lidR>.
-Warning messages:
-1: Invalid file: the header states the file contains 0 returns numbered '1' but 1202102 were found. 
-2: Invalid file: the header states the file contains 0 returns numbered '2' but 135783 were found.
-#+end_example
 
 
 which have ground?
@@ -97,66 +84,28 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
-chm, quick and easy algorithm.  this does seem to miss some trees though.
+chm, quick and easy algorithm.  this does seem to miss some trees
+though. because I filter by multiple returns, but its probably worth it to miss
+all the buildings
 #+begin_src R
   library(lidR)
   ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/")
-  opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/{ORIGINALFILENAME}_chm6"
-  opt_filter(ctg2005norm) <- "-drop_single -drop_z_above 200"
-  grid_canopy(ctg2005norm, 5, p2r(4)) 
+  opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/{ORIGINALFILENAME}_chm8"
+  opt_filter(ctg2005norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
+  grid_canopy(ctg2005norm, 3, p2r(2)) 
 #+end_src
 
 
 #+BEGIN_SRC sh
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/
-
-gdalbuildvrt chm6.vrt *chm6.tif
-
+gdalbuildvrt chm4.vrt *chm4.tif
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" chm4.vrt chm4.tif
 #+END_SRC
 
 #+RESULTS:
-: 0...10...20...30...40...50...60...70...80...90...100 - done.
-
-Automatic detection of tree tops.  This could be better tuned, but I
-don't end up using it anyway.
-#+begin_src R
-library(lidR)
-  r <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile014_ground_normalized_chm6.tif")
-  ttops <- tree_detection(r, lmf(ws = function(h){h+10}, hmin = 6, shape = "circular"))
-  crowns = silva2016(r, ttops)()
-  writeRaster(crowns, "test2.tif", overwrite = T)
-
-#+end_src
-
-#+RESULTS:
-
-with madison trees for tree tops.
-#+begin_src R
-library(lidR)
-  r <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile014_ground_normalized_chm6.tif")
-  proj4string(r) <- "+init=epsg:7599"
-  ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
-  ttops <- spTransform(ttops, "+init=epsg:7599")
-  crowns = silva2016(r, ttops)()
-  writeRaster(crowns, "test3.tif", overwrite = T)
-
-#+end_src
-
-#+begin_src R
-library(lidR)
-  r <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile014_ground_normalized_chm6.tif")
-  proj4string(r) <- "+init=epsg:7599"
-  ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
-  ttops <- spTransform(ttops, "+init=epsg:7599")
-  crowns = dalponte2016(r, ttops, th_tree = 6)()
-  writeRaster(crowns, "dalponte_test3.tif", overwrite = T)
-
-#+end_src
-
-#+RESULTS:
-: Warning message:
-: In match_chm_and_seeds(chm, treetops, ID) :
-:   Some seeds are outside the canopy height model. They were removed.
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+|                                                Input | file | size  | is | 15712, | 11538 |
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
 silva 2016 seems to do better than dalponte2016, apply to all the
 rasters
@@ -164,7 +113,7 @@ rasters
   library(lidR)
   library(stringr)
   files <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/", 
-                      pattern = ".*tile[0-9]{3}_ground_normalized_chm6.tif",
+                      pattern = ".*tile[0-9]{3}_ground_normalized_chm8.tif",
                       full.names = T)
 
                                           #remove tile 008, 009, 017,025,031-034 because they doesn't overlap with tree inventory
@@ -174,11 +123,11 @@ rasters
   lapply(files, function(f) {
       tile <- str_extract(f, "tile[0-9]{3}")
       r <- raster(f)
-    proj4string(r) <- "+init=epsg:7599"
-    ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
-    ttops <- spTransform(ttops, "+init=epsg:7599")
-    crowns = silva2016(r, ttops)()
-    writeRaster(crownsf, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/",tile,"_tree_polys.tif"), overwrite = T)
+      proj4string(r) <- "+init=epsg:7599"
+      ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+      ttops <- spTransform(ttops, "+init=epsg:7599")
+      crowns = silva2016(r, ttops, max_cr_factor = .99)()
+      writeRaster(crowns, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/",tile,"_tree_polys.tif"), overwrite = T)
   }
   )
 
@@ -194,6 +143,52 @@ gdalbuildvrt tree_polys.vrt *tree_polys.tif
 
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
+
+A slightly different tac, avoiding the issue of rasterizing which can
+mess with resolution of things
+#+begin_src R
+
+  library(lidR)
+  ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/")
+  opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/{ORIGINALFILENAME}_trees"
+  opt_filter(ctg2005norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
+  ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+  ttops <- spTransform(ttops, "+init=epsg:7599")
+  chm <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/chm4.tif")
+  algo <- silva2016(chm, ttops, max_cr_factor = .99)
+  lastrees(ctg2005norm, algo)
+#+end_src
+
+
+#+begin_src R
+  library(lidR)
+  l <- readLAS("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/tile014_ground_normalized.las",
+               filter = "-drop_single -drop_z_above 200 -drop_z_below 0")
+
+  algo = pitfree(thresholds = c(0,10,20,30,40,50), subcircle = 2, max_edge = c(3, 1.5))
+  chm  = grid_canopy(l, 3, algo)
+  plot(chm, col = height.colors(50))
+#+end_src
+
+#+RESULTS:
+
+
+
+#+begin_src R
+hulls  = tree_hulls(las, func = .stdmetrics)
+spplot(hulls, "Z")
+#+end_src
+
+
+#+begin_src R
+  crowns <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile014_tree_polys.tif")
+  e <- drawExtent()
+  ce <- crop(crowns, e)
+  p <- rasterToPolygons(ce, dissolve = TRUE)
+#+end_src
+
+
+
 
 assign the maximum tree height to each tree polygon
 #+begin_src R
@@ -225,8 +220,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/
 
 gdalbuildvrt max_height_2005.vrt *_max_height.tif
 
-gdal_translate -of GTiff -co "TILED=YES" max_height_2005.vrt max_height_2005.tif
-
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" max_height_2005.vrt max_height_2005.tif
 
 #+END_SRC
 
@@ -235,53 +229,53 @@ gdal_translate -of GTiff -co "TILED=YES" max_height_2005.vrt max_height_2005.tif
 |                                                Input | file | size  | is | 18285, | 13055 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
+
 ** 2009 lidar
-create lax
-#+begin_src sh :session b
-cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
-/home/erker/Downloads/LAStools/bin/lasindex -i *.LAS
+This lidar covers all of dane county.  Only get the tiles that
+intersect with the madison tree inventory.
+
+#+name: tiles
+#+begin_src R
+    library(raster)
+    library(rgeos)
+    trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+    tiles <- shapefile("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/TileIndex/StudyArea.shp")
+
+    trees <- spTransform(trees, crs(tiles))
+
+    o <- over(trees, tiles)
+    o <- unique(o)
+
+  tiles <- na.omit(o$LASClass)
+
 #+end_src
 
-#+begin_src R
-  library(lidR)
-  l <- readLAS("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LiDAR_PointClouds_LAS/tile001.las")
-  plot(l, trim = 1000)
-#+end_src
+#+RESULTS: tiles
 
-which have ground?
-#+begin_src R
-      library(stringr)
-      f <- list.files("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LiDAR_PointClouds_LAS/", pattern = ".*.las$", full.names = T)
-      lapply(f, function(file) {
-          i <- str_match(file, ".*tile([0-9]+).*.las$")[,2]
-          l <- readLAS(file)
-          n <- sum(l@data$Classification == 2)
-          return(c(i, n))
-    })
-#+end_src
 
 find ground
 #+begin_src R
-    ctg2009 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LiDAR_PointClouds_LAS/")
-    opt_output_files(ctg2009) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/ground/{ORIGINALFILENAME}_ground"
-                                            #lasground(ctg2009, csf())
-    ws = seq(6,24,6)
-    th = seq(.1, 1.5, length.out = length(ws))
+library(lidR)
 
- lasground(ctg2009, pmf(ws, th))
+  lapply(tiles[37:101], function(tile) {
+      tile.path <- paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/", tile, ".LAS")
+      las <- readLAS(tile.path)
 
-  #  plot(ctg2009, map = T)
+      ws = seq(6,24,6)
+      th = seq(.1, 1.5, length.out = length(ws))
 
+      lg <- lasground(las, pmf(ws, th))
 
+      writeLAS(lg, paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees/",tile, "_ground.las"))
+})
 #+end_src
 
-normalize
-#+begin_src R :session *R2009*
 
-  ctg2009ground <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/ground/")
+normalize
+#+begin_src R
+  ctg2009ground <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees")
   opt_output_files(ctg2009ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
   lasnormalize(ctg2009ground, tin())
-
 #+end_src
 
 make lax for normalized
@@ -295,7 +289,7 @@ chm, quick and easy algorithm
 #+begin_src R
   library(lidR)
   ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/")
-  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/{ORIGINALFILENAME}_chm2"
+  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/chm/{ORIGINALFILENAME}_chm"
   grid_canopy(ctg2009norm, 4, p2r(6)) 
 #+end_src
 
@@ -320,9 +314,12 @@ chm, pitless algoright, too slow to be worth running.
 #+end_src
 
 ** 2016 lidar
+:PROPERTIES:
+:header-args:R: :session *R:2016*
+:END:
 epsg 7599
 
-#+begin_src R :session *R2016*
+#+begin_src R
       library(stringr)
       library(lidR)
 
@@ -359,12 +356,147 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 
 
 
+CHM for multiple returns (approximately trees)
+#+begin_src R
+  library(lidR)
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/multiple_chm/{ORIGINALFILENAME}_tree_chm"
+    opt_filter(ctg2016norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
+    chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
+#+end_src
+
+#+RESULTS:
+
+
+the multiple return approach also included building edges.  I need to find a way to just get tree points
+#+begin_src R
+      ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
+      opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_las/{ORIGINALFILENAME}_tree_chm"
+      opt_filter(ctg2016norm) <- "-drop_z_above 200 -drop_z_below 0"
+
+  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
+    files <- list.files(dir, pattern = ".*.las$",
+                        full.names = F)
+
+    lapply(files, function(f) {
+        l <- readLAS(paste0(dir,f))
+        ls <- lasdetectshape(l, shp_line(th1 = 10, k = 5), "Colinear")
+        lsp <- lasdetectshape(ls, shp_plane(th1 = 4, th2 = 4, k = 11), "Coplanar")
+        lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < 100)]$Classification <- 5L
+        writeLAS(lsp, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar_wtree/",f))
+  })
+
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+  library(lidR)
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar_wtree")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/{ORIGINALFILENAME}_chm"
+    opt_filter(ctg2016norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0 -keep_class 5"
+    chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
+#+end_src
+
+#+RESULTS:
+
+
+*** testing finding trees
+#+begin_src R
+
+   l <- readLAS("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/102_normalized.las",
+                 filter = "-drop_class 9 -drop_z_above 200 -drop_z_below 0")
+      chm <- grid_canopy(l, res = 3, p2r(1))
+  plot(chm)
+  #e <- drawExtent()
+
+  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
+      ymin = 485978.641378534, ymax = 487311.522306307)
+
+  l2 <- lasclip(l, e)
+
+  writeLAS(l2, "test2016.las")
+
+#+end_src
+
+#+RESULTS:
+
+
+
+possible plan, 
+
+- get only those points that are certainly tree
+- add back in points that are near the certainly tree points.
+
+#+begin_src R
+    library(lidR) 
+
+    l <- readLAS("test2016.las", filter = "-drop_z_below 6")
+    ls <- lasdetectshape(l, shp_line(th1 = 10, k = 5), "Colinear")
+    lsp <- lasdetectshape(ls, shp_plane(th1 = 3, th2 = 4, k = 11), "Coplanar")
+    lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < 20)]$Classification <- 5L
+    lt <- lasfilter(lsp, Classification == 5L)
+    chm <- grid_canopy(lt, res = 3, p2r(1))
+  plot(chm)
+
+
+    plot(lsp, color = "Classification", col = c("red", "green"))
+    chm <- reclassify(chm, matrix(c(NA, 0), ncol = 2))
+
+    ker = matrix(1,3,3)
+    chm = focal(chm, w = ker, fun = median)
+    plot(chm)
+
+
+
+    chm = focal(chm, w = ker, fun = median)
+
+    plot(chm)
+#+end_src
+
+find the best set of parameters
+#+begin_src R
+  intensity <- seq(20, 100, 20)
+  intensity <- c(100)
+  th1_p <- seq(2,15,1)
+  th2_p <- c(4)
+  k <- c(6,7,8,9,11,13,15)
+  d <- expand.grid(intensity, th1_p, th2_p, k)
+
+  mapply(function(i, t1, t2, k) {
+      l <- readLAS("test2016.las", filter = "-drop_z_below 6")
+      ls <- lasdetectshape(l, shp_line(th1 = t1, k = k), "Colinear")
+      lsp <- lasdetectshape(ls, shp_plane(th1 = t1, th2 = t2, k = k), "Coplanar")
+      lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < i)]$Classification <- 5L
+      lt <- lasfilter(lsp, Classification == 5L)
+      chm <- grid_canopy(lt, res = 3, p2r(1))
+      png(paste0("figs/",i,"_",t1, "_", t2, "_", k, ".png"))
+      plot(chm)
+      dev.off()
+  },
+  d$Var1, d$Var2, d$Var3, d$Var4)
+#+end_src
+
+#+RESULTS:
+
+
+CHM for just trees
+#+begin_src R
+  library(lidR)
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
+    opt_filter(ctg2016norm) <- "-keep_class 2 -drop_z_above 200 -drop_z_below 0"
+    chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
+#+end_src
+
+
+
 
 #+begin_src R
 
   f2 <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/", ".*_normalized.las")
-
-
 
       lapply(f2, function(file) {
             i <- str_match(file, "([0-9]+).*.las$")[,2]
@@ -522,3 +654,13 @@ i <- 205
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
+
+* old stuff
+ 
+
+
+
+
+
+
+
