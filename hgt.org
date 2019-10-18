@@ -354,6 +354,53 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 #+RESULTS:
 
 
+find the tiles that overlap with the madison tree inventory data
+#+begin_src R
+  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
+        fs <-   list.files(dir,
+                   pattern = ".las",
+                   full.names = F)
+
+    es <-     lapply(fs, function(f) {
+        e <- extent(readLAS(paste0(dir, f), select = "", filter = "-keep_every_nth 100"))
+        a <- as(e, "SpatialPolygons")
+        a <- SpatialPolygonsDataFrame(a, data.frame(tile = f))
+        return(a)
+    })
+
+  p <- do.call("rbind", es)
+  #shapefile(p, "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/lidar_extents.shp")
+
+  proj4string(p) <- "+init=epsg:7599"
+
+  trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+  trees <- spTransform(trees, crs(p))
+
+  o <- over(trees, p)
+  o <- unique(o)
+
+  tiles.w.trees <- na.omit(o$tile)
+
+#+end_src
+
+#+RESULTS:
+
+HERER IS WHERE i AM!!!
+
+USE "tiles.w.trees" to loop through
+
+
+extract tree points from the lidar
+ #+begin_src R
+
+
+
+#+end_src
+
+
+
+
+
 
 CHM for multiple returns (approximately trees)
 #+begin_src R
@@ -675,3 +722,4 @@ https://link.springer.com/article/10.1186/s40663-018-0146-y
 
 
 
+p
