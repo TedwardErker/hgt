@@ -229,7 +229,6 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" max_height_2005.vrt 
 |                                                Input | file | size  | is | 18285, | 13055 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
-
 ** 2009 lidar
 This lidar covers all of dane county.  Only get the tiles that
 intersect with the madison tree inventory.
@@ -430,59 +429,71 @@ possible plan,
 - get only those points that are certainly tree
 - add back in points that are near the certainly tree points.
 
+
+
+I need a rule that if a point is within 1m of something I know for
+sure is a building, to call it a building.
+
+
+try voxel
 #+begin_src R
-    library(lidR) 
+  #install_github("Jean-Romain/lidR", ref = "devel")
+  library(lidR) 
+  library(devtools)
 
-    l <- readLAS("test2016.las", filter = "-drop_z_below 6")
-    ls <- lasdetectshape(l, shp_line(th1 = 10, k = 5), "Colinear")
-    lsp <- lasdetectshape(ls, shp_plane(th1 = 3, th2 = 4, k = 11), "Coplanar")
-    lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < 20)]$Classification <- 5L
-    lt <- lasfilter(lsp, Classification == 5L)
-    chm <- grid_canopy(lt, res = 3, p2r(1))
-  plot(chm)
+  pct_x_is<- function(x, is) {
+      return(list(pct_x = sum(x == is) / length(x)))
+      }
+
+  # point_metrics https://github.com/Jean-Romain/lidR/issues/276
+  l <- readLAS("test2016.las", filter = "-drop_z_below 6 -keep_first")
+  plot(l)
+  lsp <- lasdetectshape(l, shp_plane(th1 = 4, th2 = 4, k = 10), "building")
+  plot(lsp, color = "building", col = c("green", "red"))
+  lsl <- lasdetectshape(l, shp_line(th1 = 2, k = 17), "building")
+  plot(lsl, color = "building", col = c("green", "red"))
+
+  l <- lasadddata(l, (lsp@data$building == T) | (lsl@data$building == T), "building")
 
 
-    plot(lsp, color = "Classification", col = c("red", "green"))
-    chm <- reclassify(chm, matrix(c(NA, 0), ncol = 2))
+  pm <- point_metrics(l, ~pct_x_is(x = building, is = TRUE), k = 20)
 
-    ker = matrix(1,3,3)
-    chm = focal(chm, w = ker, fun = median)
-    plot(chm)
+  l <- lasadddata(l, pm$pct_x, "pct_x")
+  plot(l, color = "pct_x", trim = 1)
+  l@data$building[pm$pct_x > .9] <- TRUE
+  l@data$building[pm$pct_x < .4] <- FALSE
+  plot(l, color = "building", col = c("green", "red"))
+
+
+  pm <- point_metrics(lsp, ~pct_x_is(x = building, is = TRUE), k = 50)
+  lsp@data$building[pm$pct_x > .6] <- TRUE
+  lsp@data$building[pm$pct_x < .4] <- FALSE
+  plot(lsp, color = "building", col = c("green", "red"))
 
 
 
-    chm = focal(chm, w = ker, fun = median)
+  # try to get powerlines and tower
+  lf <- lasfilter(lsp, building == FALSE)
+  lfl <- lasdetectshape(lf, shp_line(th1 = 4, k = 15), "building")   #lfl <- lasdetectshape(lf, shp_line(th1 = 4, k = 15), "building")  
+  plot(lfl, color = "building")
+  pm <- point_metrics(lfl, ~pct_x_is(x = building, is = TRUE), k = 30)
+  lfl <- lasadddata(lfl, pm$pct_x, "pct_x")
+  plot(lfl, color = "pct_x", trim = 1)
 
-    plot(chm)
+  lfl@data$building[pm$pct_x > .4] <- TRUE
+  lfl@data$building[pm$pct_x < .1] <- FALSE
+  plot(lfl, color = "building", col = c("green", "red"))
+
 #+end_src
 
-find the best set of parameters
+**** point cloud viewer backedn
 #+begin_src R
-  intensity <- seq(20, 100, 20)
-  intensity <- c(100)
-  th1_p <- seq(2,15,1)
-  th2_p <- c(4)
-  k <- c(6,7,8,9,11,13,15)
-  d <- expand.grid(intensity, th1_p, th2_p, k)
+  l <- readLAS("test2016.las", filter = "-drop_z_below 6 -keep_first")
+  plot(l, backend = "pcv")
 
-  mapply(function(i, t1, t2, k) {
-      l <- readLAS("test2016.las", filter = "-drop_z_below 6")
-      ls <- lasdetectshape(l, shp_line(th1 = t1, k = k), "Colinear")
-      lsp <- lasdetectshape(ls, shp_plane(th1 = t1, th2 = t2, k = k), "Coplanar")
-      lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < i)]$Classification <- 5L
-      lt <- lasfilter(lsp, Classification == 5L)
-      chm <- grid_canopy(lt, res = 3, p2r(1))
-      png(paste0("figs/",i,"_",t1, "_", t2, "_", k, ".png"))
-      plot(chm)
-      dev.off()
-  },
-  d$Var1, d$Var2, d$Var3, d$Var4)
 #+end_src
 
-#+RESULTS:
-
-
-CHM for just trees
+**** CHM for just trees
 #+begin_src R
   library(lidR)
     ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
@@ -642,7 +653,7 @@ i <- 205
 
 
 
-* 
+
 
 
 
