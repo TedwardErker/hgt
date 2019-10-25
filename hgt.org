@@ -1156,7 +1156,6 @@ the big trees.
 : [2] "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/height_norm_2009.tif"
 : [3] "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/height_norm_2016.tif"
 : Error in compareRaster(rasters) : different extent
->>>>>>> 5856a7d57d3445e9439681bae32bcf8b8c41fb98
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
