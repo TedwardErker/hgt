@@ -215,3 +215,160 @@ Archived entries from file /home/erker/git/hgt/hgt.org
 #+RESULTS:
 
 
+
+* OLD WAY:
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-10-25 Fri 10:32
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/creating normalized lidar and doing best to filter out tree points/2005 lidar
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+
+
+chm, quick and easy algorithm.  this does seem to miss some trees
+though. because I filter by multiple returns, but its probably worth it to miss
+all the buildings
+#+begin_src R
+  library(lidR)
+  ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/")
+  opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/{ORIGINALFILENAME}_chm8"
+  opt_filter(ctg2005norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
+  grid_canopy(ctg2005norm, 3, p2r(2)) 
+#+end_src
+
+
+#+BEGIN_SRC sh
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/
+gdalbuildvrt chm4.vrt *chm4.tif
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" chm4.vrt chm4.tif
+#+END_SRC
+
+#+RESULTS:
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+|                                                Input | file | size  | is | 15712, | 11538 |
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+
+silva 2016 seems to do better than dalponte2016, apply to all the
+rasters
+#+begin_src R
+  library(lidR)
+  library(stringr)
+  files <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/", 
+                      pattern = ".*tile[0-9]{3}_ground_normalized_chm8.tif",
+                      full.names = T)
+
+                                          #remove tile 008, 009, 017,025,031-034 because they doesn't overlap with tree inventory
+  files <- files[-c(8,9,17,25,31,32,33,34)]
+
+
+  lapply(files, function(f) {
+      tile <- str_extract(f, "tile[0-9]{3}")
+      r <- raster(f)
+      proj4string(r) <- "+init=epsg:7599"
+      ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+      ttops <- spTransform(ttops, "+init=epsg:7599")
+      crowns = silva2016(r, ttops, max_cr_factor = .99)()
+      writeRaster(crowns, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/",tile,"_tree_polys.tif"), overwrite = T)
+  }
+  )
+
+#+end_src
+
+
+#+BEGIN_SRC sh 
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/
+
+gdalbuildvrt tree_polys.vrt *tree_polys.tif
+
+#+END_SRC
+
+#+RESULTS:
+: 0...10...20...30...40...50...60...70...80...90...100 - done.
+
+A slightly different tac, avoiding the issue of rasterizing which can
+mess with resolution of things
+#+begin_src R
+
+  library(lidR)
+  ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/")
+  opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/{ORIGINALFILENAME}_trees"
+  opt_filter(ctg2005norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
+  ttops <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+  ttops <- spTransform(ttops, "+init=epsg:7599")
+  chm <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/chm4.tif")
+  algo <- silva2016(chm, ttops, max_cr_factor = .99)
+  lastrees(ctg2005norm, algo)
+#+end_src
+
+
+#+begin_src R
+  library(lidR)
+  l <- readLAS("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/tile014_ground_normalized.las",
+               filter = "-drop_single -drop_z_above 200 -drop_z_below 0")
+
+  algo = pitfree(thresholds = c(0,10,20,30,40,50), subcircle = 2, max_edge = c(3, 1.5))
+  chm  = grid_canopy(l, 3, algo)
+  plot(chm, col = height.colors(50))
+#+end_src
+
+#+RESULTS:
+
+
+
+#+begin_src R
+hulls  = tree_hulls(las, func = .stdmetrics)
+spplot(hulls, "Z")
+#+end_src
+
+
+#+begin_src R
+  crowns <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile014_tree_polys.tif")
+  e <- drawExtent()
+  ce <- crop(crowns, e)
+  p <- rasterToPolygons(ce, dissolve = TRUE)
+#+end_src
+
+
+
+
+assign the maximum tree height to each tree polygon
+#+begin_src R
+    library(raster)
+
+    polys <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/", 
+                        pattern = ".*tile[0-9]{3}_tree_polys.tif",
+                        full.names = T)
+
+    lapply(polys, function(poly) {
+        tile <- str_extract(poly, "tile[0-9]{3}")
+        tile <- str_extract(tile, "[0-9]{3}")
+        polyr <- raster(poly)
+        height <- raster(paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile",tile,"_ground_normalized_chm6.tif"))
+
+        z <- zonal(height, polyr, max)
+
+        maxheight <- reclassify(polyr, z, filename = paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tile",tile,"_max_height.tif"),
+                                overwrite = T)
+    })
+
+#+end_src
+
+combine all max tree heights into one 2005 max tree height raster
+
+#+BEGIN_SRC sh
+
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/
+
+gdalbuildvrt max_height_2005.vrt *_max_height.tif
+
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" max_height_2005.vrt max_height_2005.tif
+
+#+END_SRC
+
+#+RESULTS:
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+|                                                Input | file | size  | is | 18285, | 13055 |
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+
