@@ -18,6 +18,34 @@
 ---------------------
 
 
+* Introduction
+
+- Why important
+  - Urban environments are unique
+  - Trees there provide services, one of which is carbon sequestration
+    via growth
+- Context
+  - there is incredible variability in urban tree growth across a city
+    due to variability in environment, and species
+  - Remote sensing technology, specifically repeat lidar and imaging
+    spectroscopy, allow for measurements of growth (from repeat lidar)
+    for thousands of trees, which then can be combined with indicies
+    of foliar traits (from imaging spectroscopy) to create large data
+    for understanding urban tree growth
+- Questions
+  - What is the distribution of rates of urban tree height growth for different
+    species in Madison?
+    - this is the variability that I would seek to explain with
+      environmental and trait data.
+  - Do foliar trait indicies derived from imaging spectroscopy explain
+    any of the variability in tree growth rates?
+  - Do environmental factors (proximity to road, age of road?, percent
+    impervious within 100m,
+- We hypothesize that we'll see effects expected from other studies
+  - trees grow faster
+
+
+
 * Methods
 
 Using lidar from 2005, 2009, and 2016, we 
@@ -707,6 +735,16 @@ i <- 205
 
 
 
+
+
+** modeling
+
+maybe use a gam with a smoother for the effect of initial height on
+growth rate.
+
+y ~ b * height
+
+b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
 
 
