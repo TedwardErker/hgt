@@ -475,22 +475,17 @@ create lax
     chm <- grid_canopy(ctg2009trees, res = 3, p2r(1))
 #+end_src
 
+
+#+BEGIN_SRC sh :session *a* :results verbatim
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_chm/
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2009.tif
+#+END_SRC
+
 #+RESULTS:
-#+begin_example
-Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
-Processing [-------------------------------------------]   1% (1/101) eta:  1mProcessing [>------------------------------------------]   2% (2/101) eta:  2mProcessing [>------------------------------------------]   3% (3/101) eta:  2mProcessing [=>-----------------------------------------]   4% (4/101) eta:  2mProcessing [=>-----------------------------------------]   5% (5/101) eta:  1mProcessing [==>----------------------------------------]   6% (6/101) eta:  1mProcessing [==>----------------------------------------]   7% (7/101) eta:  2mProcessing [==>----------------------------------------]   8% (8/101) eta:  2mProcessing [===>---------------------------------------]   9% (9/101) eta:  2mProcessing [===>--------------------------------------]  10% (10/101) eta:  2mProcessing [====>-------------------------------------]  11% (11/101) eta:  2mProcessing [====>-------------------------------------]  12% (12/101) eta:  2mProcessing [====>-------------------------------------]  13% (13/101) eta:  2mProcessing [=====>------------------------------------]  14% (14/101) eta:  2mProcessing [=====>------------------------------------]  15% (15/101) eta:  2mProcessing [======>-----------------------------------]  16% (16/101) eta:  2mProcessing [======>-----------------------------------]  17% (17/101) eta:  2mProcessing [======>-----------------------------------]  18% (18/101) eta:  2mProcessing [=======>----------------------------------]  19% (19/101) eta:  2mProcessing [=======>----------------------------------]  20% (20/101) eta:  2mProcessing [========>---------------------------------]  21% (21/101) eta:  2mProcessing [========>---------------------------------]  22% (22/101) eta:  2mProcessing [=========>--------------------------------]  23% (23/101) eta:  2mProcessing [=========>--------------------------------]  24% (24/101) eta:  2mProcessing [=========>--------------------------------]  25% (25/101) eta:  2mProcessing [==========>-------------------------------]  26% (26/101) eta:  2mProcessing [==========>-------------------------------]  27% (27/101) eta:  1mProcessing [===========>------------------------------]  28% (28/101) eta:  1mProcessing [===========>------------------------------]  30% (30/101) eta:  1mProcessing [============>-----------------------------]  31% (31/101) eta:  1mProcessing [============>-----------------------------]  32% (32/101) eta:  1mProcessing [=============>----------------------------]  33% (33/101) eta:  1mProcessing [=============>----------------------------]  34% (34/101) eta:  1mProcessing [==============>---------------------------]  35% (35/101) eta:  1mProcessing [==============>---------------------------]  36% (36/101) eta:  1mProcessing [==============>---------------------------]  37% (37/101) eta:  1mProcessing [===============>--------------------------]  38% (38/101) eta:  1mProcessing [===============>--------------------------]  39% (39/101) eta:  1mProcessing [================>-------------------------]  40% (40/101) eta:  1mProcessing [================>-------------------------]  41% (41/101) eta:  1mProcessing [================>-------------------------]  42% (42/101) eta:  1mProcessing [=================>------------------------]  43% (43/101) eta:  1mProcessing [=================>------------------------]  44% (44/101) eta:  1mProcessing [==================>-----------------------]  45% (45/101) eta:  1mProcessing [==================>-----------------------]  46% (46/101) eta:  1mProcessing [===================>----------------------]  47% (47/101) eta:  1mProcessing [===================>----------------------]  48% (48/101) eta:  1mProcessing [===================>----------------------]  49% (49/101) eta:  1mProcessing [====================>---------------------]  50% (50/101) eta:  1mProcessing [====================>---------------------]  50% (51/101) eta:  1mProcessing [=====================>--------------------]  51% (52/101) eta:  1mProcessing [=====================>--------------------]  52% (53/101) eta: 49sProcessing [=====================>--------------------]  53% (54/101) eta: 48sProcessing [======================>-------------------]  54% (55/101) eta: 47sProcessing [======================>-------------------]  55% (56/101) eta: 46sProcessing [======================>-------------------]  55% (56/101) eta: 47sProcessing [=======================>------------------]  56% (57/101) eta: 46sProcessing [=======================>------------------]  57% (58/101) eta: 45sProcessing [========================>-----------------]  59% (60/101) eta: 43sProcessing [========================>-----------------]  60% (61/101) eta: 41sProcessing [=========================>----------------]  61% (62/101) eta: 40sProcessing [=========================>----------------]  62% (63/101) eta: 39sProcessing [==========================>---------------]  63% (64/101) eta: 38sProcessing [==========================>---------------]  64% (65/101) eta: 37sProcessing [==========================>---------------]  65% (66/101) eta: 36sProcessing [===========================>--------------]  66% (67/101) eta: 35sProcessing [===========================>--------------]  67% (68/101) eta: 34sProcessing [============================>-------------]  68% (69/101) eta: 33sProcessing [============================>-------------]  69% (70/101) eta: 32sProcessing [=============================>------------]  70% (71/101) eta: 31sProcessing [=============================>------------]  71% (72/101) eta: 29sProcessing [=============================>------------]  72% (73/101) eta: 28sProcessing [==============================>-----------]  73% (74/101) eta: 27sProcessing [==============================>-----------]  74% (75/101) eta: 26sProcessing [===============================>----------]  75% (76/101) eta: 25sProcessing [===============================>----------]  76% (77/101) eta: 24sProcessing [===============================>----------]  77% (78/101) eta: 23sProcessing [================================>---------]  78% (79/101) eta: 22sProcessing [================================>---------]  79% (80/101) eta: 21sProcessing [=================================>--------]  80% (81/101) eta: 20sProcessing [=================================>--------]  81% (82/101) eta: 19sProcessing [==================================>-------]  82% (83/101) eta: 18sProcessing [==================================>-------]  83% (84/101) eta: 17sProcessing [==================================>-------]  84% (85/101) eta: 16sProcessing [===================================>------]  85% (86/101) eta: 15sProcessing [===================================>------]  86% (87/101) eta: 14sProcessing [====================================>-----]  87% (88/101) eta: 13sProcessing [====================================>-----]  88% (89/101) eta: 12sProcessing [====================================>-----]  89% (90/101) eta: 11sProcessing [=====================================>----]  90% (91/101) eta: 10sProcessing [=====================================>----]  91% (92/101) eta:  9sProcessing [======================================>---]  92% (93/101) eta:  8sProcessing [======================================>---]  93% (94/101) eta:  7sProcessing [=======================================>--]  94% (95/101) eta:  6sProcessing [=======================================>--]  95% (96/101) eta:  5sProcessing [=======================================>--]  96% (97/101) eta:  4sProcessing [========================================>-]  97% (98/101) eta:  3sProcessing [========================================>-]  98% (99/101) eta:  2sProcessing [========================================>]  99% (100/101) eta:  1sProcessing [=========================================] 100% (101/101) eta:  0s
-Warning messages:
-1: There are 0 points flagged 'synthetic'. 
-2: There are 0 points flagged 'synthetic'. 
-3: There are 0 points flagged 'synthetic'. 
-4: There are 0 points flagged 'synthetic'. 
-5: There are 0 points flagged 'synthetic'. 
-6: There are 0 points flagged 'synthetic'. 
-7: There are 0 points flagged 'synthetic'. 
-8: There are 0 points flagged 'synthetic'.
-#+end_example
-
-
+: 
+: Input file size is 30105, 30256
+: 0ERROR 5: lc2t81009f_ground_normalized_tree_chm.tif, band 1: Access window out of range in RasterIO().  Requested
+: (0,0) of size 1773x256 on raster of 1771x1788.
 
 
 
@@ -725,6 +720,11 @@ maybe do another clean up with point metrics.
 
 #+RESULTS:
 
+
+#+BEGIN_SRC sh :session *a*
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2016.tif
+#+END_SRC
 
 
 STOP here until I have a good tree chm for each year.
@@ -1067,6 +1067,69 @@ y ~ b * height
 b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
 
+** difference in chm 2016 - 2009
+
+#+begin_src R
+  library(raster)
+  r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/height_norm_2016.tif")
+  r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/height_norm_2009.tif")
+  diff <- r2016 - r2009
+  writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_all_2016-2009.tif")
+
+#+end_src
+
+#+RESULTS:
+: Error in .local(.Object, ...) : 
+: 
+: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
+:   Cannot create a RasterLayer object from this file. (file does not exist)
+: Error: object 'r2009' not found
+
+** difference in tree chm 2016 - 2009
+
+#+begin_src R
+    library(raster)
+    r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_height_norm_2016.tif")
+    r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_height_norm_2009.tif")
+  r6e <- crop(r2016, e)
+  r9e <- crop(r2009, e)
+
+  r6e[is.na(r6e)] <- 0
+  r9e[is.na(r9e)] <- 0
+
+  s <- stack(r6e, r9e)
+
+    diff <- overlay(r6e, r9e, fun = function(x,y) {x - y})
+
+
+
+    writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009.tif", overwrite = T)
+
+  diff[diff == 0] <- NA
+
+  diffsmooth <- focal(diff,  w=matrix(1/9,nrow=3,ncol=3))
+
+  writeRaster(diffsmooth, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_smoothed.tif", overwrite = T)
+
+
+  r6es <- focal(r6e,  w=matrix(1/9,nrow=3,ncol=3))
+  r9es <- focal(r9e,  w=matrix(1/9,nrow=3,ncol=3))
+
+  r6t <- r6es > 6
+  r9t <- r9es > 6
+
+
+  difft <- overlay(r6t, r9t, fun = function(x,y) {x - y})
+  writeRaster(difft, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_tree_y_n.tif", overwrite = T)
+#+end_src
+
+#+RESULTS:
+: Error in .local(.Object, ...) : 
+: 
+: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
+:   Cannot create a RasterLayer object from this file. (file does not exist)
+: Error: object 'r2009' not found
+
 ** extract heights from normalized lidar at location of trees
 
 
@@ -1086,11 +1149,12 @@ the big trees.
   intersect, keep the bigger of the two.
 
 
+Also need to beware of non street trees overhanging street trees.
 
 
 
 
-*** 
+*** save out heights
 #+begin_src R
   library(raster)
   library(rgeos)
@@ -1098,14 +1162,20 @@ the big trees.
   years <- c(2005, 2009, 2016)
 
 
-  trees <- shapefile("/media/erker/DATA_ERKER/dd/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+  trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
   trees <- spTransform(trees, crs("+init=epsg:7599"))
 
-  p <- gBuffer(trees, width = 8, byid = T)
-  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/trees_buf.shp", overwrite = T)
+  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
+           ymin = 485978.641378534, ymax = 487311.522306307)
 
-  p <- gBuffer(trees, width = c(1,8), byid = T)
-  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/trees_buf_test.shp", overwrite = T)
+  trees <- crop(trees, e)
+
+
+  p <- gBuffer(trees, width = 8, byid = T)
+                                          #  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/trees_buf.shp", overwrite = T)
+
+
+
 
 
   res <- lapply(years, function(year) {
@@ -1119,43 +1189,91 @@ the big trees.
           o
       })
       hgt <- apply(do.call("cbind",out),1, max)
+      saveRDS(hgt, paste0("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_",year,".rds"))
       hgt
   })
 
 
+#+end_src
 
+*** assign heights to trees
+#+begin_src R
+  trees@data$height2005 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2005.rds")
+  trees@data$height2009 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2009.rds")
+  trees@data$height2016 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2016.rds")
+#  shapefile(trees, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/tree_sample_wHeight.shp")
+#+end_src
 
+#+RESULTS:
 
+testing with subset
+#+begin_src R
+treesa <- shapefile("/media/erker/DATA_ERKER/dd/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+  treesa <- spTransform(treesa, crs("+init=epsg:7599"))
+  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
+           ymin = 485978.641378534, ymax = 487311.522306307)
 
+tae <- crop(treesa, e)
 
+  tae@data$height2005 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2005.rds")
+  tae@data$height2009 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2009.rds")
+  tae@data$height2016 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2016.rds")
 
-
-
-
-  out.dir <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_",year,"_heights/all_chm_velox/")
-  dir.create(out.dir)
-
-
-
-  r.v$write(path = paste0(out.dir, f))
-
-
-
-
-  lapply(paths, function(path) {
-      r <- raster(path)
-      proj4string(r) <- "+init=epsg:7599"
-      o <- raster::extract(r, p[1:100,], fun = max)
-
-      s <- stack(paths)
 
 #+end_src
 
 #+RESULTS:
-: [1] "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/height_norm_2005.tif"
-: [2] "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/height_norm_2009.tif"
-: [3] "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/height_norm_2016.tif"
-: Error in compareRaster(rasters) : different extent
+
+
+** look at data?
+#+begin_src R
+  library(dplyr)
+  library(tidyr)
+library(stringr)
+library(ggplot2)
+  d <- tae@data
+  dg <- d %>%
+      select(UID, Genus, height2005, height2009, height2016) %>%
+      gather(., year, height, -Genus, -UID) %>%
+    mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+  str(dg)
+#+end_src
+
+#+RESULTS:
+: 'data.frame':	1233 obs. of  4 variables:
+:  $ UID   : chr  "ST08437" "ST08464" "ST08504" "ST08505" ...
+:  $ Genus : chr  "Stump" "Juniperus" "Ginkgo" "Acer" ...
+:  $ year  : num  2005 2005 2005 2005 2005 ...
+:  $ height: num  23.6 -Inf -Inf 25 23.5 ...
+
+#+begin_src R :exports results :results graphics :file figs/sample_growth.png :height 800 :width 1000 :res 120
+dgf <- filter(dg, !Genus %in% c("Stump", "Vacant"))
+dgf <- filter(dg, Genus %in% c("Fraxinus", "Gleditsia", "Acer", "Tilia", "Ulmus", "Syringa", "Prunus"))
+ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line()
+#+end_src
+
+#+RESULTS:
+[[file:figs/sample_growth.png]]
+
+#+begin_src R :exports results :results graphics :file figs/sample_growth_facetGenus.png :height 800 :width 1000 :res 120
+  ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line() +
+    facet_wrap(~Genus)
+#+end_src
+
+#+RESULTS:
+[[file:figs/sample_growth_facetGenus.png]]
+
+#+begin_src R :exports results :results graphics :file figs/sample_growth_fraxinus.png :height 800 :width 1000 :res 120
+  dgff <- filter(dgf, Genus == "Fraxinus")
+    ggplot(dgff, aes(x = year, y = height, group = UID)) + geom_line() +
+      coord_cartesian(y = c(20, 70)) +
+      facet_wrap(~UID)
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/sample_growth_fraxinus.png]]
+
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
