@@ -372,3 +372,33 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" max_height_2005.vrt 
 |                                                Input | file | size  | is | 18285, | 13055 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
+
+* old way extracting heights with chm.
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-10-30 Wed 09:30
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/extract heights from normalized lidar at location of trees/clip lidar to tree buffers and extract tallest return
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+#+begin_src R
+
+
+  res <- lapply(years, function(year) {
+      in.dir <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_",year,"_heights/all_chm/")
+      fs <- list.files(in.dir,
+                       pattern = ".*.tif$")
+      out <- lapply(fs, function(f) {
+          r.v <- velox(paste0(in.dir, f))
+          o <- r.v$extract(sp = p)
+          o <- unlist(lapply(o, function(x) max(x, na.rm = T)))
+          o
+      })
+      hgt <- apply(do.call("cbind",out),1, max)
+      saveRDS(hgt, paste0("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_",year,".rds"))
+      hgt
+  })
+
+
+#+end_src
+

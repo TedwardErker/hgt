@@ -1,15 +1,15 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
-#+PROPERTY:  header-args:sh :eval yes
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval no
+#+PROPERTY:  header-args:sh :eval no
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
 #+HTML_HEAD: <link rel="stylesheet" href="main.css" type="text/css">
 #+OPTIONS: toc:nil num:t date:t author:nil
 #+LATEX_HEADER: \usepackage[margin=1in]{geometry}
 #+LATEX_HEADER: \usepackage{natbib}
-#+LATEX_HEADER: \usepackage{chemformula}
+##+LATEX_HEADER: \usepackage{chemformula}
 #+latex_header: \usepackage{adjustbox}
 #+LaTeX_HEADER: \RequirePackage{lineno} \def\linenumberfont{\normalfont\small\tt}
 #+LATEX_HEADER: \hypersetup{colorlinks=true,linkcolor=black, citecolor=black, urlcolor=black}
@@ -18,6 +18,60 @@
 ---------------------
 
 * Introduction
+
+Urban trees grow differently than their more rural counterparts
+because of the challenges they face surviving amongst urban
+infrastructure and because they are largely cultivated by humans (but
+not for their wood).  For example, street trees are subject to damage
+from vehicles, pedestrians, and poor soil conditions; urban trees tend
+to be more open grown than rural trees; urban trees are pruned to
+accomodate powerlines or for aesthetics, many urban trees are
+irrigated and fertilized; the species composition in a city is often
+different than its rural surrounding.  Urban conditions are not only
+unique, but they are also more heterogeneous, which creates
+variability in the growth of the urban forest at small spatial scales.
+
+Urban forests are also critical components of the "green
+infrastructure" meant to make cities more livable.  With over half the
+human population living in urban areas, planting trees to provide
+ecosystem services is seen as a way to make cities more livable.
+These ecosystem services include habitat for wildlife, stormwater
+runoff reduction, air quality improvement, and carbon sequestration.  
+
+All these services are a function of growth, either directy such as
+carbon sequestration, or indirectly such as stormwater runoff
+reduction which is a function of tree size.  Therefore, understanding
+urban tree growth is essential to estimating and projecting ecosystem
+services into the future.  
+
+Remote sensing technology provides an efficient way to collect
+sufficient data on urban tree growth for detecting effect sizes that
+may be small relative to the variability induced by the urban
+environment.  Here we use two technologies that have only recently
+become more available, repeat lidar and imaging spectroscopy.  Lidar
+uses the reflection of lazer pulses to create 3 dimensional point
+clouds of objects.  Using multiple years of lidar data we are able to
+calculate growth in the the height of thousands of trees.  Imaging
+spectroscopy 
+
+to measure height
+growth, to create indicies of canopy foliar
+traits.  
+
+
+
+
+
+** COMMENT comments
+
+
+
+
+
+
+
+Understanding how trees grow in urban environments can help cities
+better estimate and project 
 
 - Why important
   - Urban environments are unique
@@ -39,7 +93,7 @@
   - Do foliar trait indicies derived from imaging spectroscopy explain
     any of the variability in tree growth rates?
   - Do environmental factors (proximity to road, age of road?, percent
-    impervious within 100m,
+    impervious within 100m, topographic location.
 - We hypothesize that we'll see effects expected from other studies
   - trees grow faster
 
@@ -47,6 +101,68 @@
 
 
 * Methods
+
+** Overview
+In our study city, Madison, WI, we used two dates of lidar data (2009
+and 2016) to estimate the height growth of trees over 7 years.
+Inventories of street trees and two of Madison's neighborhoods,
+provided species labels and diameter at breast height (DBH) for about
+100 thousand trees.  In June 2015, NASA's Airborne Visible / Infrared
+Imaging Spectometer - Next Generation (AVIRIS-NG) imaged the majority
+of Madison.  Using predictive equations developed following
+cite:singh_e_2015, we predicted canopy foliar traits: Nitrogen (% mass), N;
+leaf mass per area (g/m^2), LMA; lignin (% mass), cellulose (% mass).
+CHECK I HAVE ALL THESE.  In addition to foliar traits, we calculated
+other environmental factors such as proximity to road and topographic
+position. 
+
+separate models for street trees and trees from the neighborhood inventories.
+
+We then built a regression models to estimate the relationship of
+environmental factors and foliar traits with growth, with separate
+models for different species and tree contexts (street trees versus
+neighborhood trees).
+
+** Madison, WI: population and forests
+Madison is a city of about 260,000 persons ([[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][USCensus]]), located in south
+central Wisconsin.  Its climate is .... and the dominant forest type
+is broadleaf deciduous.  Pre-european settlement forests were
+dominated by oaks (Quercus), maples (Acer), and basswood (Tilia).
+Now the most common street tree genera are Fraxinus, Acer, Gleditsia,
+and Tilia, making up over 70% of all street trees.  Other common
+genera in neighborhoods include: Picea, Thuja, Betula, and Pinus.
+
+** Data
+
+*** Tree inventories
+The species of a tree encodes a suite of genetic factors that affect
+growth rates and is therefore important to know when modeling tree
+grwoth.  We used three tree inventories for species information.  The
+first is the city's street tree inventory from 2011; the second is the
+2012?  inventory of the Atwood neighborhood located on Madison's east
+side and the north side of lake Monona, the third is the 2015-2016
+inventory of the [[http://www.hillfarms.org/documents/UHFP_Tree_Report_2016.pdf][HillFarms neighborhood]] on Madison's west side FIGURE
+HERE SHOWING INVENTORIES!!  give species breakdowns too.
+
+
+I need a figure showing the neighborhood inventories and the street
+tree inventories too.
+
+
+
+
+- street tree inventory, hill farms and atwood inventories
+- lidar
+  - how modified to create heights
+- imaging spectrsopty
+  - modified to create indicies of canopy foliar traits
+  - because of variations across images, we adjusted trait maps to one
+    image and derived indicies of  foliar tratis.
+- dem?
+  - topographic position.
+** Modeling
+
+
 
 Using lidar from 2005, 2009, and 2016, we 
 
@@ -66,7 +182,7 @@ location ( street trees).
 ** creating normalized lidar and doing best to filter out tree points
 *** 2005 lidar
 **** create lax
-#+begin_src sh :session b
+#+begin_src sh 
 cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
@@ -106,7 +222,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 #+end_src
 
 **** normalize
-#+begin_src R :session *R2005*
+#+begin_src R 
 
   ctg2005ground <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/")
   opt_output_files(ctg2005ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/{ORIGINALFILENAME}_normalized"
@@ -115,7 +231,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 #+end_src
 
 **** make lax for normalized
-#+begin_src sh :session b
+#+begin_src sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
@@ -134,7 +250,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 : Processing [>-------------------------------------------]   3% (1/34) eta: 39sError: filename exists; use overwrite=TRUE
 
 
-#+BEGIN_SRC sh :session *a*
+#+BEGIN_SRC sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2005.tif
 #+END_SRC
@@ -233,7 +349,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+end_src
 
 **** make lax
-#+BEGIN_SRC sh :session a
+#+BEGIN_SRC sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+END_SRC
@@ -527,9 +643,6 @@ chm, pitless algoright, too slow to be worth running.
 #+end_src
 
 *** 2016 lidar
-:PROPERTIES:
-:header-args:R: :session *R:2016*
-:END:
 epsg 7599
 **** normalize
 #+begin_src R
@@ -1067,7 +1180,8 @@ y ~ b * height
 b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
 
-** difference in chm 2016 - 2009
+** comparing CHMs - more for visualization in 2d
+*** difference in chm 2016 - 2009
 
 #+begin_src R
   library(raster)
@@ -1085,7 +1199,7 @@ b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 :   Cannot create a RasterLayer object from this file. (file does not exist)
 : Error: object 'r2009' not found
 
-** difference in tree chm 2016 - 2009
+*** difference in tree chm 2016 - 2009
 
 #+begin_src R
     library(raster)
@@ -1135,10 +1249,7 @@ b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
 - read in points and make a buffer of 5 ft radius around each point (they are
   almost always in the center of the tree)
-- for each year (chm) extract the maximum height within that buffer and assign it to the tree
-  - maximum because the way i did the raster there are varying number
-    of holes (the point clouds have different densities).
-
+- for each year lidar, clip to buffer/polygon and extract the maximum height within that buffer and assign it to the tree
 
 Really I should come up with some clever rules for thinning out the
 tree dataset.  If I have small trees next to big trees, the small
@@ -1151,50 +1262,92 @@ the big trees.
 
 Also need to beware of non street trees overhanging street trees.
 
-
-
-
-*** save out heights
+*** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.
 #+begin_src R
   library(raster)
   library(rgeos)
-  library(velox)
-  years <- c(2005, 2009, 2016)
+  library(dplyr)
 
-
-  trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
+  trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
   trees <- spTransform(trees, crs("+init=epsg:7599"))
-
-  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
-           ymin = 485978.641378534, ymax = 487311.522306307)
-
-  trees <- crop(trees, e)
-
+  trees@data <-   select(trees@data, UID, DBH)
 
   p <- gBuffer(trees, width = 8, byid = T)
-                                          #  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/trees_buf.shp", overwrite = T)
+  pa <- aggregate(p)
+  pd <- disaggregate(pa)
 
+  o <- over(pd, trees, returnList = T)
 
-
-
-
-  res <- lapply(years, function(year) {
-      in.dir <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_",year,"_heights/all_chm/")
-      fs <- list.files(in.dir,
-                       pattern = ".*.tif$")
-      out <- lapply(fs, function(f) {
-          r.v <- velox(paste0(in.dir, f))
-          o <- r.v$extract(sp = p)
-          o <- unlist(lapply(o, function(x) max(x, na.rm = T)))
-          o
-      })
-      hgt <- apply(do.call("cbind",out),1, max)
-      saveRDS(hgt, paste0("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_",year,".rds"))
-      hgt
+  uids <- lapply(o, function(e) {
+      set.seed(1)
+      sample(e$UID[e$DBH == max(as.numeric(e$DBH), na.rm = T)], 1) # randomly select 1 of many
   })
 
+  po <- p[p@data$UID %in% unlist(uids),]
+
+  shapefile(po, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp", overwrite = T)
 
 #+end_src
+
+*** clip lidar to tree buffers and extract tallest return
+
+**** 2009
+**** 2016
+#+begin_src R
+  library(doParallel)
+  library(foreach)
+  library(lidR)
+  library(dplyr)
+  library(stringr)
+
+  b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  b <- spTransform(b, crs("+init=epsg:7599"))
+  b@data <- select(b@data, UID)
+
+  fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/trees_lidar_linefiltered/",
+                   pattern = ".*.las",
+                   full.names = T)
+
+
+  # crop the polygons so that a huge object doesn't need to be sent to each node
+  cl <- makeCluster(4)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+      l <- readLAS(f)
+      proj4string(l) <- "+init=epsg:7599"
+      bc <- crop(b, extent(l))
+      i <- str_extract(f, "[0-9]+_norm")
+      shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2016cropped/",i,".shp"))
+  }
+
+  closeAllConnections()
+
+  rm(b)
+
+  # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+
+  cl <- makeCluster(7)
+  registerDoParallel(cl)
+  out <- foreach(f = fl[-69][11:110], .packages = c("stringr","lidR")) %dopar% {  
+      l <- readLAS(f)
+      i <- str_extract(f, "[0-9]+_norm")
+      bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2016cropped/",i,".shp"))
+      lc <- lasclip(l, bc)
+      m <- lapply(lc, function(ls) {
+          max(ls@data$Z)
+      })
+      o <- cbind(UID = bc@data$UID, height_2016 = unlist(m))
+      saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016/",i,".rds"))
+  }
+
+  closeAllConnections()
+
+#+end_src
+
+
+
+
+
 
 *** assign heights to trees
 #+begin_src R
@@ -1208,16 +1361,17 @@ Also need to beware of non street trees overhanging street trees.
 
 testing with subset
 #+begin_src R
-treesa <- shapefile("/media/erker/DATA_ERKER/dd/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+dir <- "/home/erker/hgt_data/"
+treesa <- shapefile(paste0(dir,"/madison_tree_inventories/MadisonTrees_WithAttributes.shp"))
   treesa <- spTransform(treesa, crs("+init=epsg:7599"))
   e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
            ymin = 485978.641378534, ymax = 487311.522306307)
 
 tae <- crop(treesa, e)
 
-  tae@data$height2005 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2005.rds")
-  tae@data$height2009 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2009.rds")
-  tae@data$height2016 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2016.rds")
+  tae@data$height2005 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2005.rds"))
+  tae@data$height2009 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2009.rds"))
+  tae@data$height2016 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2016.rds"))
 
 
 #+end_src
@@ -1240,6 +1394,7 @@ library(ggplot2)
 #+end_src
 
 #+RESULTS:
+: 
 : 'data.frame':	1233 obs. of  4 variables:
 :  $ UID   : chr  "ST08437" "ST08464" "ST08504" "ST08505" ...
 :  $ Genus : chr  "Stump" "Juniperus" "Ginkgo" "Acer" ...
