@@ -17,6 +17,34 @@
 #+LATEX_CLASS_OPTIONS: [12pt]
 ---------------------
 
+* list of figures (for presentation and paper)
+
+check my paper in stat consulting office to make sure I got it all
+
+- raw data
+  - lidar
+    - lazers from a plane illustration
+    - point cloud screen shot or gif
+    - height difference from tree CHM.
+  - hyperspectral imagery
+    - aviris-ng
+    - hyperspectral cube
+    - leaf spectrum
+    - 2015 flightlines over Madison.
+    - merged trait maps over all of Madison.
+  - tree inventories
+    - street trees
+      - get figure from poster with the summary statistics
+    - hill farms
+      - make figure like i have for street trees
+    - atwood
+      - make figure like i have for street trees
+  - show tree points colored by growth
+  - summary distributions for height growth by species...
+  - growth by explanatory variable plots??
+  - model plots???
+
+
 * Introduction
 
 Urban trees grow differently than their more rural counterparts
@@ -142,15 +170,26 @@ first is the city's street tree inventory from 2011; the second is the
 2012?  inventory of the Atwood neighborhood located on Madison's east
 side and the north side of lake Monona, the third is the 2015-2016
 inventory of the [[http://www.hillfarms.org/documents/UHFP_Tree_Report_2016.pdf][HillFarms neighborhood]] on Madison's west side FIGURE
-HERE SHOWING INVENTORIES!!  give species breakdowns too.
-
+HERE SHOWING INVENTORIES!!  give species breakdowns too.  These
+inventories also provide information on DBH and tree condition.  
 
 I need a figure showing the neighborhood inventories and the street
 tree inventories too.
 
+*** Light detection and ranging (lidar)
 
+2009 lidar is .75 points per square meter. 2016 lidar is 
 
+**** COMMENT comments on lidar
+2009 lidar is not well documented.  I think it appers as 2010 lidar on
+the wisconsinview website.
 
+i need to get the average point density across all the tiles because
+it varies.
+
+.07 pts per sq ft.  = .75 pts per sq meter
+.06 
+*** other
 - street tree inventory, hill farms and atwood inventories
 - lidar
   - how modified to create heights
@@ -1169,6 +1208,9 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
+*** 2017 lidar
+
+
 
 ** modeling
 
@@ -1290,8 +1332,70 @@ Also need to beware of non street trees overhanging street trees.
 #+end_src
 
 *** clip lidar to tree buffers and extract tallest return
-
 **** 2009
+#+begin_src R
+  library(doParallel)
+  library(foreach)
+  library(lidR)
+  library(dplyr)
+  library(stringr)
+
+  b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  b <- spTransform(b, crs("+init=epsg:7599"))
+  b@data <- select(b@data, UID)
+
+  fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar",
+                   pattern = ".*.las",
+                   full.names = T)
+
+
+  # crop the polygons so that a huge object doesn't need to be sent to each node
+  cl <- makeCluster(4)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+      l <- readLAS(f)
+      proj4string(l) <- "+init=epsg:7599"
+      bc <- crop(b, extent(l))
+      if(!is.null(bc)) {
+          i <- str_extract(f, "lc2t[0-9]+")
+          shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"), overwrite = T)
+      }
+  }
+  closeAllConnections()
+
+  rm(b)
+
+  # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+
+  cl <- makeCluster(7)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {  
+      l <- readLAS(f)
+     i <- str_extract(f, "lc2t[0-9]+")
+      bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"))
+      lc <- lasclip(l, bc)
+      m <- lapply(lc, function(ls) {
+          max(ls@data$Z)
+      })
+      o <- cbind(UID = bc@data$UID, height_2009 = unlist(m))
+      saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/",i,".rds"))
+  }
+
+  closeAllConnections()
+
+#+end_src
+
+
+save as heights
+#+begin_src R
+  hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/", full.names = T)
+  hs <- lapply(hs, readRDS)
+
+  h2009 <- do.call("rbind", hs)
+
+  saveRDS(h2009, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+#+end_src
+
 **** 2016
 #+begin_src R
   library(doParallel)
@@ -1328,7 +1432,7 @@ Also need to beware of non street trees overhanging street trees.
 
   cl <- makeCluster(7)
   registerDoParallel(cl)
-  out <- foreach(f = fl[-69][11:110], .packages = c("stringr","lidR")) %dopar% {  
+  out <- foreach(f = fl[-69][11:110][60], .packages = c("stringr","lidR")) %dopar% {  
       l <- readLAS(f)
       i <- str_extract(f, "[0-9]+_norm")
       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2016cropped/",i,".shp"))
@@ -1344,40 +1448,61 @@ Also need to beware of non street trees overhanging street trees.
 
 #+end_src
 
-
-
-
-
-
-*** assign heights to trees
+save as heights
 #+begin_src R
-  trees@data$height2005 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2005.rds")
-  trees@data$height2009 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2009.rds")
-  trees@data$height2016 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2016.rds")
-#  shapefile(trees, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/tree_sample_wHeight.shp")
+  hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016/", full.names = T)
+  hs <- lapply(hs, readRDS)
+
+  h2016 <- do.call("rbind", hs)
+
+  saveRDS(h2016, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
 #+end_src
 
-#+RESULTS:
 
-testing with subset
+*** join heights to trees
+
 #+begin_src R
-dir <- "/home/erker/hgt_data/"
-treesa <- shapefile(paste0(dir,"/madison_tree_inventories/MadisonTrees_WithAttributes.shp"))
-  treesa <- spTransform(treesa, crs("+init=epsg:7599"))
-  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
-           ymin = 485978.641378534, ymax = 487311.522306307)
+  height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
 
-tae <- crop(treesa, e)
-
-  tae@data$height2005 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2005.rds"))
-  tae@data$height2009 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2009.rds"))
-  tae@data$height2016 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2016.rds"))
 
 
 #+end_src
 
-#+RESULTS:
+#+begin_src R
+  library(raster)
+  library(dplyr)
 
+  trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+  tb <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+
+  height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+  height_2016 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+
+  height_2009 <- as.data.frame(height_2009, stringsAsFactors = F) %>%
+      mutate(height_2009 = as.numeric(height_2009))
+
+  height_2009 <- height_2009 %>%
+      group_by(UID) %>%
+      summarize(height_2009 = max(height_2009, na.rm = T))
+
+  height_2016 <- as.data.frame(height_2016, stringsAsFactors = F) %>%
+      mutate(height_2016 = as.numeric(height_2016))
+
+  height_2016 <- height_2016 %>%
+      group_by(UID) %>%
+      summarize(height_2016 = max(height_2016, na.rm = T))
+
+
+  heights <- left_join(height_2009, height_2016, by = "UID") %>%
+      mutate(growth = height_2016 - height_2009)
+
+
+  trees@data <- left_join(trees@data, heights)
+
+  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
+
+#+end_src
 
 ** look at data?
 #+begin_src R
@@ -1432,6 +1557,8 @@ ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line()
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
+
+file:///home/erker/Downloads/remotesensing-10-00347.pdf
 
 * old stuff
  

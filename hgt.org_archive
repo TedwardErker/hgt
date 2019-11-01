@@ -402,3 +402,41 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" max_height_2005.vrt 
 
 #+end_src
 
+
+* this is old way with CHM extracted heights assign heights to trees
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-10-31 Thu 12:19
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/extract heights from normalized lidar at location of trees
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+#+begin_src R
+  trees@data$height2005 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2005.rds")
+  trees@data$height2009 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2009.rds")
+  trees@data$height2016 <- readRDS("/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/height_2016.rds")
+#  shapefile(trees, "/media/erker/DATA_ERKER/dd/madison_tree_inventories/hgt/tree_sample_wHeight.shp")
+#+end_src
+
+#+RESULTS:
+
+testing with subset
+#+begin_src R
+dir <- "/home/erker/hgt_data/"
+treesa <- shapefile(paste0(dir,"/madison_tree_inventories/MadisonTrees_WithAttributes.shp"))
+  treesa <- spTransform(treesa, crs("+init=epsg:7599"))
+  e <- new("Extent", xmin = 826616.082997855, xmax = 828596.309091884, 
+           ymin = 485978.641378534, ymax = 487311.522306307)
+
+tae <- crop(treesa, e)
+
+  tae@data$height2005 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2005.rds"))
+  tae@data$height2009 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2009.rds"))
+  tae@data$height2016 <- readRDS(paste0(dir, "/madison_tree_inventories/hgt/height_2016.rds"))
+
+
+#+end_src
+
+#+RESULTS:
+
+
