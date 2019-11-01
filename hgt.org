@@ -681,6 +681,7 @@ chm, pitless algoright, too slow to be worth running.
   grid_canopy(ctg2009norm, 4, pitfree(c(0,6,12), c(0,1), subcircle = 6)) 
 #+end_src
 
+
 *** 2016 lidar
 epsg 7599
 **** normalize
@@ -1212,6 +1213,8 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
+
+
 ** modeling
 
 maybe use a gam with a smoother for the effect of initial height on
@@ -1286,7 +1289,12 @@ b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 :   Cannot create a RasterLayer object from this file. (file does not exist)
 : Error: object 'r2009' not found
 
-** extract heights from normalized lidar at location of trees
+** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
+
+This would give me one more year.  5 years: 2005, 2009, 2010, 2016,
+and 2017 would be real nice.
+
+** extract heights from normalized lidar at location of trees---------  i SHOULD probably do this from chm for speed 
 
 
 - read in points and make a buffer of 5 ft radius around each point (they are
