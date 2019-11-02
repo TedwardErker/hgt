@@ -1,8 +1,8 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval no
-#+PROPERTY:  header-args:sh :eval no
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
+#+PROPERTY:  header-args:sh :eval yes
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
 #+HTML_HEAD: <link rel="stylesheet" href="main.css" type="text/css">
@@ -1210,8 +1210,63 @@ the multiple return approach also included building edges.  I need to find a way
 
 *** 2017 lidar
 
+**** get metadata and reports
+#+BEGIN_SRC sh
+cd /home/erker/hgt_data/dane_lidar_2017/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Metadata/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Reports/
+#+END_SRC
+**** download which tiles intersect with tree
+download tiles
+#+BEGIN_SRC sh
+cd /home/erker/hgt_data/dane_lidar_2017/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/
+#+END_SRC
+
+find tiles that intersect
+#+begin_src R
+  library(raster)
+  tiles <- shapefile("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
+
+  trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+  trees <- spTransform(trees, crs(tiles))
+
+  tree.tiles <- over(trees, tiles)
+
+  tree.tiles.u <- unique(tree.tiles)
+
+#+end_src
+
+save out to file
+#+begin_src R :file tree_tiles_2017.txt
+  writeLines(tree.tiles.u$Name_Final)
+#+end_src
+
+#+RESULTS:
+[[file:tree_tiles_2017.txt]]
+
+Download those tiles from ftp
+#+BEGIN_SRC sh :session *a*
+
+cd /home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/
+
+while IFS= read -r line;
+do
+tile=${line}_usgs.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/$tile
+done < ~/git/hgt/tree_tiles_2017.txt
+
+#+END_SRC
+
+**** think about checking out their raster dems
+#+BEGIN_SRC sh
 
 
+ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Raster_DEM_Tiles/
+
+
+#+END_SRC
 ** modeling
 
 maybe use a gam with a smoother for the effect of initial height on
@@ -1221,7 +1276,9 @@ y ~ b * height
 
 b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
-
+** adjusting chms
+see this paper:
+https://www.tandfonline.com/doi/abs/10.5589/m06-030
 ** comparing CHMs - more for visualization in 2d
 *** difference in chm 2016 - 2009
 
@@ -1285,6 +1342,8 @@ b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 : Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
 :   Cannot create a RasterLayer object from this file. (file does not exist)
 : Error: object 'r2009' not found
+
+
 
 ** extract heights from normalized lidar at location of trees
 
@@ -1559,6 +1618,10 @@ ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line()
 https://link.springer.com/article/10.1186/s40663-018-0146-y
 
 file:///home/erker/Downloads/remotesensing-10-00347.pdf
+
+https://www.sciencedirect.com/science/article/pii/S0034425717302316#f0005
+
+https://www.tandfonline.com/doi/abs/10.5589/m06-030
 
 * old stuff
  
