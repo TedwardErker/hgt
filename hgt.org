@@ -216,11 +216,10 @@ finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 2005 lidar might not be good enough for a general tree canopy layer,
 but it should still be reliable for treee heights if I know the trees
 location ( street trees).
-
-
-** creating normalized lidar and doing best to filter out tree points
-*** 2005 lidar
-**** create lax
+** work
+*** creating normalized lidar and doing best to filter out tree points
+**** 2005 lidar
+***** create lax
 #+begin_src sh 
 cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
@@ -233,7 +232,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 #+end_src
 
 
-**** which have ground?
+***** which have ground?
 #+begin_src R
       library(stringr)
       f <- list.files("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/", pattern = ".*.las$", full.names = T)
@@ -245,7 +244,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
     })
 #+end_src
 
-**** find ground
+***** find ground
 #+begin_src R
     ctg2005 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/")
     opt_output_files(ctg2005) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/{ORIGINALFILENAME}_ground"
@@ -260,7 +259,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 #+end_src
 
-**** normalize
+***** normalize
 #+begin_src R 
 
   ctg2005ground <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/")
@@ -269,13 +268,13 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 #+end_src
 
-**** make lax for normalized
+***** make lax for normalized
 #+begin_src sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
-**** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized")
@@ -295,7 +294,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+END_SRC
 
 
-**** get extents
+***** get extents
 #+begin_src R
 
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
@@ -318,7 +317,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+RESULTS:
 
 
-**** Get tree points
+***** Get tree points
 #+begin_src R
   library(lidR)
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
@@ -387,7 +386,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 
 #+end_src
 
-**** make lax
+***** make lax
 #+BEGIN_SRC sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
@@ -395,7 +394,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 
 #+RESULTS:
 
-**** tree chm
+***** tree chm
 #+begin_src R
   library(lidR)
     ctg2005trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar")
@@ -412,9 +411,9 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2005.tif
 #+END_SRC
 
-*** 2009 lidar
+**** 2009 lidar
 
-**** get tiles just over the tree inventory
+***** get tiles just over the tree inventory
 This lidar covers all of dane county.  Only get the tiles that
 intersect with the madison tree inventory.
 
@@ -437,7 +436,7 @@ intersect with the madison tree inventory.
 #+RESULTS: tiles
 
 
-**** find ground
+***** find ground
 #+begin_src R
 library(lidR)
 
@@ -455,21 +454,21 @@ library(lidR)
 #+end_src
 
 
-**** normalize
+***** normalize
 #+begin_src R
   ctg2009ground <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees")
   opt_output_files(ctg2009ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
   lasnormalize(ctg2009ground, tin())
 #+end_src
 
-**** make lax for normalized
+***** make lax for normalized
 #+begin_src sh :session b
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
 
-**** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized")
@@ -489,7 +488,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+END_SRC
 
 
-**** get extents to select a downtown tile?
+***** get extents to select a downtown tile?
 #+begin_src R
 
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/"
@@ -682,9 +681,9 @@ chm, pitless algoright, too slow to be worth running.
 #+end_src
 
 
-*** 2016 lidar
+**** 2016 lidar
 epsg 7599
-**** normalize
+***** normalize
 #+begin_src R
   library(stringr)
   library(lidR)
@@ -708,7 +707,7 @@ epsg 7599
 
 #+end_src
 
-**** create lax (las index)
+***** create lax (las index)
 
 i had to download LAStools and run make in the directory.
 
@@ -720,7 +719,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 
 #+RESULTS:
 
-**** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
@@ -738,7 +737,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+END_SRC
 
 
-**** find the tiles that overlap with the madison tree inventory data
+***** find the tiles that overlap with the madison tree inventory data
 #+begin_src R
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
         fs <-   list.files(dir,
@@ -780,7 +779,7 @@ writeLines(tiles.w.trees)
 #+RESULTS:
 [[file:tiles.w.trees.txt]]
 
-**** extract tree points from the lidar
+***** extract tree points from the lidar
 #+begin_src R
   #   library(devtools)
   #   install_github("Jean-Romain/lidR", ref = "devel")
@@ -863,7 +862,7 @@ maybe do another clean up with point metrics.
 #+RESULTS:
 
 
-**** Create the tree chm
+***** Create the tree chm
 #+begin_src R
   library(lidR)
     ctg2016trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar_linefiltered/")
@@ -904,7 +903,7 @@ STOP here until I have a good tree chm for each year.
 
 
 
-**** testing finding trees
+***** testing finding trees
 
 
 
@@ -994,14 +993,14 @@ try voxel
 
 #+end_src
 
-***** point cloud viewer backedn
+****** point cloud viewer backedn
 #+begin_src R
   l <- readLAS("test2016.las", filter = "-drop_z_below 6 -keep_first")
   plot(l, backend = "pcv")
 
 #+end_src
 
-***** CHM for just trees
+****** CHM for just trees
 #+begin_src R
   library(lidR)
     ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
@@ -1142,7 +1141,7 @@ i <- 205
 #+RESULTS:
 : 1924 points below 0 found.
 
-***** old stuff
+****** old stuff
 
 
 
@@ -1209,15 +1208,15 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
-*** 2017 lidar
+**** 2017 lidar
 
-**** get metadata and reports
-#+BEGIN_SRC sh
-cd /home/erker/hgt_data/dane_lidar_2017/
+***** get metadata and reports
+#+BEGIN_SRC sh :session a
+cd ~/hgt_data/dane_lidar_2017/
 wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Metadata/
 wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Reports/
 #+END_SRC
-**** download which tiles intersect with tree
+***** download which tiles intersect with tree
 download tiles
 #+BEGIN_SRC sh
 cd /home/erker/hgt_data/dane_lidar_2017/
@@ -1250,7 +1249,7 @@ save out to file
 Download those tiles from ftp
 #+BEGIN_SRC sh :session *a*
 
-cd /home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/
+cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/
 
 while IFS= read -r line;
 do
@@ -1260,17 +1259,51 @@ done < ~/git/hgt/tree_tiles_2017.txt
 
 #+END_SRC
 
-**** think about checking out their raster dems
+
+
+
+***** think about checking out their raster dems
 #+BEGIN_SRC sh
-
-
-
 ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Raster_DEM_Tiles/
+#+END_SRC
 
+***** normlalize the lidar
+
+#+BEGIN_SRC sh
 
 #+END_SRC
 
-** modeling
+#+begin_src R
+library(lidR)
+#l <- readLAS("/Users/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/0523_usgs.las")
+l <- readLAS("/Users/erker/Downloads/0523_esri.las")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+library(lidR)
+l2017 <- catalog("/Users/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/")
+
+
+"/Volumes/NO NAME/"
+
+  ctg2009ground <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees")
+  opt_output_files(ctg2009ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
+  lasnormalize(ctg2009ground, tin())
+
+#+end_src
+***** make lax for normalized
+#+begin_src sh :session b
+cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
+/home/erker/Downloads/LAStools/bin/lasindex -i *.las
+#+end_src
+
+
+#+end_src
+
+
+*** modeling
 
 maybe use a gam with a smoother for the effect of initial height on
 growth rate.
@@ -1279,11 +1312,11 @@ y ~ b * height
 
 b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
 
-** adjusting chms
+*** adjusting chms
 see this paper:
 https://www.tandfonline.com/doi/abs/10.5589/m06-030
-** comparing CHMs - more for visualization in 2d
-*** difference in chm 2016 - 2009
+*** comparing CHMs - more for visualization in 2d
+**** difference in chm 2016 - 2009
 
 #+begin_src R
   library(raster)
@@ -1301,7 +1334,7 @@ https://www.tandfonline.com/doi/abs/10.5589/m06-030
 :   Cannot create a RasterLayer object from this file. (file does not exist)
 : Error: object 'r2009' not found
 
-*** difference in tree chm 2016 - 2009
+**** difference in tree chm 2016 - 2009
 
 #+begin_src R
     library(raster)
@@ -1347,16 +1380,16 @@ https://www.tandfonline.com/doi/abs/10.5589/m06-030
 : Error: object 'r2009' not found
 
 
-** extract heights from normalized lidar at location of trees
+*** extract heights from normalized lidar at location of trees
 
-** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
+*** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
 
 This would give me one more year.  5 years: 2005, 2009, 2010, 2016,
 and 2017 would be real nice.
 
-** extract heights from normalized lidar at location of trees---------  i SHOULD probably do this from chm for speed 
+*** extract heights from normalized lidar at location of trees---------  i SHOULD probably do this from chm for speed 
 
-** look at data?
+*** look at data?
 #+begin_src R
   library(dplyr)
   library(tidyr)
