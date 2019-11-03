@@ -1247,19 +1247,48 @@ save out to file
 [[file:tree_tiles_2017.txt]]
 
 Download those tiles from ftp
+
+DOES USGS EVEN WORK? RIGHT HEADER????
+
+do esri instead
+
+actually it just might have been one of the tiles.  I may have to
+manually fix the header.....
+
 #+BEGIN_SRC sh :session *a*
 
-cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/
+cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
 
 while IFS= read -r line;
 do
-tile=${line}_usgs.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/$tile
+tile=${line}_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/$tile
 done < ~/git/hgt/tree_tiles_2017.txt
 
 #+END_SRC
 
+redoing troublesome tiles
+#+BEGIN_SRC sh :session *a*
+cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
+#wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0817_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0671_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0724_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/1121_esri.las
+#+END_SRC
 
+
+
+
+
+
+#+begin_src R
+library(lidR)
+l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0673_esri.las")
+#plot(l, trim = 900)
+plot(l, color = "Classification")
+#+end_src
+
+#+RESULTS:
 
 
 ***** think about checking out their raster dems
@@ -1281,18 +1310,38 @@ l <- readLAS("/Users/erker/Downloads/0523_esri.las")
 
 #+RESULTS:
 
+Reclassify water as ground so that normalization is faster.....
 #+begin_src R
-library(lidR)
-l2017 <- catalog("/Users/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/")
+  dir <- "~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/"
+      fs <- list.files(dir,
+                       full.names = F,
+                       pattern = ".las$")
 
+  out.dir <- "~/hgt_data/dane_lidar_2017/water_ground/"
 
-"/Volumes/NO NAME/"
-
-  ctg2009ground <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees")
-  opt_output_files(ctg2009ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
-  lasnormalize(ctg2009ground, tin())
+    lapply(fs, function(f) {
+      l <- readLAS(paste0(dir,f))
+      l@data$Classification[l@data$Classification == 9] <- 2L
+      writeLAS(l, paste0(out.dir, f))
+    })
 
 #+end_src
+
+#+begin_src R
+  library(lidR)
+  ctg2017 <- catalog("~/hgt_data/dane_lidar_2017/water_ground/")
+  opt_output_files(ctg2017) <- "~/hgt_data/dane_lidar_2017/normalized/{ORIGINALFILENAME}_normalized"
+  lasnormalize(ctg2017, tin())
+#+end_src
+
+#+begin_src R :session *R:hggt2:
+library(lidR)
+l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/normalized/0869_esri_normalized.las")
+plot(l)
+#+end_src
+
+#+RESULTS:
+
 ***** make lax for normalized
 #+begin_src sh :session b
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
