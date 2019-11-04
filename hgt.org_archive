@@ -440,3 +440,52 @@ tae <- crop(treesa, e)
 #+RESULTS:
 
 
+
+* 820 reproducible example with and without assigning to water
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-04 Mon 09:49
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/creating normalized lidar and doing best to filter out tree points/2017 lidar
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+Picnic Point on lake Mendota, an extreme example.
+
+#+BEGIN_SRC sh :session a
+
+cd ~/hgt_data/reproducibleexample/
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0820_esri.las
+
+#+END_SRC
+
+
+#+begin_src R
+  library(lidR)
+  l <- readLAS("/home/erker/hgt_data/reproducibleexample/0820_esri.las")
+  plot(l, color = "Classification")
+
+
+#    system.time(ln_keepwater <- lasnormalize(l, tin()))
+
+
+  l@data$Classification[l@data$Classification == 9] <- 2L
+
+  system.time(ln_removewater <- lasnormalize(l, tin()))
+
+
+#+end_src
+
+#+RESULTS:
+: Loading required package: raster
+: Loading required package: sp
+: lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+: 
+: Delaunay rasterization[======--------------------------------------------] 13% (4 threads)Delaunay rasterization[=======-------------------------------------------] 14% (4 threads)Delaunay rasterization[=======-------------------------------------------] 15% (4 threads)Delaunay rasterization[========------------------------------------------] 16% (4 threads)Delaunay rasterization[========------------------------------------------] 17% (4 threads)Delaunay rasterization[=========-----------------------------------------] 18% (4 threads)Delaunay rasterization[=========-----------------------------------------] 19% (4 threads)Delaunay rasterization[==========----------------------------------------] 20% (4 threads)Delaunay rasterization[==========----------------------------------------] 21% (4 threads)Delaunay rasterization[===========---------------------------------------] 22% (4 threads)Delaunay rasterization[===========---------------------------------------] 23% (4 threads)Delaunay rasterization[============--------------------------------------] 24% (4 threads)Delaunay rasterization[============--------------------------------------] 25% (4 threads)Delaunay rasterization[=============-------------------------------------] 26% (4 threads)Delaunay rasterization[=============-------------------------------------] 27% (4 threads)Delaunay rasterization[==============------------------------------------] 28% (4 threads)Delaunay rasterization[==============------------------------------------] 29% (4 threads)Delaunay rasterization[===============-----------------------------------] 30% (4 threads)Delaunay rasterization[===============-----------------------------------] 31% (4 threads)Delaunay rasterization[================----------------------------------] 32% (4 threads)Delaunay rasterization[================----------------------------------] 33% (4 threads)Delaunay rasterization[=================---------------------------------] 34% (4 threads)Delaunay rasterization[=================---------------------------------] 35% (4 threads)Delaunay rasterization[==================--------------------------------] 36% (4 threads)Delaunay rasterization[==================--------------------------------] 37% (4 threads)Delaunay rasterization[===================-------------------------------] 38% (4 threads)Delaunay rasterization[===================-------------------------------] 39% (4 threads)Delaunay rasterization[====================------------------------------] 40% (4 threads)Delaunay rasterization[====================------------------------------] 41% (4 threads)Delaunay rasterization[=====================-----------------------------] 42% (4 threads)Delaunay rasterization[=====================-----------------------------] 43% (4 threads)Delaunay rasterization[======================----------------------------] 44% (4 threads)Delaunay rasterization[======================----------------------------] 45% (4 threads)Delaunay rasterization[=======================---------------------------] 46% (4 threads)Delaunay rasterization[=======================---------------------------] 47% (4 threads)Delaunay rasterization[========================--------------------------] 48% (4 threads)Delaunay rasterization[========================--------------------------] 49% (4 threads)Delaunay rasterization[=========================-------------------------] 50% (4 threads)Delaunay rasterization[=========================-------------------------] 51% (4 threads)Delaunay rasterization[==========================------------------------] 52% (4 threads)Delaunay rasterization[==========================------------------------] 53% (4 threads)Delaunay rasterization[===========================-----------------------] 54% (4 threads)Delaunay rasterization[===========================-----------------------] 55% (4 threads)Delaunay rasterization[============================----------------------] 56% (4 threads)Delaunay rasterization[============================----------------------] 57% (4 threads)Delaunay rasterization[=============================---------------------] 58% (4 threads)Delaunay rasterization[=============================---------------------] 59% (4 threads)Delaunay rasterization[==============================--------------------] 60% (4 threads)Delaunay rasterization[==============================--------------------] 61% (4 threads)Delaunay rasterization[===============================-------------------] 62% (4 threads)Delaunay rasterization[===============================-------------------] 63% (4 threads)Delaunay rasterization[================================------------------] 64% (4 threads)Delaunay rasterization[================================------------------] 65% (4 threads)Delaunay rasterization[=================================-----------------] 66% (4 threads)Delaunay rasterization[=================================-----------------] 67% (4 threads)Delaunay rasterization[==================================----------------] 68% (4 threads)Delaunay rasterization[==================================----------------] 69% (4 threads)Delaunay rasterization[===================================---------------] 70% (4 threads)Delaunay rasterization[===================================---------------] 71% (4 threads)Delaunay rasterization[====================================--------------] 72% (4 threads)Delaunay rasterization[====================================--------------] 73% (4 threads)Delaunay rasterization[=====================================-------------] 74% (4 threads)Delaunay rasterization[=====================================-------------] 75% (4 threads)Delaunay rasterization[======================================------------] 76% (4 threads)Delaunay rasterization[======================================------------] 77% (4 threads)Delaunay rasterization[=======================================-----------] 78% (4 threads)Delaunay rasterization[=======================================-----------] 79% (4 threads)Delaunay rasterization[========================================----------] 80% (4 threads)Delaunay rasterization[========================================----------] 81% (4 threads)Delaunay rasterization[=========================================---------] 82% (4 threads)Delaunay rasterization[=========================================---------] 83% (4 threads)Delaunay rasterization[==========================================--------] 84% (4 threads)Delaunay rasterization[==========================================--------] 85% (4 threads)Delaunay rasterization[===========================================-------] 86% (4 threads)Delaunay rasterization[===========================================-------] 87% (4 threads)Delaunay rasterization[============================================------] 88% (4 threads)Delaunay rasterization[============================================------] 89% (4 threads)Delaunay rasterization[=============================================-----] 90% (4 threads)Delaunay rasterization[=============================================-----] 91% (4 threads)Delaunay rasterization[==============================================----] 92% (4 threads)Delaunay rasterization[==============================================----] 93% (4 threads)Delaunay rasterization[===============================================---] 94% (4 threads)Delaunay rasterization[===============================================---] 95% (4 threads)Delaunay rasterization[================================================--] 96% (4 threads)Delaunay rasterization[================================================--] 97% (4 threads)Delaunay rasterization[=================================================-] 98% (4 threads)Delaunay rasterization[=================================================-] 99% (4 threads)Delaunay rasterization[==================================================] 100% (4 threads)   user  system elapsed 
+:  23.818   0.489  14.264 
+: Warning messages:
+: 1: There were 6 degenerated ground points. Some X Y Z coordinates were repeated. They were removed. 
+: 2: There were 91 degenerated ground points. Some X Y coordinates were repeated but with different Z coordinates. min Z were retained.
+
+
+

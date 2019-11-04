@@ -680,6 +680,54 @@ chm, pitless algoright, too slow to be worth running.
   grid_canopy(ctg2009norm, 4, pitfree(c(0,6,12), c(0,1), subcircle = 6)) 
 #+end_src
 
+**** 2010 lidar derived (NGA)
+There is no raw point cloud available.  It's been "destroyed"
+(personal communication with John at the NGA (571 721 2159 or maybe
+571 721 7999)
+
+In the meta data it says the point cloud has "sub meter ground sample distance".
+
+date april 9 2010
+
+But there is a raster layer of the dem and the dsm (the elevation of
+the ground and the elevation of the stuff above the ground).  I can
+take their difference to find the height.
+
+
+
+elevation
+#+begin_src R
+library(raster)
+ground <- raster("/home/erker/hgt_data/madison_2010_nga_lidar_derived/US Cities/Madison_20100409/Digital Terrain Model (DTM)/DTM - Not Specified/U_US-Cities_dtm_ns_20191101.1118_6.tif")
+
+  e <- new("Extent", xmin = 827161.463391346, xmax = 828579.428253175, 
+      ymin = 486162.738356131, ymax = 487289.679000948)
+ge <- crop(ground, e)
+#+end_src
+
+#+RESULTS:
+: 
+: Error in .local(x, y, ...) : extents do not overlap
+
+surface
+#+begin_src R
+first <- raster("/home/erker/hgt_data/madison_2010_nga_lidar_derived/US Cities/Madison_20100409/Digital Surface Model (DSM)/DSM - First Return/U_US-Cities_dsm_first_return_20191101.1118_5.tif")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+diff <- first - ground
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+    diff <- projectRaster(diff, crs = CRS("+init=epsg:7599"))
+  # convert to feet like all the rest of the layers
+  diff <- diff * 3.28084
+    writeRaster(diff, "~/hgt_data/madison_lidar_2010_heights/height_2010.tif", overwrite = T)
+#+end_src
 
 **** 2016 lidar
 epsg 7599
@@ -1344,13 +1392,79 @@ plot(l)
 
 ***** make lax for normalized
 #+begin_src sh :session b
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
-/home/erker/Downloads/LAStools/bin/lasindex -i *.las
+cd /home/erker/hgt_data/dane_lidar_2017/normalized/
+/home/erker/LAStools/bin/lasindex -i *.las
 #+end_src
 
+***** make normalized chm (this includes buildings, but excludes some points)
+#+begin_src R
+  library(lidR)
+  l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/normalized_notdone/1065_esri_normalized.las",
+               filter = "-drop_z_above 120 -drop_z_below 6")
+  plot(l)
+#+end_src
+
+#+RESULTS:
+: Loading required package: raster
+: Loading required package: sp
+: lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+
+
+#+begin_src R
+  library(lidR)
+  library(stringr)
+  dir <- "~/hgt_data/dane_lidar_2017/normalized_notdone/"
+      fs <- list.files(dir,
+                       full.names = F,
+                       pattern = ".las$")
+
+  out.dir <- "~/hgt_data/madison_lidar_2017_heights/all_chm/"
+
+  lapply(fs, function(f) {
+      bn <- basename(f)
+      bn <- str_sub(bn, 1, -5)
+      l <- readLAS(paste0(dir,f), filter = "-drop_z_above 120 -drop_z_below 6")
+      chm <- grid_canopy(l, res = 3, p2r(1))
+      writeRaster(chm, paste0(out.dir, bn, "_chm.tif"), overwrite = T)
+  })
 
 #+end_src
 
+this isn't working well.  But I don't know why?  They run really fast
+as singletons.  try just lapply through all the files
+#+begin_src R :eval no
+  library(lidR)
+    ctg2017norm <- catalog("~/hgt_data/dane_lidar_2017/normalized_notdone")
+    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_lidar_2017_heights/all_chm/{ORIGINALFILENAME}_chm"
+    opt_filter(ctg2017norm) <- "-drop_z_above 120 -drop_z_below 6"
+    chm <- grid_canopy(ctg2017norm, res = 3, p2r(1))
+#+end_src
+
+#+RESULTS:
+: Loading required package: raster
+: Loading required package: sp
+: lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+: 
+:   |                                                                              |                                                                      |   0%  |                                                                              |=                                                                     |   1%Error: filename exists; use overwrite=TRUE
+
+#+begin_src sh
+cd ~/hgt_data/madison_lidar_2017_heights/all_chm/
+
+gdalbuildvrt height_2017.vrt *.tif
+#+end_src
+
+#+RESULTS:
+: 0...10...20...30...40...50...60...70...80...90...100 - done.
+
+
+#+begin_src sh
+cd ~/hgt_data/madison_lidar_2017_heights/all_chm/
+gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 height_2017.vrt ../height_2017.tif
+#+end_src
+
+#+RESULTS:
+|                                                Input | file | size  | is | 40502, | 28502 |
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
 *** modeling
 
