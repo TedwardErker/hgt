@@ -217,7 +217,7 @@ finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 but it should still be reliable for treee heights if I know the trees
 location ( street trees).
 ** work
-*** creating normalized lidar and doing best to filter out tree points
+*** creating normalized lidar and also trying to create point clouds with just trees
 **** 2005 lidar
 ***** create lax
 #+begin_src sh 
@@ -1255,7 +1255,6 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
-
 **** 2017 lidar
 
 ***** get metadata and reports
@@ -1466,6 +1465,92 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
 |                                                Input | file | size  | is | 40502, | 28502 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
+*** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.  Note: trees with no dbh are dropped.
+ #+begin_src R
+   library(raster)
+   library(rgeos)
+   library(dplyr)
+ 
+   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+   trees <- spTransform(trees, crs("+init=epsg:7599"))
+   trees@data <-   select(trees@data, UID, DBH)
+ 
+   p <- gBuffer(trees, width = 8, byid = T)
+   pa <- aggregate(p)
+   pd <- disaggregate(pa)
+ 
+   o <- over(pd, trees, returnList = T)
+ 
+   uids <- lapply(o, function(e) {
+       set.seed(1)
+       sample(e$UID[e$DBH == max(as.numeric(e$DBH), na.rm = T)], 1) # randomly select 1 of many
+   })
+ 
+   po <- p[p@data$UID %in% unlist(uids),]
+ 
+   shapefile(po, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp", overwrite = T)
+ 
+ #+end_src
+
+*** extract lidar clouds within tree buffers 
+**** 2017
+ #+begin_src R
+   library(doParallel)
+   library(foreach)
+   library(lidR)
+   library(dplyr)
+   library(stringr)
+   library(rgeos)
+
+   b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+   b <- spTransform(b, crs("+init=epsg:7599"))
+   b@data <- select(b@data, UID)
+
+   fl <- list.files("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/",
+                    pattern = ".*.las",
+                    full.names = T)
+
+
+   # crop the polygons so that a huge object doesn't need to be sent to each node
+   tiles.w.trees.i <- unlist(lapply(str_extract_all(fl, "[0-9]{4}"), function(x) x[2]))
+
+   tiles <- shapefile("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
+   tiles <- spTransform(tiles, crs(b))
+
+   tiles.w.trees <- tiles[tiles@data$Name_Final %in% tiles.w.trees.i,]
+
+   lapply(tiles.w.trees.i, function(i) {
+       bo <- crop(b, tiles.w.trees[tiles.w.trees@data$Name_Final == i,])
+                                           # rather than crop I should just get the tree buffers that are fully within the tile, so that no buffers are cropped to less than a circle.
+
+       if(!is.null(bo)) {    # some will be null because we lost trees with no dbh
+           shapefile(bo, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2017cropped/",i,".shp"), overwrite = T)
+       }
+   })
+
+   rm(b)
+
+   cl <- makeCluster(7)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR", "rgeos")) %dopar% {  
+       l <- readLAS(f, filter = "-drop_z_above 120 -drop_z_below 6 -keep_first", select = "")
+       i <- str_extract(str_extract(f, "[0-9]{4}_esri_norm"), "[0-9]{4}")
+       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2017cropped/",i,".shp"))
+       lapply(seq(length(bc)), function(j) {
+           if(round(gArea(bc[j,])) == 198) {  # make sure we have the full circle.  if radius changes this will need to...
+               lc <- lasclip(l, bc[j,])
+               if(nrow(lc@data) > 0) {
+                   writeLAS(lc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/",bc[j,]$UID,"_",i,".las"))
+               }
+           }
+       })
+   }
+   closeAllConnections()
+
+ #+end_src
+ 
+
+
 *** modeling
 
 maybe use a gam with a smoother for the effect of initial height on
@@ -1633,33 +1718,7 @@ https://www.tandfonline.com/doi/abs/10.5589/m06-030
  
  Also need to beware of non street trees overhanging street trees.
  
-*** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.
- #+begin_src R
-   library(raster)
-   library(rgeos)
-   library(dplyr)
- 
-   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
-   trees <- spTransform(trees, crs("+init=epsg:7599"))
-   trees@data <-   select(trees@data, UID, DBH)
- 
-   p <- gBuffer(trees, width = 8, byid = T)
-   pa <- aggregate(p)
-   pd <- disaggregate(pa)
- 
-   o <- over(pd, trees, returnList = T)
- 
-   uids <- lapply(o, function(e) {
-       set.seed(1)
-       sample(e$UID[e$DBH == max(as.numeric(e$DBH), na.rm = T)], 1) # randomly select 1 of many
-   })
- 
-   po <- p[p@data$UID %in% unlist(uids),]
- 
-   shapefile(po, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp", overwrite = T)
- 
- #+end_src
- 
+
 *** clip lidar to tree buffers and extract tallest return
 **** 2009
  #+begin_src R

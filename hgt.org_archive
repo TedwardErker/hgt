@@ -714,3 +714,25 @@ save as heights
   shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
 
 #+end_src
+
+* Subset the buffer to just to those trees with a dbh greater than 20 inches. 
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-04 Mon 13:17
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+Do this for computational expediency, but also because the aviris
+derived data will be more reliable.
+
+#+begin_src R
+  library(raster)
+  po <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  shapefile(po[as.numeric(po@data$DBH) > 20, ], "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_dbhg20.shp")
+#+end_src
+
+#+RESULTS:
+
+
+
