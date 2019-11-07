@@ -178,7 +178,15 @@ tree inventories too.
 
 *** Light detection and ranging (lidar)
 
+What instrument?
+when flown?
+altitude? avg pulse density? footprint size?
+
 2009 lidar is .75 points per square meter. 2016 lidar is 
+
+2016 - 
+
+
 
 **** COMMENT comments on lidar
 2009 lidar is not well documented.  I think it appers as 2010 lidar on
@@ -1492,6 +1500,26 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
 |                                                Input | file | size  | is | 40502, | 28502 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
 
+****** get the pulse density 
+#+begin_src R
+  library(lidR)
+    ctg2017norm <- catalog("~/hgt_data/madison_lidar_2017_heights/normalized")
+    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_lidar_2017_heights/grid_density/{ORIGINALFILENAME}_gd"
+    opt_filter(ctg2017norm) <- "-drop_z_above 120 -drop_z_below 6 -keep_first"
+  gd <- grid_density(ctg2017norm, res = 15)
+#+end_src
+
+it didn't finish, i'mnot sure why
+
+#+begin_src sh
+cd ~/hgt_data/madison_lidar_2017_heights/grid_density/
+
+gdalbuildvrt ../gd_2017.vrt *.tif
+#+end_src
+
+#+RESULTS:
+: 0...10...20...30...40...50...60...70...80...90...100 - done.
+
 **** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.  Note: trees with no dbh are dropped.
  #+begin_src R
    library(raster)
@@ -1830,20 +1858,79 @@ library(stringr)
 
  #+end_src
 
-**** extract height and estimate bias for trees
-***** compare 2017 to 2016
+**** TODO extract height and estimate bias for trees
 
- #+begin_src R
- l2016 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2016_las/ST14603_102_norm.las")
-plot(l2016)
 
-l2017 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST14603_0823.las")
-plot(l2017)
- #+end_src
+plan [2019-11-07 Thu]:
 
- #+RESULTS:
+Some of the difference in maximum height will be due to the randomness
+of the sampling and due to the difference in the sample size across
+years. This creates a bias in maximum height estimates. To estimate
+the bias due to these factors, I bootstrapped the lidar point clouds.
+I assume that for 2 adjacent collection years (i.e. 2017 and 2016;
+2016 and 2009; 2009 and 2005) that they come from the same collection.
+That is, all the points were acquired at the same time and that there
+was no growth.  I assume footprint size is the same and all other
+characteristics of the points are the same, the only difference is
+that the number of pulses between years.
 
-***** what is the bias between years
+I will then sample from the combined lidar clouds, new clouds for each
+year of the same size as the original data.  For example, if there
+were 200 pulses in the 2017 cloud and 50 pulses in the 2016 cloud, I
+will randomly sample with replacement 200 of the 250 pulses and assign them to a new
+2017 cloud and randomly sample with replacement 50 and assign them to a new 2016
+cloud. I'll then calculate the maximum of each of these clouds and
+find the difference.  This is an estimate of the bias in maximum
+height due to differences in sample size.
+
+By repeating the sampling many times (say 1000), I can get an accurate
+estimate of the mean bias and the variance of that bias.  For example,
+there are sometimes just one or two points from a tree in 2005 lidar.
+This means that the bias estimate will be very uncertain.  But there
+is some information in those points and it is still worthwhile to keep
+them.
+
+I will then correct for the bias by adding the bias to the observed
+maximum height.  This is the expected maximum height.  I'll then
+perform a weighted regression to estimate height growth rate, where
+corrected heights are weighted by the inverse of the bias variance.
+That is, the observations with an imprecise bias estimate were
+weighted less.
+
+Included implicitly in this method is the canopy structure for each tree.
+
+I combined the two years because this makes sense.  We need the full
+sample of points from which we resample from.  Also, later years,
+while they usually have more points, don't always have the highest points.
+
+
+
+
+maybe don't worry about it too much.  see if filtering down to a
+decent number of points for 2005 gives appropriate biases.
+
+it's never going to be perfect (it can't).
+
+
+
+read roussel's paper.  he required a histogram from a very high res.
+Do I have a very high res area in 2017 (overlap) that I can use and
+assume applies to all trees?  Or maybe a few of them?  2017 is high
+res, but still not high enough to know i'm not missing any ranches.
+2009 and 2016 tenney oak have higher branches than the 2017.
+
+correcting for pulse density may not correct quite right because of
+differences in footprint size....
+
+how to get footprint size?
+
+
+I think the histogram approach is esstianlly the same as my
+resampling.  resampling may be more precise because the lack of
+binning, but you need to resample many times.  
+
+The uncertainty in the bias is also important.  Especially wehn few
+points.  But less important if averaging across many treees.
 
 #+begin_src R
 
@@ -1913,10 +2000,10 @@ plot(l2017)
 
   treelasdir <- "/home/erker/hgt_data/madison_tree_inventories/hgt/"
 
-  cl <- makeCluster(5)
+  cl <- makeCluster(6)
   registerDoParallel(cl)
 
-  out <- foreach(i = (1:nrow(uids_df)[1:3), .packages = c("stringr","lidR", "rgeos"), .combine = "rbind") %dopar% {  
+  out <- foreach(i = (1:nrow(uids_df)), .packages = c("stringr","lidR", "rgeos"), .combine = "rbind") %dopar% {  
 
       path2017 <- paste0(treelasdir, "trees_2017_las/", uids_df$path2017[i])
       path2016 <- paste0(treelasdir, "trees_2016_las/", uids_df$path2016[i])
@@ -1941,7 +2028,7 @@ plot(l2017)
               if(n16 < n17) {
                   bias17to16 <- max2017 - mean(replicate(reps, max(sample(l2017@data$Z, n16))))
               } else if (n16 > n17) {
-                  bias17to16 <- max2017 - mean(replicate(reps, max(sample(l2017@data$Z, n16))))
+                  bias17to16 <- -1 * (max2016 - mean(replicate(reps, max(sample(l2016@data$Z, n17)))))
               } else if (n16 == n17) {
                   bias17to16 <- 0
               }
@@ -1983,7 +2070,14 @@ plot(l2017)
           n05 <- nrow(l2005@data)
           max2005 <- max(l2005@data$Z)
           if (file.exists(path2009)) {
-              bias09to05 <- max(l2009@data$Z) - mean(replicate(reps, max(sample(l2009@data$Z, n05))))
+              if(n05 < n09) {
+                  bias09to05 <- max(l2009@data$Z) - mean(replicate(reps, max(sample(l2009@data$Z, n05))))
+              } else if (n05 > n09) {
+                  bias09to05 <- -1 * (max(l2005@data$Z) - mean(replicate(reps, max(sample(l2005@data$Z, n09)))))
+              } else if (n05 == n09) {
+                  bias09to05 <- 0
+              }
+    
           } else {
               bias09to05 <- NA
           }
@@ -2019,9 +2113,343 @@ plot(l2017)
 
 #+end_src
 
+or read in the data from the saved
+
+#+begin_src R
+    h <- data.frame(out, stringsAsFactors = F) 
+
+
+  hn <-h %>%
+      select(-uid) %>%
+      mutate_if(is.character, as.numeric)
+
+  hn$uid <- h$uid
+
+
+saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
+
+#+end_src
+
+#+RESULTS:
+
+which trees have many points
+#+begin_src R 
+head(arrange(hn, desc(n2017)))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  max2017 n2017 max2016 n2016 max2009 n2009 max2005 n2005 bias17to16 bias16to09
+1  45.240   421   42.23    24   35.94    19   28.57     2    1.01398     0.1055
+2  59.813   410   57.79    23   55.07    23   55.36     4    2.27493     0.0000
+3  49.427   393   48.67    31   40.24    21   40.40     2    0.46406     0.3845
+4  57.866   392   56.91    68   55.57    46   53.42     3    0.45573     0.2044
+5  48.808   390   48.50    55   43.23    12   36.85     3    0.32271     1.0933
+6  40.823   387   40.32    15   28.00    11   21.32     2    1.01305     1.0801
+  bias09to05     uid
+1     8.6867 ST16124
+2     1.7297 ST31236
+3     3.1191 ST12970
+4     2.0546 ST27840
+5     1.0339 ST82950
+6     2.9347 ST04014
+#+end_example
+
+#+begin_src R
+  library(lidR)
+  lst16124 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST16124_1065.las")
+  plot(lst16124)
+
+  lst31236 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST31236_0920.las")
+  plot(lst31236)
+
+  lst17111 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST17111_0823.las")
+  plot(lst17111)
+
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src R
+
+
+  hn <-h %>%
+      select(-uid) %>%
+      mutate_if(is.character, as.numeric)
+
+  hn$uid <- h$uid
+
+
+  hc <- hn %>%
+    mutate(max2005corr = ifelse(bias09to05 > 0, max2005 + bias09to05, 
+
+#max2017 = ifelse(bias17to16 > 0, max2017, max2017 - bias17to16),
+ #          max2016 = 
+
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src R
+    hn3 <- hn %>% filter(n2005 > 2, 
+                         n2009 > 3,
+                         abs(bias17to16) < 2,
+                         abs(bias16to09) < 2,
+                         abs(bias09to05) < 2)
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src R :exports results :results graphics :file figs/heights_lidar_extract.png :width 700 :height 500
+  n <- 10
+
+    library(tidyr)
+      d <- hn3 %>%
+          select(max2017, max2016, max2009, max2005, uid) %>%
+        sample_n(n) %>%
+        gather(year, height, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+  ggplot(d, aes(x = year, y = height, group = uid)) + geom_line()
+#+end_src
+
+#+RESULTS:
+[[file:figs/heights_lidar_extract.png]]
+
+
+ #+begin_src R
+  library(lme4)
+
+  m <- lmer(height ~ year + (1 | uid), data = d)
+
+#+end_src
+
+#+RESULTS:
+
 **** crop lidar to the tenney oak for visualization of bias situation.
 
 I could make a 2d plot of the points (z on y axis and 
+
+
+My resampling strategy doesn't work becuase while the larger foot
+print might underestimate height according to roussel (see his paper),
+it also means that the points don't penetrate as deeply.  So when I
+resample from the 2017 which has a smaller footprint and deeper
+penetration into the canopy, I can potentially sample points lower
+than I would ever get from 2005 lidar.  But maybe this doesn't matter
+since I'm not interested in the mean, but rather the maximum.
+
+
+#+begin_src R
+  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0823_esri_normalized.las", select = "r")
+  l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/102_normalized.las", select = "r")
+  l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70912f_ground_normalized.las", select = "r")
+  l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile014_ground_normalized.las", select = "r")
+
+
+  tenney_oak <- shapefile("/home/erker/hgt_data/tenney_oak.shp")
+
+  o2017 <- lasclip(l2017, tenney_oak)
+  o2016 <- lasclip(l2016, tenney_oak)
+  o2009 <- lasclip(l2009, tenney_oak)
+  o2005 <- lasclip(l2005, tenney_oak)
+
+#  plot(o2017)
+ # plot(o2009)
+  #plot(o2005)
+
+  # I should make neat gifs...
+
+
+  d2017 <- o2017@data %>% mutate(year = 2017)
+  d2016 <- o2016@data %>% mutate(year = 2016)
+  d2009 <- o2009@data %>% mutate(year = 2009)
+  d2005 <- o2005@data %>% mutate(year = 2005)
+
+#+end_src
+
+#+begin_src R
+  library(ggthemes)
+
+    terk <- list(theme_solarized_2(base_size = 16) +
+                 theme(legend.title = element_text(size = 10),
+                       legend.text = element_text(size = 8),
+                       axis.ticks = element_line(size = .3),
+                       rect = element_rect(fill = "transparent"),
+                       panel.background = element_rect(fill = "transparent"),
+                       panel.grid.major = element_line(color = "#839496", size = .3),
+                       panel.grid.minor = element_line(color = "#839496", size = .1)),
+blue <- scale_color_solarized("blue"))
+
+red <- solarized_pal("red")(1)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/tenney_oak1.png :width 1200 :height 300 :res 100 :bg transparent
+
+  d <- rbind(d2017, d2016, d2009, d2005)
+  ggplot(d, aes(x = X, y = Z, color = factor(year))) +
+      geom_point(size = .5) +
+      geom_rug(sides = "l") +
+      coord_equal() +
+      facet_wrap(~year, ncol = 4) +
+    terk +
+    theme(axis.text.x = element_blank())
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/tenney_oak1.png]]
+the pulses penetrate deep into the canopy when there aren't leaves.
+#+begin_src R :exports results :results graphics :file figs/tenney_oak1_firstreturns.png :width 1200 :height 300 :res 100 :bg transparent
+
+  ggplot(filter(d, ReturnNumber ==1), aes(x = X, y = Z, color = factor(year))) +
+      geom_point(size = .5) +
+      geom_rug(sides = "l") +
+      coord_equal() +
+      facet_wrap(~year, ncol = 4) +
+    terk +
+    theme(axis.text.x = element_blank())
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/tenney_oak1_firstreturns.png]]
+
+#+begin_src R :exports results :results graphics :file figs/tenney_oak_crosssection.png :width 1200 :height 300 :res 100 :bg transparent
+
+    xc <- 825410
+
+    dc <- filter(d, abs(X - xc) < 8)
+    ggplot(dc, aes(x = Y, y = Z, color = factor(year))) +
+        geom_point(size = .5) +
+        geom_rug(sides = "l") +
+        coord_equal() +
+        facet_wrap(~year, ncol = 4) +
+    terk +
+    theme(axis.text.x = element_blank())
+
+
+  #+end_src
+
+  #+RESULTS:
+  [[file:figs/tenney_oak_crosssection.png]]
+
+  #+begin_src R :exports results :results graphics :file figs/tenney_oak_centerpoints.png :width 800 :height 800 :res 100 :bg transparent
+    yc <- 489580
+    dc <- filter(d, abs(Y - yc) < 8)
+
+    ggplot(dc, aes(x = Y, y = Z, color = factor(year))) +
+        geom_point(size = 1) +
+        geom_rug(sides = "l") +
+        coord_equal() +
+        facet_wrap(~year, ncol = 4) +
+    terk +
+    theme(axis.text.x = element_blank())
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/tenney_oak_centerpoints.png]]
+
+#+begin_src R :exports results :results graphics :file figs/tenney_oak_centerpoints_firstreturn.png :width 800 :height 800 :res 100 :bg transparent
+
+    dcfirst <- filter(dc, ReturnNumber == 1)
+
+    ggplot(dcfirst, aes(x = Y, y = Z, color = factor(year))) +
+        geom_point() +
+        geom_rug(sides = "l") +
+        coord_equal() +
+        facet_wrap(~year, ncol = 4) +
+    terk +
+    theme(axis.text.x = element_blank())
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/tenney_oak_centerpoints_firstreturn.png]]
+
+#+begin_src R :exports results :results graphics :file figs/tenney_oak_centerpoints_firstreturn.png :width 800 :height 800 :res 100 :bg transparent
+
+  ggplot(dcfirst, aes(x = Y, y = Z, color = factor(year))) +
+      geom_point() +
+      geom_rug(sides = "l") +
+      coord_equal() +
+      facet_wrap(~year, ncol = 4) +
+  terk +
+  theme(axis.text.x = element_blank()) +
+    coord_cartesian(ylim = c(56,64))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/tenney_oak_centerpoints_firstreturn.png]]
+
+
+Maybe it does work well?
+I'm not sure this resampling makes sense.  It's not not bad for this
+tree, within distribution of bias for sure (bias is about 1.9m with sd
+1.4), the observed difference between 2017 and 2005 is 1.9.
+
+How to deal with the fact that the 2016 and 2009 have higher heights
+than the 2017?
+
+
+#+begin_src R
+
+d2017f <- filter(d2017, ReturnNumber ==1)
+d2005f <- filter(d2005, ReturnNumber ==1)
+n2005 <- nrow(d2005f)
+
+reps <- 100
+replicate(reps, max(sample(d2017$Z, n2005)))
+
+max2017 <- max(d2017f$Z)
+max_height_resampled <- replicate(reps, max(sample(d2017$Z, n2005)))
+mean(max_height_resampled)
+
+sd(max_height_resampled)
+
+max2017 - mean(max_height_resampled)
+max2005 <- max(d2005f$Z)
+
+max2017 - max2005
+
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+  [1] 59.665 60.274 60.181 60.304 59.897 61.327 59.567 58.432 56.079 59.085
+ [11] 55.762 58.990 59.884 59.567 55.199 58.226 59.085 59.567 60.169 57.934
+ [21] 60.304 60.304 55.220 60.169 58.118 59.567 55.583 59.909 57.655 60.052
+ [31] 60.432 60.651 58.226 60.393 56.372 58.899 58.478 61.030 61.030 58.478
+ [41] 58.653 61.779 55.237 60.280 58.145 58.145 58.480 55.393 61.030 54.738
+ [51] 56.588 54.676 55.614 59.930 55.762 57.185 60.647 60.274 60.647 57.611
+ [61] 58.145 55.237 59.322 59.398 53.656 57.541 56.079 61.030 58.653 57.611
+ [71] 60.052 59.558 60.784 61.601 59.910 58.136 58.193 58.949 61.779 56.830
+ [81] 60.393 56.352 59.404 59.567 55.382 60.432 59.240 59.910 54.658 59.240
+ [91] 58.455 59.567 61.601 59.240 59.930 58.317 55.131 55.137 58.949 57.434
+
+[1] 58.86473
+
+[1] 2.104214
+
+[1] 3.30627
+
+[1] 1.451
+#+end_example
+
+
 
 *** the subsampling down to get bias by species could be it's own paper maybe...
 *** I need to think hard about how i'm going to structure this paper.
