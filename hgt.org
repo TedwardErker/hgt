@@ -430,10 +430,13 @@ intersect with the madison tree inventory.
 #+begin_src R
     library(raster)
     library(rgeos)
-    trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
-    tiles <- shapefile("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/TileIndex/StudyArea.shp")
+    trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/dd/MadisonTrees_WithAttributes.shp")
+  tiles <- shapefile("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/TileIndex/StudyArea.shp")
 
-    trees <- spTransform(trees, crs(tiles))
+  trees <- trees[!is.na(trees@data$DBH),]
+  trees <- trees[as.numeric(trees@data$DBH) > 0,]
+
+  trees <- spTransform(trees, crs(tiles))
 
     o <- over(trees, tiles)
     o <- unique(o)
@@ -445,21 +448,22 @@ intersect with the madison tree inventory.
 #+RESULTS: tiles
 
 
-****** find ground
+****** TODO find ground  I NEED TO FIX THIS!!!!
 #+begin_src R
-library(lidR)
+  library(lidR)
 
-  lapply(tiles[37:101], function(tile) {
-      tile.path <- paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/", tile, ".LAS")
-      las <- readLAS(tile.path)
+  tile <- "lc2t70833f"
+    lapply(tiles, function(tile) {
+        tile.path <- paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/", tile, ".LAS")
+        las <- readLAS(tile.path)
 
-      ws = seq(6,24,6)
-      th = seq(.1, 1.5, length.out = length(ws))
+        ws = seq(6,24,6)
+        th = seq(.1, 1.5, length.out = length(ws))
 
-      lg <- lasground(las, pmf(ws, th))
+        lg <- lasground(las, pmf(ws, th))
 
-      writeLAS(lg, paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees/",tile, "_ground.las"))
-})
+        writeLAS(lg, paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees/",tile, "_ground.las"))
+  })
 #+end_src
 
 
@@ -2224,7 +2228,7 @@ correct heights and add bias uncertainty
 : Joining, by = c("uid", "year")
 
 On average, I'd say that this correction looks pretty good!
-#+begin_src R :exports results :results graphics :file figs/correction.png :width 1300 :height 800 :bg transparent :res 100
+#+begin_src R :exports results :results graphics :file figs/correction_oldway.png :width 1300 :height 800 :bg transparent :res 100
 
   n <- 40
   set.seed(6)
@@ -2244,7 +2248,7 @@ On average, I'd say that this correction looks pretty good!
 #+end_src
 
 #+RESULTS:
-[[file:figs/correction.png]]
+[[file:figs/correction_oldway.png]]
 
 #+begin_src R :exports results :results graphics :file figs/correction_st14603.png :width 300 :height 200 :bg transparent :res 100
   hcf <- filter(hc, uid == "ST14603")
@@ -2346,7 +2350,7 @@ better than if you assume all points contain equal information.
 
 
 
-Fitting many weighted regressions and getting estimates
+***** Fitting many weighted regressions and getting estimates
 #+begin_src R
 
         lms <- list()
@@ -2742,24 +2746,285 @@ ggplotly(p)
 
 #+RESULTS:
 
+****** save new correction
 
 Calculate the mean bias for each Genus.  This is the correction that
 I will apply to the data
 #+begin_src R
-nghg <-   ngh %>% 
-      group_by(Genus, sample_size, pulse_density) %>%
-      summarize(bias = mean(mean_bias),
-                sd_bias = mean(sd_bias))
+  nghg <-   ngh %>% 
+        group_by(Genus, sample_size, pulse_density) %>%
+        summarize(bias = mean(mean_bias),
+                  sd_bias = mean(sd_bias))
+
+  saveRDS(nghg, "/home/erker/hgt_data/madison_tree_inventories/hgt/no_growth_bias.rds")
+#+end_src
+
+#+RESULTS:
+****** apply new correction
+Apply the species specific correction derived from large not growing
+trees to the data.
+
+Reading back in the extracted heights
+#+begin_src R
+    trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+    h <-   readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
+    h <- left_join(h, select(unique(trees@data), UID, Genus), by = c("uid" = "UID")) # use unique because for some reason there are duplicate trees
+
+  bias <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/no_growth_bias.rds")
+
+  hy <- h %>%
+    select(emp_max2017, emp_max2016, emp_max2009, emp_max2005, Genus, uid) %>%
+    gather(year, emp_height, -Genus, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+  hn <- h %>%
+        select(n2017, n2016, n2009, n2005, Genus, uid) %>%
+    gather(year, sample_size, -Genus, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+  hg <- left_join(hy, hn)
+
+  d <- left_join(hg, bias)
+
+  d <- d %>%
+      mutate(cor_height = emp_height - bias)
+
+#+end_src
+
+#+RESULTS:
+: 
+: Joining, by = c("Genus", "uid", "year")
+: 
+: Joining, by = c("Genus", "sample_size")
+
+#+begin_src R
+saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_40.png :width 1300 :height 800 :bg transparent :res 100
+
+  n <- 40
+  set.seed(6)
+  uids <- sample(unique(h$uid), n)
+  df <- filter(d, uid %in% uids)
+
+    ggplot(data = df) + 
+        geom_line(aes(y = emp_height, x = year, group = uid), color = base1) +
+        geom_line(aes(y = cor_height, x = year, group = uid), color = red) +
+        geom_linerange(aes(ymax = cor_height + 1.96 * sd_bias, ymin = cor_height - 1.96 *sd_bias, x = year), color = red) + 
+        facet_wrap(~uid, ncol = 8) +
+        terk +
+        scale_x_continuous(breaks = c(2005,2009, 2017)) +
+        theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction_nogrowth_40.png]]
+
+
+
+
+****** compare the two corrections
+| [[file:figs/correction_nogrowth_40.png]] | [[file:figs/correction_oldway.png]] |
+
+****** Fitting many weighted regressions and getting estimates
+#+begin_src R
+
+    # filter the trees out that aren't in the spceies that we ahve corrections for 
+    d <- d[complete.cases(d),]
+
+  # set year 2005 to 0
+  d$year <- d$year - 2005
+
+            lms <- list()
+            uids <- unique(d$uid)
+          for(i in 1:length(uids)) {
+                lms[[i]] <- lm(cor_height ~ year, data = subset(d, uid == uids[i]))
+            }
+      names(lms) <- uids
+        saveRDS(lms, "/home/erker/hgt_data/madison_tree_inventories/hgt/ng_growth_rates_lms.rds")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+      growth.rates <- sapply(lms, function(lm) coef(lm)[2])
+      growth.rates.se <- sapply(lms, function(lm) summary(lm)$coefficients[2,2])
+      est.hgt.at2005 <- sapply(lms, function(lm) coef(lm)[1])
+      growth.rates <- data.frame(uid = names(lms), 
+                                 growth.rate = growth.rates, 
+                                 growth.rate.se = growth.rates.se, 
+                                 est.hgt.at2005 = est.hgt.at2005, stringsAsFactors = F)
+#+end_src
+
+#+RESULTS:
+
+****** plots of growth rates
+
+******* histogram
+#+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm.png :width 1000 :res 120 :bg transparent
+  ggplot(growth.rates, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
+    terk +
+    scale_x_continuous("growth rate (ft/year)")
+#+end_src
+
+#+RESULTS:
+[[file:figs/ng_growthrates_lm.png]]
+
+#+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm_clip.png :width 1000 :res 120 :bg transparent
+  ggplot(growth.rates, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2, color = base1) +
+    terk +
+    scale_x_continuous("growth rate (cm/year)", lim = c(-100,100), breaks = c(-100,-50,0, round(mean(growth.rates$growth.rate * 100),1), 50, 100)) +
+    geom_vline(data = growth.rates, aes(xintercept = mean(growth.rate)*100), color = red)
+#+end_src
+
+#+RESULTS:
+[[file:figs/ng_growthrates_lm_clip.png]]
+
+******* plot suspect growth rates
+#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_suspect_high.png :width 1300 :height 800 :bg transparent :res 100
+  d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
+    dn <- left_join(d, growth.rates)
+
+  dn <- dn[complete.cases(dn),]
+
+      df <- dn[dn$growth.rate > 1,]
+
+        ggplot(data = df) + 
+            geom_line(aes(y = emp_height, x = year, group = uid), color = base1) +
+            geom_line(aes(y = cor_height, x = year, group = uid), color = red) +
+            geom_linerange(aes(ymax = cor_height + 1.96 * sd_bias, ymin = cor_height - 1.96 *sd_bias, x = year), color = red) + 
+            facet_wrap(~uid, ncol = 8) +
+            terk +
+            scale_x_continuous(breaks = c(2005,2009, 2017)) +
+            theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction_nogrowth_suspect_high.png]]
+
+******* growth by height 
+#+begin_src R :exports results :results graphics :file figs/ng_rate_by_int.png :bg transparent :width 1000 :res 100
+hn <- left_join(h, growth.rates)
+
+  ggplot(hn, aes(x = emp_max2005, y = growth.rate)) + geom_point(color = base1, size = .5, alpha = .5) + terk +
+    geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/ng_rate_by_int.png]]
+
+
+#+begin_src R
+saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+#+end_src
+
+#+RESULTS:
+
+******* growth in space
+join growth rates to trees
+
+#+begin_src R
+    library(raster)
+    trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+  trees <- spTransform(trees, "+init=epsg:7599")
+
+    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+
+    trees@data <- left_join(trees@data, hn, by = c("UID" = "uid"))
+
+    shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_Withlidarextractedheights_growthrates_corrFromNoGrowth.rds", overwrite = T)
+
+#+end_src
+
+#+RESULTS:
+: 
+: Warning message:
+: In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
+:   Field names abbreviated for ESRI Shapefile driver
+
+#+begin_src R
+  tdf <- data.frame(trees) %>%
+    filter(!is.na(growth.rate))
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+  library(ggthemes)
+      terk <- list(theme_solarized_2(base_size = 16) +
+                   theme(legend.title = element_text(size = 10),
+                         legend.text = element_text(size = 8),
+                         axis.ticks = element_line(size = .3),
+                         rect = element_rect(fill = "transparent"),
+                         panel.background = element_rect(fill = "transparent"),
+                         panel.grid.major = element_line(color = "#839496", size = .1),
+                         panel.grid.minor = element_line(color = "#839496", size = .05)))
+
+  base1 <- "#93a1a1"
+#  blue <- scale_color_solarized("blue")
+  green <- solarized_pal("green")(1)
+  red <- solarized_pal("red")(1)
 
 #+end_src
 
 #+RESULTS:
 
-Apply the species specific correction derived from large not growing
-trees to the data.
+#+begin_src R :exports results :results graphics :file figs/trees_growth.png :width 1000 :height 800 :bg transparent
+  p <-   ggplot(tdf, aes(x = coords.x1, y = coords.x2, color = growth.rate)) + geom_point(size = .8, alpha = .8) +
+      coord_equal() +
+      terk +
+      scale_color_distiller(limits = c(-.3, .3), direction = 1, palette = "RdYlGn")
+  p
+#+end_src
+
+#+RESULTS:
+[[file:figs/trees_growth.png]]
 #+begin_src R
+ggplotly(p)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/trees_growth_bin.png :width 1000 :height 800 :bg transparent :res 100
+  tdf <- tdf %>%
+    mutate(growth = ifelse(growth.rate > median(growth.rate), "high", ifelse(growth.rate < 0, "no", "low")))
+
+    p <-   ggplot(tdf, aes(x = coords.x1, y = coords.x2, color = growth)) + geom_point(size = .4, alpha = .8) +
+        coord_equal() +
+        terk +
+        scale_color_brewer(palette = "RdYlGn", direction = -1)
+    p
+#+end_src
+
+#+RESULTS:
+[[file:figs/trees_growth_bin.png]]
+
+******* growth by species
+#+begin_src R
+    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+
+hn <- hn[complete.cases(hn),]
 
 #+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/growth_species.png :bg transparent :width 1000
+ggplot(hn, aes(y = growth.rate, x = Genus)) + geom_boxplot() +
+terk
+#+end_src
+
+#+RESULTS:
+[[file:figs/growth_species.png]]
+
 **** crop lidar to the tenney oak for visualization of bias situation.
 
 I could make a 2d plot of the points (z on y axis and 
@@ -3213,6 +3478,122 @@ red <- solarized_pal("red")(1)
 
 #+RESULTS:
 [[file:figs/ST69002.png]]
+
+**** HF6591
+:PROPERTIES:
+:Attachments: IMG_20191018_173331.jpg
+:ID:       9346cc96-17cc-42eb-b67f-10e39b107aa1
+:END:
+
+Why 2009 the way it is?
+#+begin_src R
+
+  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0917_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/117_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70919f_ground_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
+
+
+  p <- shapefile("/home/erker/hgt_data/HF6591.shp")
+
+    o2017 <- lasclip(l2017, p)
+    o2016 <- lasclip(l2016, p)
+    o2009 <- lasclip(l2009, p)
+    o2005 <- lasclip(l2005, p)
+
+    plot(o2016)
+    plot(o2009)
+    #plot(o2005)
+
+    # I should make neat gifs...
+
+
+    d2017 <- o2017@data %>% mutate(year = 2017)
+    d2016 <- o2016@data %>% mutate(year = 2016)
+    d2009 <- o2009@data %>% mutate(year = 2009)
+    d2005 <- o2005@data %>% mutate(year = 2005)
+
+#+end_src
+
+#+begin_src R :exports results :results graphics :file figs/HF6591.png :width 1200 :height 300 :res 100 :bg transparent
+
+        d <- rbind(d2017, d2016, d2009, d2005) %>%
+          mutate(year = factor(year),
+                 height = Z * .3048,
+                 X = X * .3048,
+                 Y = Y * .3048)
+
+
+        ggplot(d, aes(x = X, y = height, color = year)) +
+            geom_point(size = .5) +
+            geom_rug(sides = "l") +
+            coord_equal() +
+            facet_wrap(~year, ncol = 4) +
+          terk +
+          theme(axis.text.x = element_blank())
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/HF6591.png]]
+
+**** ST45429
+#+begin_src R
+
+  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/1019_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/162_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70933f_ground_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
+
+
+  p <- shapefile("/home/erker/hgt_data/ST45429.shp")
+
+    o2017 <- lasclip(l2017, p)
+    o2016 <- lasclip(l2016, p)
+    o2009 <- lasclip(l2009, p)
+    o2005 <- lasclip(l2005, p)
+
+    plot(o2016)
+    plot(o2009)
+    #plot(o2005)
+
+    # I should make neat gifs...
+
+
+    d2017 <- o2017@data %>% mutate(year = 2017)
+    d2016 <- o2016@data %>% mutate(year = 2016)
+    d2009 <- o2009@data %>% mutate(year = 2009)
+    d2005 <- o2005@data %>% mutate(year = 2005)
+
+#+end_src
+
+#+RESULTS:
+: 
+: Warning message:
+: There are 0 points flagged 'synthetic'.
+
+#+begin_src R :exports results :results graphics :file figs/ST45429.png :width 1200 :height 300 :res 100 :bg transparent
+
+        d <- rbind(d2017, d2016, d2009, d2005) %>%
+          mutate(year = factor(year),
+                 height = Z * .3048,
+                 X = X * .3048,
+                 Y = Y * .3048)
+
+
+        ggplot(d, aes(x = X, y = height, color = year)) +
+            geom_point(size = .5) +
+            geom_rug(sides = "l") +
+            coord_equal() +
+            facet_wrap(~year, ncol = 4) +
+          terk +
+          theme(axis.text.x = element_blank())
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/ST45429.png]]
+
 
 *** the subsampling down to get bias by species could be it's own paper maybe...
 *** I need to think hard about how i'm going to structure this paper.
