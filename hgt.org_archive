@@ -440,3 +440,881 @@ tae <- crop(treesa, e)
 #+RESULTS:
 
 
+
+* 820 reproducible example with and without assigning to water
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-04 Mon 09:49
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/creating normalized lidar and doing best to filter out tree points/2017 lidar
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+Picnic Point on lake Mendota, an extreme example.
+
+#+BEGIN_SRC sh :session a
+
+cd ~/hgt_data/reproducibleexample/
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0820_esri.las
+
+#+END_SRC
+
+
+#+begin_src R
+  library(lidR)
+  l <- readLAS("/home/erker/hgt_data/reproducibleexample/0820_esri.las")
+  plot(l, color = "Classification")
+
+
+#    system.time(ln_keepwater <- lasnormalize(l, tin()))
+
+
+  l@data$Classification[l@data$Classification == 9] <- 2L
+
+  system.time(ln_removewater <- lasnormalize(l, tin()))
+
+
+#+end_src
+
+#+RESULTS:
+: Loading required package: raster
+: Loading required package: sp
+: lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+: 
+: Delaunay rasterization[======--------------------------------------------] 13% (4 threads)Delaunay rasterization[=======-------------------------------------------] 14% (4 threads)Delaunay rasterization[=======-------------------------------------------] 15% (4 threads)Delaunay rasterization[========------------------------------------------] 16% (4 threads)Delaunay rasterization[========------------------------------------------] 17% (4 threads)Delaunay rasterization[=========-----------------------------------------] 18% (4 threads)Delaunay rasterization[=========-----------------------------------------] 19% (4 threads)Delaunay rasterization[==========----------------------------------------] 20% (4 threads)Delaunay rasterization[==========----------------------------------------] 21% (4 threads)Delaunay rasterization[===========---------------------------------------] 22% (4 threads)Delaunay rasterization[===========---------------------------------------] 23% (4 threads)Delaunay rasterization[============--------------------------------------] 24% (4 threads)Delaunay rasterization[============--------------------------------------] 25% (4 threads)Delaunay rasterization[=============-------------------------------------] 26% (4 threads)Delaunay rasterization[=============-------------------------------------] 27% (4 threads)Delaunay rasterization[==============------------------------------------] 28% (4 threads)Delaunay rasterization[==============------------------------------------] 29% (4 threads)Delaunay rasterization[===============-----------------------------------] 30% (4 threads)Delaunay rasterization[===============-----------------------------------] 31% (4 threads)Delaunay rasterization[================----------------------------------] 32% (4 threads)Delaunay rasterization[================----------------------------------] 33% (4 threads)Delaunay rasterization[=================---------------------------------] 34% (4 threads)Delaunay rasterization[=================---------------------------------] 35% (4 threads)Delaunay rasterization[==================--------------------------------] 36% (4 threads)Delaunay rasterization[==================--------------------------------] 37% (4 threads)Delaunay rasterization[===================-------------------------------] 38% (4 threads)Delaunay rasterization[===================-------------------------------] 39% (4 threads)Delaunay rasterization[====================------------------------------] 40% (4 threads)Delaunay rasterization[====================------------------------------] 41% (4 threads)Delaunay rasterization[=====================-----------------------------] 42% (4 threads)Delaunay rasterization[=====================-----------------------------] 43% (4 threads)Delaunay rasterization[======================----------------------------] 44% (4 threads)Delaunay rasterization[======================----------------------------] 45% (4 threads)Delaunay rasterization[=======================---------------------------] 46% (4 threads)Delaunay rasterization[=======================---------------------------] 47% (4 threads)Delaunay rasterization[========================--------------------------] 48% (4 threads)Delaunay rasterization[========================--------------------------] 49% (4 threads)Delaunay rasterization[=========================-------------------------] 50% (4 threads)Delaunay rasterization[=========================-------------------------] 51% (4 threads)Delaunay rasterization[==========================------------------------] 52% (4 threads)Delaunay rasterization[==========================------------------------] 53% (4 threads)Delaunay rasterization[===========================-----------------------] 54% (4 threads)Delaunay rasterization[===========================-----------------------] 55% (4 threads)Delaunay rasterization[============================----------------------] 56% (4 threads)Delaunay rasterization[============================----------------------] 57% (4 threads)Delaunay rasterization[=============================---------------------] 58% (4 threads)Delaunay rasterization[=============================---------------------] 59% (4 threads)Delaunay rasterization[==============================--------------------] 60% (4 threads)Delaunay rasterization[==============================--------------------] 61% (4 threads)Delaunay rasterization[===============================-------------------] 62% (4 threads)Delaunay rasterization[===============================-------------------] 63% (4 threads)Delaunay rasterization[================================------------------] 64% (4 threads)Delaunay rasterization[================================------------------] 65% (4 threads)Delaunay rasterization[=================================-----------------] 66% (4 threads)Delaunay rasterization[=================================-----------------] 67% (4 threads)Delaunay rasterization[==================================----------------] 68% (4 threads)Delaunay rasterization[==================================----------------] 69% (4 threads)Delaunay rasterization[===================================---------------] 70% (4 threads)Delaunay rasterization[===================================---------------] 71% (4 threads)Delaunay rasterization[====================================--------------] 72% (4 threads)Delaunay rasterization[====================================--------------] 73% (4 threads)Delaunay rasterization[=====================================-------------] 74% (4 threads)Delaunay rasterization[=====================================-------------] 75% (4 threads)Delaunay rasterization[======================================------------] 76% (4 threads)Delaunay rasterization[======================================------------] 77% (4 threads)Delaunay rasterization[=======================================-----------] 78% (4 threads)Delaunay rasterization[=======================================-----------] 79% (4 threads)Delaunay rasterization[========================================----------] 80% (4 threads)Delaunay rasterization[========================================----------] 81% (4 threads)Delaunay rasterization[=========================================---------] 82% (4 threads)Delaunay rasterization[=========================================---------] 83% (4 threads)Delaunay rasterization[==========================================--------] 84% (4 threads)Delaunay rasterization[==========================================--------] 85% (4 threads)Delaunay rasterization[===========================================-------] 86% (4 threads)Delaunay rasterization[===========================================-------] 87% (4 threads)Delaunay rasterization[============================================------] 88% (4 threads)Delaunay rasterization[============================================------] 89% (4 threads)Delaunay rasterization[=============================================-----] 90% (4 threads)Delaunay rasterization[=============================================-----] 91% (4 threads)Delaunay rasterization[==============================================----] 92% (4 threads)Delaunay rasterization[==============================================----] 93% (4 threads)Delaunay rasterization[===============================================---] 94% (4 threads)Delaunay rasterization[===============================================---] 95% (4 threads)Delaunay rasterization[================================================--] 96% (4 threads)Delaunay rasterization[================================================--] 97% (4 threads)Delaunay rasterization[=================================================-] 98% (4 threads)Delaunay rasterization[=================================================-] 99% (4 threads)Delaunay rasterization[==================================================] 100% (4 threads)   user  system elapsed 
+:  23.818   0.489  14.264 
+: Warning messages:
+: 1: There were 6 degenerated ground points. Some X Y Z coordinates were repeated. They were removed. 
+: 2: There were 91 degenerated ground points. Some X Y coordinates were repeated but with different Z coordinates. min Z were retained.
+
+
+
+
+* extract heights from normalized lidar at location of trees---------  i SHOULD probably do this from chm for speed 
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-04 Mon 12:35
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: accidentally deleted
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+  
+
+ read in points and make a buffer of 5 ft radius around each point (they are
+  almost always in the center of the tree)
+ for each year lidar, clip to buffer/polygon and extract the maximum height within that buffer and assign it to the tree
+
+Really I should come up with some clever rules for thinning out the
+tree dataset.  If I have small trees next to big trees, the small
+trees look like they are tall, but really they are being overtopped by
+the big trees.
+
+ consider making buffers based on the trees dbh.  if two trees
+  intersect, keep the bigger of the two.
+
+
+Also need to beware of non street trees overhanging street trees.
+
+*** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.
+#+begin_src R
+  library(raster)
+  library(rgeos)
+  library(dplyr)
+
+  trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+  trees <- spTransform(trees, crs("+init=epsg:7599"))
+  trees@data <-   select(trees@data, UID, DBH)
+
+  p <- gBuffer(trees, width = 8, byid = T)
+  pa <- aggregate(p)
+  pd <- disaggregate(pa)
+
+  o <- over(pd, trees, returnList = T)
+
+  uids <- lapply(o, function(e) {
+      set.seed(1)
+      sample(e$UID[e$DBH == max(as.numeric(e$DBH), na.rm = T)], 1) # randomly select 1 of many
+  })
+
+  po <- p[p@data$UID %in% unlist(uids),]
+
+  shapefile(po, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp", overwrite = T)
+
+#+end_src
+
+*** clip lidar to tree buffers and extract tallest return
+**** 2009
+#+begin_src R
+  library(doParallel)
+  library(foreach)
+  library(lidR)
+  library(dplyr)
+  library(stringr)
+
+  b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  b <- spTransform(b, crs("+init=epsg:7599"))
+  b@data <- select(b@data, UID)
+
+  fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar",
+                   pattern = ".*.las",
+                   full.names = T)
+
+
+  # crop the polygons so that a huge object doesn't need to be sent to each node
+  cl <- makeCluster(4)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+      l <- readLAS(f)
+      proj4string(l) <- "+init=epsg:7599"
+      bc <- crop(b, extent(l))
+      if(!is.null(bc)) {
+          i <- str_extract(f, "lc2t[0-9]+")
+          shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"), overwrite = T)
+      }
+  }
+  closeAllConnections()
+
+  rm(b)
+
+  # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+
+  cl <- makeCluster(7)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {  
+      l <- readLAS(f)
+     i <- str_extract(f, "lc2t[0-9]+")
+      bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"))
+      lc <- lasclip(l, bc)
+      m <- lapply(lc, function(ls) {
+          max(ls@data$Z)
+      })
+      o <- cbind(UID = bc@data$UID, height_2009 = unlist(m))
+      saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/",i,".rds"))
+  }
+
+  closeAllConnections()
+
+#+end_src
+
+
+save as heights
+#+begin_src R
+  hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/", full.names = T)
+  hs <- lapply(hs, readRDS)
+
+  h2009 <- do.call("rbind", hs)
+
+  saveRDS(h2009, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+#+end_src
+
+**** 2016
+#+begin_src R
+  library(doParallel)
+  library(foreach)
+  library(lidR)
+  library(dplyr)
+  library(stringr)
+
+  b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  b <- spTransform(b, crs("+init=epsg:7599"))
+  b@data <- select(b@data, UID)
+
+  fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/trees_lidar_linefiltered/",
+                   pattern = ".*.las",
+                   full.names = T)
+
+
+  # crop the polygons so that a huge object doesn't need to be sent to each node
+  cl <- makeCluster(4)
+  registerDoParallel(cl)
+  out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+      l <- readLAS(f)
+      proj4string(l) <- "+init=epsg:7599"
+      bc <- crop(b, extent(l))
+      i <- str_extract(f, "[0-9]+_norm")
+      shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2016cropped/",i,".shp"))
+  }
+
+  closeAllConnections()
+
+  rm(b)
+
+  # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+
+  cl <- makeCluster(7)
+  registerDoParallel(cl)
+  out <- foreach(f = fl[-69][11:110][60], .packages = c("stringr","lidR")) %dopar% {  
+      l <- readLAS(f)
+      i <- str_extract(f, "[0-9]+_norm")
+      bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2016cropped/",i,".shp"))
+      lc <- lasclip(l, bc)
+      m <- lapply(lc, function(ls) {
+          max(ls@data$Z)
+      })
+      o <- cbind(UID = bc@data$UID, height_2016 = unlist(m))
+      saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016/",i,".rds"))
+  }
+
+  closeAllConnections()
+
+#+end_src
+
+save as heights
+#+begin_src R
+  hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016/", full.names = T)
+  hs <- lapply(hs, readRDS)
+
+  h2016 <- do.call("rbind", hs)
+
+  saveRDS(h2016, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+#+end_src
+
+
+*** join heights to trees
+
+#+begin_src R
+  height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+
+
+
+#+end_src
+
+#+begin_src R
+  library(raster)
+  library(dplyr)
+
+  trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+  tb <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+
+  height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+  height_2016 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+
+  height_2009 <- as.data.frame(height_2009, stringsAsFactors = F) %>%
+      mutate(height_2009 = as.numeric(height_2009))
+
+  height_2009 <- height_2009 %>%
+      group_by(UID) %>%
+      summarize(height_2009 = max(height_2009, na.rm = T))
+
+  height_2016 <- as.data.frame(height_2016, stringsAsFactors = F) %>%
+      mutate(height_2016 = as.numeric(height_2016))
+
+  height_2016 <- height_2016 %>%
+      group_by(UID) %>%
+      summarize(height_2016 = max(height_2016, na.rm = T))
+
+
+  heights <- left_join(height_2009, height_2016, by = "UID") %>%
+      mutate(growth = height_2016 - height_2009)
+
+
+  trees@data <- left_join(trees@data, heights)
+
+  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
+
+#+end_src
+
+* Subset the buffer to just to those trees with a dbh greater than 20 inches. 
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-04 Mon 13:17
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+Do this for computational expediency, but also because the aviris
+derived data will be more reliable.
+
+#+begin_src R
+  library(raster)
+  po <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  shapefile(po[as.numeric(po@data$DBH) > 20, ], "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_dbhg20.shp")
+#+end_src
+
+#+RESULTS:
+
+
+
+
+* TODO [2019-11-08 Fri] extract height and estimate bias for trees
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-08 Fri 09:07
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/extract lidar clouds within tree buffers
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_TODO: TODO
+:ARCHIVE_ITAGS: work allo
+:END:
+
+
+plan [2019-11-07 Thu]:
+
+Some of the difference in maximum height will be due to the randomness
+of the sampling and due to the difference in the sample size across
+years. This creates a bias in maximum height estimates. To estimate
+the bias due to these factors, I bootstrapped the lidar point clouds.
+I assume that for 2 adjacent collection years (i.e. 2017 and 2016;
+2016 and 2009; 2009 and 2005) that they come from the same collection.
+That is, all the points were acquired at the same time and that there
+was no growth.  I assume footprint size is the same and all other
+characteristics of the points are the same, the only difference is
+that the number of pulses between years.
+
+I will then sample from the combined lidar clouds, new clouds for each
+year of the same size as the original data.  For example, if there
+were 200 pulses in the 2017 cloud and 50 pulses in the 2016 cloud, I
+will randomly sample with replacement 200 of the 250 pulses and assign them to a new
+2017 cloud and randomly sample with replacement 50 and assign them to a new 2016
+cloud. I'll then calculate the maximum of each of these clouds and
+find the difference.  This is an estimate of the bias in maximum
+height due to differences in sample size.
+
+By repeating the sampling many times (say 1000), I can get an accurate
+estimate of the mean bias and the variance of that bias.  For example,
+there are sometimes just one or two points from a tree in 2005 lidar.
+This means that the bias estimate will be very uncertain.  But there
+is some information in those points and it is still worthwhile to keep
+them.
+
+I will then correct for the bias by adding the bias to the observed
+maximum height.  This is the expected maximum height.  I'll then
+perform a weighted regression to estimate height growth rate, where
+corrected heights are weighted by the inverse of the bias variance.
+That is, the observations with an imprecise bias estimate were
+weighted less.
+
+Included implicitly in this method is the canopy structure for each tree.
+
+I combined the two years because this makes sense.  We need the full
+sample of points from which we resample from.  Also, later years,
+while they usually have more points, don't always have the highest points.
+
+
+
+
+maybe don't worry about it too much.  see if filtering down to a
+decent number of points for 2005 gives appropriate biases.
+
+it's never going to be perfect (it can't).
+
+
+
+read roussel's paper.  he required a histogram from a very high res.
+Do I have a very high res area in 2017 (overlap) that I can use and
+assume applies to all trees?  Or maybe a few of them?  2017 is high
+res, but still not high enough to know i'm not missing any ranches.
+2009 and 2016 tenney oak have higher branches than the 2017.
+
+correcting for pulse density may not correct quite right because of
+differences in footprint size....
+
+how to get footprint size?
+
+
+I think the histogram approach is esstianlly the same as my
+resampling.  resampling may be more precise because the lack of
+binning, but you need to resample many times.  
+
+The uncertainty in the bias is also important.  Especially wehn few
+points.  But less important if averaging across many treees.
+
+
+
+#+begin_src R
+  library(ggthemes)
+      terk <- list(theme_solarized_2(base_size = 16) +
+                   theme(legend.title = element_text(size = 10),
+                         legend.text = element_text(size = 8),
+                         axis.ticks = element_line(size = .3),
+                         rect = element_rect(fill = "transparent"),
+                         panel.background = element_rect(fill = "transparent"),
+                         panel.grid.major = element_line(color = "#839496", size = .1),
+                         panel.grid.minor = element_line(color = "#839496", size = .05)))
+
+  base1 <- "#93a1a1"
+  blue <- scale_color_solarized("blue")
+
+  red <- solarized_pal("red")(1)
+
+#+end_src
+
+#+RESULTS:
+
+
+#+begin_src R
+  library(raster)
+  library(dplyr)
+  library(stringr)
+  library(foreach)
+  library(doParallel)
+
+  b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+  b@data <- select(b@data, UID)
+
+
+                                          #uids <- c("ST14603", "ST14604", "ST14599", "ST14547")
+
+  fs2017 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/", full.names = F)
+  fs2016 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2016_las/", full.names = F)
+  fs2009 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/", full.names = F)
+  fs2005 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2005_las/", full.names = F)
+
+                                          #make sure there is only one of each trees
+  uids2017 <- str_extract(fs2017, "^[A-Za-z0-9]+")
+  head(sort(table(uids2017), decreasing = T))
+
+  uids2016 <- str_extract(fs2016, "^[A-Za-z0-9]+")
+  head(sort(table(uids2016), decreasing = T))
+
+  uids2009 <- str_extract(fs2009, "^[A-Za-z0-9]+")
+                                          #head(sort(table(uids2009), decreasing = T), 1800)
+  head(sort(table(uids2009), decreasing = T))
+
+  uids2005 <- str_extract(fs2005, "^[A-Za-z0-9]+")
+  head(sort(table(uids2005), decreasing = T))
+
+                                          # 2009 has more than one lidar file per tree.  around 1700- 1800 duplicates or triplicates.
+
+  l1 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/ST01245_lc2t70836.las")
+  l2 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/ST01245_lc2t70835.las")
+  l3 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/ST01245_lc2t70826.las")
+
+                                          #They are identical so I'll just select one of the duplicates to use and ignore the others.  This should be fixed upstream in the future.
+
+
+                                          # put all the uids and las paths for ecah year in a dataframe to loop through
+
+  uids2017 <- data.frame(str_match(fs2017, "([A-Za-z0-9]+)_.*"), stringsAsFactors = F)
+  colnames(uids2017) <- c("path2017", "uid")
+
+  uids2016 <- data.frame(str_match(fs2016, "([A-Za-z0-9]+)_.*"), stringsAsFactors = F)
+  colnames(uids2016) <- c("path2016", "uid")
+
+  uids2009 <- data.frame(str_match(fs2009, "([A-Za-z0-9]+)_.*"), stringsAsFactors = F)
+  colnames(uids2009) <- c("path2009", "uid")
+                                          # remove duplicates for 2009
+  uids2009 <- uids2009 %>% group_by(uid) %>% summarize(path2009 = path2009[1])
+
+
+  uids2005 <- data.frame(str_match(fs2005, "([A-Za-z0-9]+)_.*"), stringsAsFactors = F)
+  colnames(uids2005) <- c("path2005", "uid")
+
+
+  uids_df <- left_join(uids2017, uids2016)
+  uids_df <- left_join(uids_df, uids2009)
+  uids_df <- left_join(uids_df, uids2005)
+
+
+
+                                          # I wrote the code below to handle missing cases, but I'm going to filter out to just the complete cases (observations for every year).
+
+  uids_df <- uids_df[complete.cases(uids_df),]
+
+
+
+  treelasdir <- "/home/erker/hgt_data/madison_tree_inventories/hgt/"
+  reps <- 1000
+
+  cl <- makeCluster(6)
+  registerDoParallel(cl)
+
+  out <- foreach(i = (1:nrow(uids_df)), .packages = c("stringr","lidR", "rgeos"), .combine = "rbind") %dopar% {  
+
+      path2017 <- paste0(treelasdir, "trees_2017_las/", uids_df$path2017[i])
+      path2016 <- paste0(treelasdir, "trees_2016_las/", uids_df$path2016[i])
+      path2009 <- paste0(treelasdir, "trees_2009_las/", uids_df$path2009[i])
+      path2005 <- paste0(treelasdir, "trees_2005_las/", uids_df$path2005[i])
+
+      l2017 <- readLAS(path2017, select = "")
+      l2017@data$Z <-     l2017@data$Z  * .3048  # convert to meters
+      n17 <- nrow(l2017@data)
+      emp_max2017 <- max(l2017@data$Z)
+
+      l2016 <- readLAS(path2016, select = "")
+      l2016@data$Z <-     l2016@data$Z  * .3048  # convert to meters
+      n16 <- nrow(l2016@data)
+      emp_max2016 <- max(l2016@data$Z)
+
+      l2009 <- readLAS(path2009, select = "")
+      l2009@data$Z <-     l2009@data$Z  * .3048  # convert to meters
+      n09 <- nrow(l2009@data)
+      emp_max2009 <- max(l2009@data$Z)
+
+      l2005 <- readLAS(path2005, select = "")
+      l2005@data$Z <-     l2005@data$Z  * .3048  # convert to meters
+      n05 <- nrow(l2005@data)
+      emp_max2005 <- max(l2005@data$Z)
+
+
+                                          # here is where I am [2019-11-07 Thu]  I need to think of which clouds to combine for each calculation of bias?  Should I combine all the clouds??  The years that are adjacent?
+    # combine all of them.  this gives a pulse bias.  I may have to do a footprint correction later.
+
+
+      Z <- c(l2017@data$Z, l2016@data$Z, l2009@data$Z, l2005@data$Z)
+      mZ <- max(Z)
+
+      bias_17 <- replicate(reps, mZ - max(sample(Z, n17, replace = T)))
+      bias_16 <- replicate(reps, mZ - max(sample(Z, n16, replace = T)))
+      bias_09 <- replicate(reps, mZ - max(sample(Z, n09, replace = T)))
+      bias_05 <- replicate(reps, mZ - max(sample(Z, n05, replace = T)))
+
+      mean_bias17 <- mean(bias_17)
+      var_bias17 <- var(bias_17)
+
+      mean_bias16 <- mean(bias_16)
+      var_bias16 <- var(bias_16)
+
+      mean_bias09 <- mean(bias_09)
+      var_bias09 <- var(bias_09)
+
+      mean_bias05 <- mean(bias_05)
+      var_bias05 <- var(bias_05)
+
+
+
+      res <- data.frame(uid = uids_df[i,"uid"],
+               emp_max2017 = emp_max2017,
+               n2017 = n17,
+               emp_max2016 = emp_max2016,
+               n2016 = n16,
+               emp_max2009 = emp_max2009,
+               n2009 = n09,
+               emp_max2005 = emp_max2005,
+               n2005 = n05,
+               mean_bias17 = mean_bias17,
+               mean_bias16 = mean_bias16,
+               mean_bias09 = mean_bias09,
+               mean_bias05 = mean_bias05,
+               var_bias17 = var_bias17,
+               var_bias16 = var_bias16,
+               var_bias09 = var_bias09, 
+               var_bias05 = var_bias05, 
+               stringsAsFactors = F)
+
+      saveRDS(res, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias/", uids_df[i,"uid"], ".rds"))
+      return(res)
+
+  }
+  closeAllConnections()
+
+
+#+end_src
+
+or read in the data from the saved
+
+#+begin_src R
+
+  saveRDS(out, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
+
+
+  h <- out
+
+#+end_src
+
+#+RESULTS:
+
+which trees have many points
+#+begin_src R 
+head(arrange(h, desc(n2017)))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+      uid emp_max2017 n2017 emp_max2016 n2016 emp_max2009 n2009 emp_max2005
+1 ST16124    13.78915   421    12.87170    24    10.95451    19    8.708136
+2 ST31236    18.23100   410    17.61439    23    16.78534    23   16.873728
+3 ST12970    15.06535   393    14.83462    31    12.26515    21   12.313920
+4 ST27840    17.63756   392    17.34617    68    16.93774    46   16.282416
+5 ST82950    14.87668   390    14.78280    55    13.17650    12   11.231880
+6 ST04014    12.44285   387    12.28954    15     8.53440    11    6.498336
+  n2005 mean_bias17 mean_bias16 mean_bias09 mean_bias05   var_bias17
+1     2  0.03123286   0.3240487   0.3859301   1.6123274 0.0015629385
+2     4  0.06292474   0.7194618   0.6904741   1.7945636 0.0063961600
+3     2  0.02155850   0.2055775   0.2801795   1.2459188 0.0006976045
+4     3  0.02727716   0.1442533   0.1883932   0.9540429 0.0019947705
+5     3  0.01361968   0.1140659   0.3488460   1.1123639 0.0006723725
+6     2  0.04831415   0.3124136   0.3817020   1.1251857 0.0037936329
+   var_bias16 var_bias09 var_bias05
+1 0.038510741 0.05351206  1.8005808
+2 0.225532995 0.21412749  1.2677683
+3 0.033280425 0.05185359  1.6372845
+4 0.010350752 0.01487389  0.6407851
+5 0.007342887 0.08198063  0.7616459
+6 0.038738684 0.05972368  0.5394748
+#+end_example
+
+#+begin_src R
+  library(lidR)
+  lst16124 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST16124_1065.las")
+  plot(lst16124)
+
+  lst31236 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST31236_0920.las")
+  plot(lst31236)
+
+  lst17111 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/ST17111_0823.las")
+  plot(lst17111)
+
+#+end_src
+
+#+RESULTS:
+
+
+
+#+begin_src R :exports results :results graphics :file figs/heights_lidar_extract.png :width 700 :height 500
+library(ggplot2)
+    library(tidyr)
+  n <- 10
+
+      d <- h %>%
+          select(emp_max2017, emp_max2016, emp_max2009, emp_max2005, uid) %>%
+        sample_n(n) %>%
+        gather(year, height, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+  ggplot(d, aes(x = year, y = height, group = uid)) + geom_line()
+#+end_src
+
+#+RESULTS:
+[[file:figs/heights_lidar_extract.png]]
+
+
+correct heights and add bias uncertainty
+#+begin_src R
+
+        hc <- h %>%
+          mutate(cor_max2017 = emp_max2017 + mean_bias17,
+                 cor_max2016 = emp_max2016 + mean_bias16,
+                 cor_max2009 = emp_max2009 + mean_bias09,
+                 cor_max2005 = emp_max2005 + mean_bias05,
+                 sd17 = sqrt(var_bias17),
+                 sd16 = sqrt(var_bias16),
+                 sd09 = sqrt(var_bias09),
+                 sd05 = sqrt(var_bias05))
+
+    h_corheight <-   hc %>% select(uid, cor_max2017, cor_max2016, cor_max2009, cor_max2005) %>%
+        gather(year, cor_height, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+    h_empheight <-   hc %>% select(uid, emp_max2017, emp_max2016, emp_max2009, emp_max2005) %>%
+        gather(year, emp_height, -uid) %>%
+        mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+
+    h_sdbias <-   hc %>% select(uid, sd17, sd16, sd09, sd05) %>%
+        gather(year, sdbias, -uid) %>%
+        mutate(year = as.numeric(paste0("20",str_extract(year, "[0-9]{2}"))))
+
+
+  hc <- left_join(h_corheight, h_sdbias)
+
+  hc <- left_join(hc, h_empheight)
+
+#+end_src
+
+#+RESULTS:
+: 
+: Joining, by = c("uid", "year")
+: 
+: Joining, by = c("uid", "year")
+
+On average, I'd say that this correction looks pretty good!
+#+begin_src R :exports results :results graphics :file figs/correction.png :width 1300 :height 800 :bg transparent :res 100
+
+  n <- 40
+  set.seed(2)
+  uids <- sample(unique(hc$uid), n)
+  hcf <- filter(hc, uid %in% uids)
+
+    ggplot(data = hcf) + 
+        geom_line(aes(y = emp_height, x = year, group = uid), color = base1) +
+        geom_line(aes(y = cor_height, x = year, group = uid), color = red) +
+        geom_linerange(aes(ymax = cor_height + 1.96 * sdbias, ymin = cor_height - 1.96 *sdbias, x = year), color = red) + 
+        facet_wrap(~uid, ncol = 8) +
+        terk +
+        scale_x_continuous(breaks = c(2005,2009, 2017)) +
+        theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction.png]]
+
+
+#+begin_src R :exports results :results graphics :file figs/correction_st16209.png :width 300 :height 200 :bg transparent :res 100
+  hcf <- filter(hc, uid == "ST16209")
+
+    ggplot(data = hcf) + 
+        geom_line(aes(y = emp_height, x = year, group = uid), color = base1) +
+        geom_line(aes(y = cor_height, x = year, group = uid), color = red) +
+        geom_linerange(aes(ymax = cor_height + 1.96 * sdbias, ymin = cor_height - 1.96 *sdbias, x = year), color = red) + 
+#        facet_wrap(~uid, ncol = 1) +
+        terk +
+        scale_x_continuous(breaks = c(2005, 2009, 2017)) 
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction_st16209.png]]
+
+
+center hc
+#+begin_src R
+hc$year <- hc$year - 2005
+#+end_src
+
+#+RESULTS:
+
+Good example of why weights are needed
+#+begin_src R
+dt <- filter(hc, uid == "ST16209")
+mw <- lm(cor_height ~ year, weights = 1/ sdbias^2, data = dt)
+mnw <- lm(cor_height ~ year, data = dt)
+summary(mw)
+summary(mnw)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = cor_height ~ year, data = dt, weights = 1/sdbias^2)
+
+Weighted Residuals:
+      1       2       3       4 
+ 0.4127 -0.4735 -0.1106  0.6957 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)   
+(Intercept) 15.82650    0.54919  28.818   0.0012 **
+year         0.17992    0.05737   3.136   0.0884 . 
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6674 on 2 degrees of freedom
+Multiple R-squared:  0.831,	Adjusted R-squared:  0.7465 
+F-statistic: 9.834 on 1 and 2 DF,  p-value: 0.08841
+
+Call:
+lm(formula = cor_height ~ year, data = dt)
+
+Residuals:
+      1       2       3       4 
+ 0.5076 -0.1620 -1.0773  0.7317 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)   
+(Intercept) 17.49770    0.83920  20.851  0.00229 **
+year         0.01652    0.10012   0.165  0.88412   
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.995 on 2 degrees of freedom
+Multiple R-squared:  0.01343,	Adjusted R-squared:  -0.4799 
+F-statistic: 0.02722 on 1 and 2 DF,  p-value: 0.8841
+#+end_example
+
+
+
+Coeffiecient estimates are better than if a point were dropped, and
+better than if you assume all points contain equal information.
+
+
+
+Fitting many weighted regressions and getting estimates
+#+begin_src R
+
+        lms <- list()
+        uids <- unique(hc$uid)
+      for(i in 1:length(uids)) {
+            lms[[i]] <- lm(cor_height ~ year, data = subset(hc, uid == uids[i]))
+        }
+  names(lms) <- uids
+    saveRDS(lms, "/home/erker/hgt_data/madison_tree_inventories/hgt/growth_rates_lms.rds")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+      growth.rates <- sapply(lms, function(lm) coef(lm)[2])
+      growth.rates.se <- sapply(lms, function(lm) summary(lm)$coefficients[2,2])
+      est.hgt.at2005 <- sapply(lms, function(lm) coef(lm)[1])
+      growth.rates <- data.frame(uid = names(lms), 
+                                 growth.rate = growth.rates, 
+                                 growth.rate.se = growth.rates.se, 
+                                 est.hgt.at2005 = est.hgt.at2005, stringsAsFactors = F)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/growthrates_lm.png :width 1000 :res 120 :bg transparent
+  ggplot(growth.rates, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
+    terk +
+    scale_x_continuous("growth rate (ft/year)")
+#+end_src
+
+#+RESULTS:
+[[file:figs/growthrates_lm.png]]
+
+#+begin_src R :exports results :results graphics :file figs/growthrates_lm_clip.png :width 1000 :res 120 :bg transparent
+  ggplot(growth.rates, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2, color = base1) +
+    terk +
+    scale_x_continuous("growth rate (cm/year)", lim = c(-100,100), breaks = c(-100,-50,0, round(mean(growth.rates$growth.rate * 100),1), 50, 100)) +
+    geom_vline(data = growth.rates, aes(xintercept = mean(growth.rate)*100), color = red)
+#+end_src
+
+#+RESULTS:
+[[file:figs/growthrates_lm_clip.png]]
+
+#+begin_src R :exports results :results graphics :file figs/rate_by_int.png :bg transparent :width 1000 :res 100
+hn <- left_join(h, growth.rates)
+
+  ggplot(hn, aes(x = emp_max2005, y = growth.rate)) + geom_point(color = base1, size = .5, alpha = .5) + terk +
+    geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/rate_by_int.png]]
+
+
+#+begin_src R
+saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates.rds")
+#+end_src
+
+#+RESULTS:
+
+join growth rates to trees
+
+#+begin_src R
+library(raster)
+trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+
+
+#+end_src
+
+
+
+
+
+
+
+
+
+
+???
+
+#+begin_src R
+library(lme4)
+
+m1 <- lmer(cor_height ~ year + (1 | uid), data = hc, weights = 1/ sdbias^2)
+#+end_src
+
+#+RESULTS:
+
+
+
+
+
