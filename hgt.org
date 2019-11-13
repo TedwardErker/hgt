@@ -427,7 +427,7 @@ This lidar covers all of dane county.  Only get the tiles that
 intersect with the madison tree inventory.
 
 #+name: tiles
-#+begin_src R
+#+begin_src R 
     library(raster)
     library(rgeos)
     trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/dd/MadisonTrees_WithAttributes.shp")
@@ -447,12 +447,47 @@ intersect with the madison tree inventory.
 
 #+RESULTS: tiles
 
+#+begin_src R :file tree_tiles_2009.txt
+writeLines(tiles)
+#+end_src
 
-****** TODO find ground  I NEED TO FIX THIS!!!!
+#+RESULTS:
+[[file:tree_tiles_2009.txt]]
+
+****** download tiles from wisconsin view ftp.  The data I had from the townsend lab hard drive had been modified and points dropped.
+
+Download those tiles from ftp
+
+#+BEGIN_SRC sh :session *a*
+
+cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
+
+while IFS= read -r line;
+do
+tile=${line}.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2010_County_Delivery/Classified_LAS/LAS/$tile
+done < ~/git/hgt/tree_tiles_2009.txt
+
+#+END_SRC
+
+make lax
+#+BEGIN_SRC sh :session *a*
+
+cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
+
+/home/erker/Downloads/LAStools/bin/lasindex -i *.las
+
+#+END_SRC
+
+****** TODO NO NEED TO DO, IT'S IN DATA FROM WISCVIEW find ground  I NEED TO FIX THIS!!!!  at present their ground is better tp use.
 #+begin_src R
   library(lidR)
 
   tile <- "lc2t70833f"
+
+  #g <- readLAS("/media/erker/TOWNSEND/LiDAR_2009/BareEarth/LAS/lb2t70833f.LAS")
+  #l <- readLAS("/media/erker/TOWNSEND/LiDAR_2009/PointCloud/LAS_Raw_1of2/lc2t70833f.LAS")
+
     lapply(tiles, function(tile) {
         tile.path <- paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/", tile, ".LAS")
         las <- readLAS(tile.path)
@@ -462,17 +497,47 @@ intersect with the madison tree inventory.
 
         lg <- lasground(las, pmf(ws, th))
 
-        writeLAS(lg, paste0("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees/",tile, "_ground.las"))
+        writeLAS(lg, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/LAS_ground/",tile, "_ground.las"))
   })
 #+end_src
 
 
+#+begin_src R
+      ln <- lasnormalize(lg, tin())
+    chm <- grid_canopy(ln, res = 3, p2r(1))
+  writeRaster(chm, "test.tif", overwrite = T)
+#+end_src
+
+#+RESULTS:
+: Searching in TIN: [==========================------------------------] 53% (4 threads)Searching in TIN: [===========================-----------------------] 54% (4 threads)Searching in TIN: [===========================-----------------------] 55% (4 threads)Searching in TIN: [============================----------------------] 56% (4 threads)Searching in TIN: [============================----------------------] 57% (4 threads)Searching in TIN: [=============================---------------------] 58% (4 threads)Searching in TIN: [=============================---------------------] 59% (4 threads)Searching in TIN: [==============================--------------------] 60% (4 threads)Searching in TIN: [==============================--------------------] 61% (4 threads)Searching in TIN: [===============================-------------------] 62% (4 threads)Searching in TIN: [===============================-------------------] 63% (4 threads)Searching in TIN: [================================------------------] 64% (4 threads)Searching in TIN: [================================------------------] 65% (4 threads)Searching in TIN: [=================================-----------------] 66% (4 threads)Searching in TIN: [=================================-----------------] 67% (4 threads)Searching in TIN: [==================================----------------] 68% (4 threads)Searching in TIN: [==================================----------------] 69% (4 threads)Searching in TIN: [===================================---------------] 70% (4 threads)Searching in TIN: [===================================---------------] 71% (4 threads)Searching in TIN: [====================================--------------] 72% (4 threads)Searching in TIN: [====================================--------------] 73% (4 threads)Searching in TIN: [=====================================-------------] 74% (4 threads)Searching in TIN: [=====================================-------------] 75% (4 threads)Searching in TIN: [======================================------------] 76% (4 threads)Searching in TIN: [======================================------------] 77% (4 threads)Searching in TIN: [=======================================-----------] 78% (4 threads)Searching in TIN: [=======================================-----------] 79% (4 threads)Searching in TIN: [========================================----------] 80% (4 threads)Searching in TIN: [========================================----------] 81% (4 threads)Searching in TIN: [=========================================---------] 82% (4 threads)Searching in TIN: [=========================================---------] 83% (4 threads)Searching in TIN: [==========================================--------] 84% (4 threads)Searching in TIN: [==========================================--------] 85% (4 threads)Searching in TIN: [===========================================-------] 86% (4 threads)Searching in TIN: [===========================================-------] 87% (4 threads)Searching in TIN: [============================================------] 88% (4 threads)Searching in TIN: [============================================------] 89% (4 threads)Searching in TIN: [=============================================-----] 90% (4 threads)Searching in TIN: [=============================================-----] 91% (4 threads)Searching in TIN: [==============================================----] 92% (4 threads)Searching in TIN: [==============================================----] 93% (4 threads)Searching in TIN: [===============================================---] 94% (4 threads)Searching in TIN: [===============================================---] 95% (4 threads)Searching in TIN: [================================================--] 96% (4 threads)Searching in TIN: [================================================--] 97% (4 threads)Searching in TIN: [=================================================-] 98% (4 threads)Searching in TIN: [=================================================-] 99% (4 threads)Searching in TIN: [==================================================] 100% (4 threads)Warning message:
+: There were 1 degenerated ground points. Some X Y coordinates were repeated but with different Z coordinates. min Z were retained.
+
 ****** normalize
 #+begin_src R
-  ctg2009ground <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS_intersectTrees")
-  opt_output_files(ctg2009ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
-  lasnormalize(ctg2009ground, tin())
+        library(lidR)
+          ctg2009 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS")
+          opt_output_files(ctg2009) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
+          lasnormalize(ctg2009, tin())
+
+
 #+end_src
+
+#+RESULTS:
+#+begin_example
+Loading required package: raster
+Loading required package: sp
+lidR 2.1.5 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
+Processing [>-------------------------------------------]   1% (1/87) eta: 30mProcessing [>-------------------------------------------]   2% (2/87) eta: 26mProcessing [=>------------------------------------------]   3% (3/87) eta: 25mProcessing [=>------------------------------------------]   5% (4/87) eta: 39mProcessing [==>-----------------------------------------]   6% (5/87) eta:  1hProcessing [==>-----------------------------------------]   7% (6/87) eta:  1hProcessing [===>----------------------------------------]   8% (7/87) eta:  1hProcessing [===>----------------------------------------]   9% (8/87) eta:  1hProcessing [====>---------------------------------------]  10% (9/87) eta:  1hProcessing [====>--------------------------------------]  11% (10/87) eta:  1hProcessing [====>--------------------------------------]  13% (11/87) eta:  1hProcessing [=====>-------------------------------------]  14% (12/87) eta:  1hProcessing [=====>-------------------------------------]  15% (13/87) eta:  1hProcessing [======>------------------------------------]  16% (14/87) eta:  1hProcessing [======>------------------------------------]  17% (15/87) eta:  1hProcessing [=======>-----------------------------------]  18% (16/87) eta: 50mProcessing [=======>-----------------------------------]  20% (17/87) eta: 47mProcessing [========>----------------------------------]  21% (18/87) eta: 45mProcessing [========>----------------------------------]  22% (19/87) eta: 43mProcessing [=========>---------------------------------]  23% (20/87) eta: 41mProcessing [=========>---------------------------------]  24% (21/87) eta: 39mProcessing [==========>--------------------------------]  25% (22/87) eta: 37mProcessing [==========>--------------------------------]  26% (23/87) eta: 36mProcessing [===========>-------------------------------]  28% (24/87) eta: 34mProcessing [===========>-------------------------------]  29% (25/87) eta: 33mProcessing [============>------------------------------]  30% (26/87) eta: 33mProcessing [============>------------------------------]  31% (27/87) eta:  1hProcessing [=============>-----------------------------]  32% (28/87) eta:  1hProcessing [=============>-----------------------------]  33% (29/87) eta:  2hProcessing [==============>----------------------------]  34% (30/87) eta:  2hProcessing [==============>----------------------------]  36% (31/87) eta:  2hProcessing [===============>---------------------------]  37% (32/87) eta:  2hProcessing [===============>---------------------------]  38% (33/87) eta:  2hProcessing [================>--------------------------]  39% (34/87) eta:  2hProcessing [================>--------------------------]  40% (35/87) eta:  1hProcessing [=================>-------------------------]  41% (36/87) eta:  1hProcessing [=================>-------------------------]  43% (37/87) eta:  1hProcessing [==================>------------------------]  44% (38/87) eta:  1hProcessing [==================>------------------------]  45% (39/87) eta:  1hProcessing [===================>-----------------------]  46% (40/87) eta:  1hProcessing [===================>-----------------------]  47% (41/87) eta:  1hProcessing [====================>----------------------]  48% (42/87) eta:  1hProcessing [====================>----------------------]  49% (43/87) eta:  1hProcessing [=====================>---------------------]  51% (44/87) eta:  1hProcessing [=====================>---------------------]  52% (45/87) eta:  1hProcessing [======================>--------------------]  53% (46/87) eta:  1hProcessing [======================>--------------------]  54% (47/87) eta:  1hProcessing [=======================>-------------------]  55% (48/87) eta:  1hProcessing [=======================>-------------------]  56% (49/87) eta:  1hProcessing [========================>------------------]  57% (50/87) eta:  1hProcessing [=========================>-----------------]  60% (52/87) eta: 49mProcessing [=========================>-----------------]  61% (53/87) eta: 47mProcessing [==========================>----------------]  62% (54/87) eta: 45mProcessing [==========================>----------------]  63% (55/87) eta: 43mProcessing [===========================>---------------]  64% (56/87) eta: 45mProcessing [===========================>---------------]  66% (57/87) eta: 43mProcessing [============================>--------------]  67% (58/87) eta: 41mProcessing [=============================>-------------]  69% (60/87) eta: 37mProcessing [=============================>-------------]  70% (61/87) eta: 35mProcessing [==============================>------------]  71% (62/87) eta: 33mProcessing [==============================>------------]  72% (63/87) eta: 32mProcessing [===============================>-----------]  74% (64/87) eta: 30mProcessing [===============================>-----------]  75% (65/87) eta: 28mProcessing [================================>----------]  76% (66/87) eta: 27mProcessing [================================>----------]  77% (67/87) eta: 25mProcessing [=================================>---------]  78% (68/87) eta: 23mProcessing [=================================>---------]  79% (69/87) eta: 22mProcessing [==================================>--------]  80% (70/87) eta: 20mProcessing [==================================>--------]  82% (71/87) eta: 19mProcessing [===================================>-------]  83% (72/87) eta: 18mProcessing [===================================>-------]  84% (73/87) eta: 17mProcessing [====================================>------]  85% (74/87) eta: 15mProcessing [====================================>------]  86% (75/87) eta: 14mProcessing [=====================================>-----]  87% (76/87) eta: 13mProcessing [=====================================>-----]  89% (77/87) eta: 11mProcessing [======================================>----]  90% (78/87) eta: 10mProcessing [======================================>----]  91% (79/87) eta:  9mProcessing [=======================================>---]  92% (80/87) eta:  8mProcessing [=======================================>---]  93% (81/87) eta:  7mProcessing [========================================>--]  94% (82/87) eta:  5mProcessing [========================================>--]  95% (83/87) eta:  4mProcessing [=========================================>-]  97% (84/87) eta:  3mProcessing [=========================================>-]  98% (85/87) eta:  2mProcessing [==========================================>]  99% (86/87) eta:  1mProcessing [===========================================] 100% (87/87) eta:  0s
+class       : LAScatalog
+extent      : 773349.2 , 852886.3 , 461220.2 , 520962.4 (xmin, xmax, ymin, ymax)
+coord. ref. : NA 
+area        : 2518.94 kunits²
+points      : 466.78 million points
+density     : 0.2 points/units²
+num. files  : 87 
+There were 50 or more warnings (use warnings() to see the first 50)
+#+end_example
 
 ****** make lax for normalized
 #+begin_src sh :session b
@@ -500,6 +565,30 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2009.tif
 #+END_SRC
 
+****** pulse density
+#+begin_src R
+  library(lidR)
+    ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized")
+    opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/grid_density/{ORIGINALFILENAME}_gd"
+    opt_filter(ctg2009norm) <- "-drop_z_above 120"
+  gd <- grid_density(ctg2009norm, res = 15)
+#+end_src
+
+#+RESULTS:
+: Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
+: Processing [>-------------------------------------------]   1% (1/87) eta:  6mProcessing [>-------------------------------------------]   2% (2/87) eta:  4mProcessing [=>------------------------------------------]   3% (3/87) eta:  4mProcessing [=>------------------------------------------]   5% (4/87) eta:  7mProcessing [==>-----------------------------------------]   6% (5/87) eta:  9mProcessing [==>-----------------------------------------]   7% (6/87) eta: 10mProcessing [===>----------------------------------------]   8% (7/87) eta: 11mProcessing [===>----------------------------------------]   9% (8/87) eta: 11mProcessing [====>---------------------------------------]  10% (9/87) eta: 11mProcessing [====>--------------------------------------]  11% (10/87) eta: 10mProcessing [====>--------------------------------------]  13% (11/87) eta: 10mProcessing [=====>-------------------------------------]  14% (12/87) eta:  9mProcessing [=====>-------------------------------------]  15% (13/87) eta:  9mProcessing [======>------------------------------------]  16% (14/87) eta:  8mProcessing [======>------------------------------------]  17% (15/87) eta:  8mProcessing [=======>-----------------------------------]  18% (16/87) eta:  8mProcessing [=======>-----------------------------------]  20% (17/87) eta:  7mProcessing [========>----------------------------------]  21% (18/87) eta:  7mProcessing [========>----------------------------------]  22% (19/87) eta:  7mProcessing [=========>---------------------------------]  23% (20/87) eta:  6mProcessing [=========>---------------------------------]  24% (21/87) eta:  6mProcessing [==========>--------------------------------]  25% (22/87) eta:  6mProcessing [==========>--------------------------------]  26% (23/87) eta:  5mProcessing [===========>-------------------------------]  28% (24/87) eta:  5mProcessing [===========>-------------------------------]  29% (25/87) eta:  5mProcessing [============>------------------------------]  30% (26/87) eta:  5mProcessing [============>------------------------------]  31% (27/87) eta:  5mProcessing [=============>-----------------------------]  32% (28/87) eta:  5mProcessing [=============>-----------------------------]  33% (29/87) eta:  4mProcessing [==============>----------------------------]  34% (30/87) eta:  4mProcessing [==============>----------------------------]  36% (31/87) eta:  4mProcessing [===============>---------------------------]  37% (32/87) eta:  4mProcessing [===============>---------------------------]  38% (33/87) eta:  4mProcessing [================>--------------------------]  39% (34/87) eta:  4mProcessing [================>--------------------------]  40% (35/87) eta:  4mProcessing [=================>-------------------------]  41% (36/87) eta:  3mProcessing [=================>-------------------------]  43% (37/87) eta:  3mProcessing [==================>------------------------]  44% (38/87) eta:  3mProcessing [==================>------------------------]  45% (39/87) eta:  3mProcessing [===================>-----------------------]  46% (40/87) eta:  3mProcessing [===================>-----------------------]  47% (41/87) eta:  3mProcessing [====================>----------------------]  48% (42/87) eta:  3mProcessing [====================>----------------------]  49% (43/87) eta:  3mProcessing [=====================>---------------------]  51% (44/87) eta:  3mProcessing [=====================>---------------------]  52% (45/87) eta:  3mProcessing [======================>--------------------]  53% (46/87) eta:  2mProcessing [======================>--------------------]  54% (47/87) eta:  2mProcessing [=======================>-------------------]  55% (48/87) eta:  2mProcessing [=======================>-------------------]  56% (49/87) eta:  2mProcessing [========================>------------------]  57% (50/87) eta:  2mProcessing [=========================>-----------------]  60% (52/87) eta:  2mProcessing [=========================>-----------------]  61% (53/87) eta:  2mProcessing [==========================>----------------]  62% (54/87) eta:  2mProcessing [==========================>----------------]  63% (55/87) eta:  2mProcessing [===========================>---------------]  64% (56/87) eta:  2mProcessing [===========================>---------------]  66% (57/87) eta:  2mProcessing [============================>--------------]  67% (58/87) eta:  2mProcessing [=============================>-------------]  69% (60/87) eta:  1mProcessing [=============================>-------------]  70% (61/87) eta:  1mProcessing [==============================>------------]  71% (62/87) eta:  1mProcessing [==============================>------------]  72% (63/87) eta:  1mProcessing [===============================>-----------]  74% (64/87) eta:  1mProcessing [===============================>-----------]  75% (65/87) eta:  1mProcessing [================================>----------]  76% (66/87) eta:  1mProcessing [================================>----------]  77% (67/87) eta:  1mProcessing [=================================>---------]  78% (68/87) eta:  1mProcessing [=================================>---------]  79% (69/87) eta:  1mProcessing [==================================>--------]  80% (70/87) eta:  1mProcessing [==================================>--------]  82% (71/87) eta:  1mProcessing [===================================>-------]  83% (72/87) eta: 47sProcessing [===================================>-------]  84% (73/87) eta: 43sProcessing [====================================>------]  85% (74/87) eta: 40sProcessing [====================================>------]  86% (75/87) eta: 37sProcessing [=====================================>-----]  87% (76/87) eta: 34sProcessing [=====================================>-----]  89% (77/87) eta: 30sProcessing [======================================>----]  90% (78/87) eta: 27sProcessing [======================================>----]  91% (79/87) eta: 24sProcessing [=======================================>---]  92% (80/87) eta: 21sProcessing [=======================================>---]  93% (81/87) eta: 18sProcessing [========================================>--]  94% (82/87) eta: 15sProcessing [========================================>--]  95% (83/87) eta: 12sProcessing [=========================================>-]  97% (84/87) eta:  9sProcessing [=========================================>-]  98% (85/87) eta:  6sProcessing [==========================================>]  99% (86/87) eta:  3sProcessing [===========================================] 100% (87/87) eta:  0s
+: There were 50 or more warnings (use warnings() to see the first 50)
+
+it didn't finish, i'mnot sure why
+
+#+begin_src sh
+cd ~/hgt_data/madison_lidar_2017_heights/grid_density/
+
+gdalbuildvrt ../gd_2017.vrt *.tif
+#+end_src
+
+#+RESULTS:
+: 0...10...20...30...40...50...60...70...80...90...100 - done.
 
 ****** get extents to select a downtown tile?
 #+begin_src R
@@ -1501,8 +1590,8 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
 #+end_src
 
 #+RESULTS:
-|                                                Input | file | size  | is | 40502, | 28502 |
-| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |       |
+|                                                Input | file | size  | is | 16623, | 8264 |
+| 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |      |
 
 ****** get the pulse density 
 #+begin_src R
