@@ -161,7 +161,6 @@ and Tilia, making up over 70% of all street trees.  Other common
 genera in neighborhoods include: Picea, Thuja, Betula, and Pinus.
 
 ** Data
-
 *** Tree inventories
 The species of a tree encodes a suite of genetic factors that affect
 growth rates and is therefore important to know when modeling tree
@@ -176,8 +175,20 @@ inventories also provide information on DBH and tree condition.
 I need a figure showing the neighborhood inventories and the street
 tree inventories too.
 
-*** Light detection and ranging (lidar)
 
+
+
+
+How did we remove trees
+
+- lidar point clouds were unreliable, too close to other trees, tall
+  buildings,
+- trees were removed or replanted indicated by large decreases in height
+
+
+
+*** Light detection and ranging (lidar)
+**** COMMENT overview
 What instrument?
 when flown?
 altitude? avg pulse density? footprint size?
@@ -187,6 +198,127 @@ altitude? avg pulse density? footprint size?
 2016 - 
 
 
+We clip lidar point clouds to within 2.4 m (8 ft) from the center of
+the inventoried tree as identified in the inventory point shapefile.
+Table .. shows the 
+
+
+
+#+caption: summary statistics for the number of points per tree for each year of ALS data.  Pulse density increased greatly through time, but there is also considerable intraannual variation from tree to tree.
+|                   | 2005 | 2009 | 2016 | 2017 |
+|-------------------+------+------+------+------|
+| n min             |      |      |      |      |
+| n 25% percentile  |      |      |      |      |
+| n median          |      |      |      |      |
+| n mean            |      |      |      |      |
+| n 75th percentile |      |      |      |      |
+| n max             |      |      |      |      |
+
+
+
+
+For 2005 lidar, the average number of points for each tree was XXXX,
+for 20
+
+
+**** corrections for maximum height and estimating tree growth
+
+The estimated maximum height of trees derived from ALS is always lower
+than the true maximum height, that is, it is biased downward.  The
+magnitude of this bias is a function of the ALS and the tree
+architecture.  Greater density of lidar pulses will have less bias
+since the probability of hitting a branch near the top of the tree
+increases.  Trees with less conical and flatter tops - those with weak
+apical dominance - will have less bias because there are more branches
+close to the highest branch of the tree.  Twig size also plays a
+role. Generally, taxa with thinner twigs have denser branching so
+while a single twig may not reflect enough energy from a lidar pulse
+to trigger a return, there are many more twigs close togther.  Taxa
+with thicker twigs will have stronger returns, but since thicker twigs tend to
+be less dense, the probability of hitting a thick twig is lower.
+Exactly how these negatively correlated traits (twig thickness and
+density) interact to influence the bias in maximum height estimates is
+mediated by the algorithms used to convert full waveform lidar into
+point clouds.  Thus, in our attempt to correct for the bias in maximum
+height estimation and - by extension across multiple years - tree height
+growth, we used a bootstrap resampling technique to estimate bias at
+different pulse densities for each genera in our dataset.  Other
+characteristics of the ALS, such as footprint size are important in
+correcting bias, but we did not have this information for all our
+datasets.
+
+Our goal is to estimate tree growth from multiple years of ALS.  The
+primary issue with this endeavor is that tree growth and the size of
+the bias are confounded.  In 2005, average pulse density was very low and so
+bias was large.  By 2017, average pulse density had increased and so
+bias decreased.  The challenge therefore is to identify how much of
+the observed maximum height difference is due to growth over those 12
+years and how much is due to a decrease in bias.  
+
+To do this, we estimated the bias for trees that were no longer
+growing and then applied the bias correction to all other trees. We
+selected the tallest trees of each genera that had essentially reached
+their maximum height and stopped growing (differences in observed
+maximum height between 2009, 2016, and 2017 were all less than 1
+meter).  We then combined all returns across years for each tree,
+assuming that other than pulse density all else was equal across ALS
+aquisitions.  We then sampled 1000 times with replacement from each
+tree's point cloud samples of size 1 to the original size.  For each
+of the 1000 samples at each sample size, we calculated the maximum
+height.  Averaging the maximum heights across the 1000 samples for
+each sample size we estimated how bias changes with sample size /
+pulse density.
+
+#+name: fig:pulse_by_bias_by_genus
+[[file:figs/ng_bias_n.png]]
+
+
+We then averaged the bias curves for each genera and applied this mean
+bias correction to each tree according to its genus and number of
+pulses.  We also averaged the standard deviation of the bias estimates
+and assigned them to each tree in order to provide information on the
+amount of uncertainty in each correction.
+
+This method assumes that the relationship between pulse density and
+bias is the same for large trees as it is for small trees of the same
+genus.  This assumption may not be true, but it is difficult to test
+with the existing data.  We also tested estimating the bias correction
+for each tree individually, so that the bias by sample size curve was
+specific to that tree.  This may have minimized the issue with the
+assumption that bias is not a function of tree height, but bias and
+growth were confounded.  Nevertheless, results from both corrections
+were similar, suggesting our findings are robust to the method of
+correction.  Recognizing that there is a bias in the observed maximum
+height and that the uncertainty in the bias is a function of sample
+size is what appears to be crucial.
+
+
+pulse density varies within year too (see tree ST55248).
+
+**** Weighted regression for height growth rates
+
+After the bias correction, we had an estimated bias-corrected height
+for each year and the standard deviation of this height derived from
+the bootstrap resampling procedure.  We then fit a weighted linear
+regression for each tree with height as the response and year as the
+predictor.  Weights were inversely proportional to the variance of
+each bias-corrected height.  The result was an estimate of annual
+growth rate for each tree.  The advantage of the weighted regression
+is that we were able to include data points in the regression even if
+they were highly uncertain rather than removing them completely.  ALS
+from 2005 generally is very sparse in density, but there were some
+trees for which the sample size was sufficiently large to provide some
+information on growth.
+
+Due to the nature of the measurement error and correcting for the mean
+bias, at times a tree's height was over or under corrected.  Over
+correction explains some of the slightly negative growth rates, while
+under correction explains some of the high growth rates.  On average
+we assume these errors cancel out.
+
+#+name: fig:year_by_height
+#+caption: Height of 40 trees in 2005, 2009, 2016, and 2017.  Grey points are observed height from ALS; grey line is unweighted linear regression for the observed heights.  Red points are bias-corrected heights; red line is weighted linear regression trend line for the corrected heights.
+[[file:figs/correction_nogrowth_40_m_smooth_lm.png]]
 
 **** COMMENT comments on lidar
 2009 lidar is not well documented.  I think it appers as 2010 lidar on
@@ -207,6 +339,7 @@ it varies.
     image and derived indicies of  foliar tratis.
 - dem?
   - topographic position.
+
 ** Modeling
 
 
@@ -2299,13 +2432,13 @@ points.  But less important if averaging across many treees.
                  var_bias05 = var_bias05, 
                  stringsAsFactors = F)
 
-        saveRDS(res, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_tree/", uids_df[i,"uid"], ".rds"))
+        saveRDS(res, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_norm/", uids_df[i,"uid"], ".rds"))
         return(res)
 
     }
     closeAllConnections()
 
-  saveRDS(out, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
+  saveRDS(out, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_norm.rds")
 
 #+end_src
 
@@ -2319,10 +2452,35 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 library(tidyr)
-h <-   readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
+h <-   readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_norm.rds")
 #+end_src
 
 #+RESULTS:
+#+begin_example
+Loading required package: raster
+Loading required package: sp
+lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:raster’:
+
+    intersect, select, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Attaching package: ‘tidyr’
+
+The following object is masked from ‘package:raster’:
+
+    extract
+#+end_example
 
 which trees have many points
 #+begin_src R 
@@ -2332,26 +2490,26 @@ head(arrange(h, desc(n2017)))
 #+RESULTS:
 #+begin_example
       uid emp_max2017 n2017 emp_max2016 n2016 emp_max2009 n2009 emp_max2005
-1 ST16124    13.78915   421    12.87170    24    10.95451    19    8.708136
-2 ST31236    18.23100   410    17.61439    23    16.78534    23   16.873728
-3 ST12970    15.06535   393    14.83462    31    12.26515    21   12.313920
-4 ST27840    17.63756   392    17.34617    68    16.93774    46   16.282416
-5 ST82950    14.87668   390    14.78280    55    13.17650    12   11.231880
-6 ST04014    12.44285   387    12.28954    15     8.53440    11    6.498336
-  n2005 mean_bias17 mean_bias16 mean_bias09 mean_bias05   var_bias17
-1     2  0.03063911   0.3404281   0.3783620   1.7184697 0.0016842646
-2     4  0.06680271   0.7107689   0.7156140   1.8185660 0.0071686677
-3     2  0.01864523   0.2153211   0.2897575   1.2264372 0.0006144663
-4     3  0.02730856   0.1449364   0.1821908   0.9405857 0.0018609345
-5     3  0.01508242   0.1133289   0.3354074   1.1127840 0.0007446298
-6     2  0.04597969   0.3293779   0.3786027   1.0424337 0.0037192758
-   var_bias16 var_bias09 var_bias05
-1 0.042027397 0.05544023  2.2508712
-2 0.215096970 0.21543959  1.3773610
-3 0.032468270 0.04941980  1.5177271
-4 0.009869035 0.01364195  0.4950061
-5 0.006697383 0.07646184  0.7555068
-6 0.036913813 0.05911220  0.4651718
+1 ST16124   13.789152   421    12.87170    25   11.305032    39    8.708136
+2 ST31236   18.231002   410    17.61439    23   17.900904    27   16.873728
+3 ST12970   15.065350   393    14.83462    31   13.795248    24   13.167360
+4 ST20601    7.983931   392     8.15340    27    8.677656    22    6.059424
+5 ST27840   17.637557   392    17.34617    68   16.898112   111   16.282416
+6 ST37466   11.432743   392    11.05510    21    8.494776    49    5.809488
+  n2005 mean_bias17 mean_bias16 mean_bias09 mean_bias05   var_bias17 var_bias16
+1     3  0.03373496   0.3338587   0.2512799   1.2480615 0.0018073612 0.04375007
+2     4  0.06898173   0.6964613   0.6007227   1.7324329 0.0065914972 0.22087593
+3     5  0.02168195   0.2133618   0.2698309   0.6755279 0.0007244736 0.03414513
+4     3  0.24741927   0.9385350   0.9903571   1.6825734 0.0953358387 0.09630880
+5     4  0.03272760   0.1530587   0.1123551   0.7762921 0.0024155800 0.01080705
+6     2  0.03644067   0.5475202   0.2644576   2.2110984 0.0020779359 0.21029391
+   var_bias09 var_bias05
+1 0.027922314  0.9847051
+2 0.174923225  1.3632906
+3 0.046877821  0.1161689
+4 0.093125578  0.3771462
+5 0.007933116  0.2378079
+6 0.051733141  1.3968688
 #+end_example
 
 #+begin_src R
@@ -2417,7 +2575,7 @@ On average, I'd say that this correction looks pretty good!
 #+begin_src R :exports results :results graphics :file figs/correction_oldway.png :width 1300 :height 800 :bg transparent :res 100
 
   n <- 40
-  set.seed(6)
+  set.seed(4)
   uids <- sample(unique(hc$uid), n)
   hcf <- filter(hc, uid %in% uids)
 
@@ -2496,37 +2654,37 @@ Call:
 lm(formula = cor_height ~ year, data = dt, weights = 1/sdbias^2)
 
 Weighted Residuals:
-      1       2       3       4 
- 0.4524 -0.4728 -0.1152  0.6559 
+       1        2        3        4 
+ 0.58168 -0.59071 -0.09986  0.70543 
 
 Coefficients:
             Estimate Std. Error t value Pr(>|t|)   
-(Intercept) 15.88154    0.58209  27.284  0.00134 **
-year         0.17175    0.05955   2.884  0.10212   
+(Intercept) 15.98340    0.70779  22.582  0.00196 **
+year         0.16328    0.07147   2.285  0.14971   
 ---
 codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 0.6602 on 2 degrees of freedom
-Multiple R-squared:  0.8062,	Adjusted R-squared:  0.7093 
-F-statistic: 8.319 on 1 and 2 DF,  p-value: 0.1021
+Residual standard error: 0.7729 on 2 degrees of freedom
+Multiple R-squared:  0.723,	Adjusted R-squared:  0.5845 
+F-statistic:  5.22 on 1 and 2 DF,  p-value: 0.1497
 
 Call:
 lm(formula = cor_height ~ year, data = dt)
 
 Residuals:
       1       2       3       4 
- 0.4850 -0.1743 -0.9758  0.6651 
+ 0.5790 -0.2249 -1.1184  0.7644 
 
 Coefficients:
-            Estimate Std. Error t value Pr(>|t|)   
-(Intercept) 17.36298    0.76843  22.595  0.00195 **
-year         0.02848    0.09168   0.311  0.78546   
+             Estimate Std. Error t value Pr(>|t|)   
+(Intercept) 17.699412   0.888808  19.914  0.00251 **
+year        -0.001289   0.106044  -0.012  0.99140   
 ---
 codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 0.9111 on 2 degrees of freedom
-Multiple R-squared:  0.04603,	Adjusted R-squared:  -0.431 
-F-statistic: 0.09649 on 1 and 2 DF,  p-value: 0.7855
+Residual standard error: 1.054 on 2 degrees of freedom
+Multiple R-squared:  7.39e-05,	Adjusted R-squared:  -0.4999 
+F-statistic: 0.0001478 on 1 and 2 DF,  p-value: 0.9914
 #+end_example
 
 
@@ -2534,7 +2692,21 @@ F-statistic: 0.09649 on 1 and 2 DF,  p-value: 0.7855
 Coeffiecient estimates are better than if a point were dropped, and
 better than if you assume all points contain equal information.
 
+***** Drop Trees with "bad" data
 
+#+begin_src R
+  hs <- hc %>% select(uid, year, emp_height) %>% pivot_wider(names_from = year, values_from = emp_height)
+
+  head(hs)
+
+  bad_uids <- hs %>%
+      mutate(dif1716_big = abs(`12` - `11`) > 1.5,
+             dif1609_big = abs(`11` - `4`) > 10) %>%
+      filter(dif1716_big == T | dif1609_big == T) %>%
+      pull(uid)
+
+  hc <- filter(hc, ! uid %in% bad_uids)
+#+end_src
 
 ***** Fitting many weighted regressions and getting estimates
 #+begin_src R
@@ -2545,7 +2717,7 @@ better than if you assume all points contain equal information.
             lms[[i]] <- lm(cor_height ~ year, data = subset(hc, uid == uids[i]))
         }
   names(lms) <- uids
-    saveRDS(lms, "/home/erker/hgt_data/madison_tree_inventories/hgt/growth_rates_lms.rds")
+    saveRDS(lms, "/home/erker/hgt_data/madison_tree_inventories/hgt/growth_rates_lms_norm.rds")
 #+end_src
 
 #+RESULTS:
@@ -2562,17 +2734,20 @@ better than if you assume all points contain equal information.
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/growthrates_lm_f.png :width 1000 :res 120 :bg transparent
+#+begin_src R :exports results :results graphics :file figs/growthrates_lm_n.png :width 1000 :res 120 :bg transparent
   ggplot(growth.rates, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
     terk +
     scale_x_continuous("growth rate (ft/year)")
 #+end_src
 
 #+RESULTS:
+[[file:figs/growthrates_lm_n.png]]
+
+
 [[file:figs/growthrates_lm_f.png]]
 [[file:figs/growthrates_lm.png]]
 
-#+begin_src R :exports results :results graphics :file figs/growthrates_lm_clip_f.png :width 1000 :res 120 :bg transparent
+#+begin_src R :exports results :results graphics :file figs/growthrates_lm_clip_n.png :width 1000 :res 120 :bg transparent
   ggplot(growth.rates, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2, color = base1) +
     terk +
     scale_x_continuous("growth rate (cm/year)", lim = c(-100,100), breaks = c(-100,-50,0, round(mean(growth.rates$growth.rate * 100),1), 50, 100)) +
@@ -2580,6 +2755,10 @@ better than if you assume all points contain equal information.
 #+end_src
 
 #+RESULTS:
+[[file:figs/growthrates_lm_clip_n.png]]
+
+
+
 [[file:figs/growthrates_lm_clip_f.png]]
 
 
@@ -2611,13 +2790,9 @@ join growth rates to trees
 
   trees@data <- left_join(trees@data, hn, by = c("UID" = "uid"))
 
-  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_Withlidarextractedheights_growthrates.rds")
+  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_Withlidarextractedheights_growthrates.rds", overwrite = T)
 
 #+end_src
-
-#+RESULTS:
-: 
-: Error in .local(x, ...) : file exists, use overwrite=TRUE to overwrite it
 
 
 ***** revised bias correction (only trees that have stopped growing)
@@ -2651,36 +2826,579 @@ this is only going to work for large genera.
 
   h <-   readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias.rds")
 
-  h <- left_join(h, select(unique(trees@data), UID, Genus), by = c("uid" = "UID")) # use unique because for some reason there are duplicate trees
+  h <- left_join(h, select(unique(trees@data), UID, Genus, DBH), by = c("uid" = "UID")) # use unique because for some reason there are duplicate trees
 
 #+end_src
 
 #+begin_src R :results org
-    library(orgutils)
-    #  h %>%
-     #     filter(emp_max2009 > emp_max2016)
+      library(orgutils)
+      #  h %>%
+       #     filter(emp_max2009 > emp_max2016)
 
-  large.genera <- c("Fraxinus", "Robinia", "Celtis", "Tilia", "Betula", "Gleditsia", 
-"Acer", "Picea", "Pinus", "Populus", "Juglans",
-"Ulmus", "Thuja", "Quercus", "Abies", "Catalpa", "Salix", 
-"Platanus", "Carya", "Ginkgo", "Gymnocladus")
+    large.genera <- c("Fraxinus", "Robinia", "Celtis", "Tilia", "Betula", "Gleditsia", 
+  "Acer", "Picea", "Pinus", "Populus", "Juglans",
+  "Ulmus", "Quercus", "Abies", "Catalpa", "Salix", 
+  "Platanus", "Carya", "Ginkgo", "Gymnocladus")
 
-#number of big trees to use
-nbigtrees <- 40
-      hg <- h %>%
-          filter(Genus %in% large.genera) %>%
-          group_by(Genus) %>%
-          filter(abs(emp_max2017 - emp_max2016) < 1,
-                 abs(emp_max2017 - emp_max2009) < 1,
-                 abs(emp_max2016 - emp_max2009) < 1) %>%
-      top_n(nbigtrees, emp_max2017) %>%
-        arrange(Genus, desc(emp_max2017)) 
+    broad.genera <- c("Fraxinus", "Robinia", "Celtis", "Tilia", "Betula", "Gleditsia", 
+  "Acer", "Pinus", "Populus", "Juglans",
+  "Ulmus", "Quercus", "Catalpa", "Salix", 
+  "Platanus", "Carya", "Ginkgo", "Gymnocladus")
 
 
-#    hg %>%  select(Genus, emp_max2017, emp_max2016, emp_max2009, emp_max2005, n2017, n2016, n2009, n2005, uid) %>% data.frame() %>% toOrg
+  #number of big trees to use
+  nbigtrees <- 40
+        hg <- h %>%
+            filter(Genus %in% large.genera) %>%
+            mutate(DBH = as.numeric(DBH)) %>%
+            filter(DBH > 10) %>%
+            filter((Genus %in% broad.genera & DBH > 20) | (!(Genus %in% broad.genera) & DBH > 10)) %>%
+            group_by(Genus) %>%
+            filter(abs(emp_max2017 - emp_max2016) < 1,
+                   abs(emp_max2017 - emp_max2009) < 1,
+                   abs(emp_max2016 - emp_max2009) < 1) %>%
+        top_n(nbigtrees, emp_max2017) %>%
+          arrange(Genus, desc(emp_max2017)) 
+
+
+      hg %>%  select(Genus, DBH, emp_max2017, emp_max2016, emp_max2009, emp_max2005, n2017, n2016, n2009, n2005, uid) %>% data.frame() %>% toOrg
 
 
 #+end_src
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+| Genus       |              DBH | emp_max2017 | emp_max2016 | emp_max2009 | emp_max2005 | n2017 | n2016 | n2009 | n2005 | uid     |
+|-------------+------------------+-------------+-------------+-------------+-------------+-------+-------+-------+-------+---------|
+| Abies       |               15 |  15.3866088 |   15.328392 |   14.618208 |   14.456664 |    97 |    18 |    26 |     3 | HF3357  |
+| Abies       |               17 |  15.2619456 |    15.28572 |   15.014448 |   14.944344 |    23 |     6 |    15 |     2 | HF847   |
+| Abies       |               14 |  13.1966208 |   12.807696 |   12.277344 |    9.162288 |    49 |    34 |    33 |     3 | HF567   |
+| Acer        | 55.1181102362205 |  27.5060664 |    27.49296 |   27.267408 |    27.29484 |    31 |    12 |    11 |     5 | AS01583 |
+| Acer        |               47 |  26.5310112 |     26.4414 |    26.27376 |   25.530048 |    40 |    49 |    18 |     2 | ST68961 |
+| Acer        |               26 |  25.9579872 |   26.493216 |    26.60904 |    23.57628 |    40 |    54 |    15 |     4 | SS01411 |
+| Acer        |               36 |  25.8442968 |   26.221944 |   25.630632 |   25.380696 |    70 |    12 |    20 |     2 | SS00855 |
+| Acer        |               37 |  25.3041912 |    24.90216 |   25.453848 |   23.557992 |    85 |    33 |    15 |     6 | SS02542 |
+| Acer        |               45 |  25.1700792 |   25.152096 |   24.990552 |   24.350472 |   110 |    29 |    28 |     5 | HF1741  |
+| Acer        |               40 |  25.0448064 |   25.210008 |   24.655272 |   24.484584 |    95 |    16 |    17 |     4 | SS00226 |
+| Acer        |               35 |  24.9652536 |   25.142952 |   25.045416 |   23.009352 |    42 |    53 |    17 |     4 | ST12270 |
+| Acer        | 61.8110236220472 |  24.4455696 |    24.41448 |    24.70404 |    23.66772 |    92 |    44 |    19 |     6 | AS04134 |
+| Acer        |               21 |  24.4233192 |   24.560784 |   23.981664 |   22.988016 |    48 |    38 |    24 |     4 | ST22647 |
+| Acer        |               49 |   24.408384 |    24.21636 |    24.06396 |    23.11908 |    97 |    20 |    28 |     2 | ST04680 |
+| Acer        |               29 |   24.382476 |   24.097488 |     24.0792 |   23.289768 |    91 |    17 |    15 |     4 | SS02594 |
+| Acer        |               35 |  24.3297456 |     24.3078 |   24.137112 |   22.954488 |   193 |    60 |     5 |     4 | ST12433 |
+| Acer        | 49.6062992125984 |  24.3151152 |   24.484584 |   23.731728 |    17.78508 |    49 |    27 |    20 |     1 | AS04058 |
+| Acer        |               50 |  24.2919504 |   23.853648 |   23.969472 |   24.054816 |    49 |    28 |    24 |     4 | AS02418 |
+| Acer        |               40 |  24.2370864 |   24.289512 |   24.091392 |    23.57628 |   127 |    80 |    34 |     4 | ST46200 |
+| Acer        |               50 |  24.1846608 |   24.207216 |   23.658576 |   22.622256 |   104 |    24 |    20 |     2 | SS00221 |
+| Acer        |               52 |  24.1328448 |    24.18588 |   23.649432 |   21.942552 |    86 |    21 |    21 |     4 | HF5419  |
+| Acer        |               47 |   24.111204 |   24.557736 |    24.81072 |   24.347424 |    41 |    56 |    36 |     8 | ST08304 |
+| Acer        |               26 |  24.0758472 |   24.685752 |   24.112728 |   22.984968 |    30 |    34 |    20 |     4 | SS01329 |
+| Acer        |               38 |  23.9365536 |   24.057864 |   23.664672 |   23.247096 |    93 |    27 |    18 |     2 | SS00853 |
+| Acer        |               46 |  23.9332008 |   23.841456 |   23.673816 |   23.292816 |    65 |    21 |    25 |     2 | SS00852 |
+| Acer        |               41 |  23.9121696 |   24.067008 |   23.457408 |   23.356824 |   111 |    22 |    17 |     6 | SS00876 |
+| Acer        | 40.5511811023622 |   23.906988 |   23.554944 |   23.183088 |    21.59508 |    47 |    28 |    28 |     4 | AS02623 |
+| Acer        |               29 |  23.8938816 |   23.780496 |   23.594568 |   22.933152 |   114 |    72 |    22 |     4 | ST49005 |
+| Acer        |               39 |  23.8222536 |   23.655528 |    23.30196 |   20.948904 |    42 |    14 |    24 |     3 | ST71780 |
+| Acer        |               37 |  23.8207296 |    23.86584 |   23.603712 |   23.219664 |    88 |    24 |    16 |     6 | SS00877 |
+| Acer        |               42 |  23.8057944 |   23.536656 |   23.420832 |   22.497288 |    42 |    23 |    22 |     3 | SS02279 |
+| Acer        |               43 |  23.8054896 |   23.405592 |   24.088344 |   22.991064 |   196 |    44 |    14 |     2 | ST12436 |
+| Acer        |               36 |  23.7512352 |   24.009096 |   23.487888 |   21.921216 |   119 |    49 |    13 |     4 | ST68195 |
+| Acer        |               36 |   23.727156 |   23.594568 |   22.972776 |   21.470112 |   127 |    22 |    28 |     7 | HF4994  |
+| Acer        |               39 |  23.7146592 |   23.948136 |   23.369016 |   21.805392 |    43 |    25 |    15 |     1 | ST49174 |
+| Acer        | 21.6535433070866 |  23.6985048 |    23.27148 |    22.79904 |   18.519648 |    79 |    30 |    24 |     3 | AS04755 |
+| Acer        |               45 |   23.672292 |   23.701248 |   22.942296 |   22.564344 |    91 |    23 |    12 |     3 | SS00227 |
+| Acer        |               35 |  23.6530896 |   23.506176 |   22.811232 |   20.080224 |    87 |    20 |    20 |     3 | ST07946 |
+| Acer        |               42 |  23.5482384 |    23.48484 |   22.820376 |   21.585936 |   101 |    17 |    35 |     5 | ST42117 |
+| Acer        |               46 |   23.518368 |    22.98192 |   23.557992 |   22.329648 |    93 |    22 |    16 |     5 | SS02588 |
+| Acer        |               39 |  23.5156248 |   23.625048 |   23.140416 |     21.7932 |    81 |    44 |     9 |     4 | ST68654 |
+| Acer        |               36 |  23.4522264 |   23.106888 |   22.978872 |   22.512528 |    87 |    15 |    26 |     4 | SS00442 |
+| Acer        |               39 |  23.3144568 |   23.216616 |   22.917912 |    22.06752 |   105 |    21 |    14 |     3 | SS00881 |
+| Betula      |               34 |  20.9540856 |    20.97024 |    20.97024 |   20.506944 |    98 |    22 |    22 |     4 | HF31    |
+| Betula      |               27 |  18.4720992 |    18.39468 |   17.657064 |   15.995904 |   238 |    41 |    17 |     5 | HF5179  |
+| Betula      |               65 |  18.0789072 |   17.614392 |   17.291304 |   14.465808 |    96 |    18 |    27 |     2 | HF1204  |
+| Betula      |               28 |  17.9478432 |    17.02308 |   17.791176 |    13.91412 |    55 |    11 |    17 |     2 | HF308   |
+| Betula      |               21 |  16.5884352 |   17.288256 |   16.501872 |   15.115032 |    37 |    26 |    13 |     5 | HF1535  |
+| Betula      |               38 |  16.3497768 |   16.294608 |   15.755112 |   13.911072 |    98 |    22 |    24 |     1 | HF4208  |
+| Betula      |               29 |  16.1851848 |   16.166592 |   16.187928 |   16.050768 |    39 |    21 |    25 |     4 | HF334   |
+| Betula      |               26 |  15.9955992 |    15.89532 |   15.060168 |   13.536168 |    86 |    27 |    20 |     4 | HF3315  |
+| Betula      |               21 |   15.991332 |     16.2306 |    15.33144 |   15.111984 |    48 |    28 |    18 |     3 | HF5396  |
+| Betula      |               22 |  15.6935424 |   15.745968 |   15.413736 |   16.898112 |    39 |    16 |    22 |     6 | HF4179  |
+| Betula      |               23 |   15.614904 |   15.739872 |    15.07236 |     9.15924 |   135 |    20 |    17 |     2 | HF3456  |
+| Betula      |               21 |  15.5246832 |   15.602712 |   14.697456 |    13.99032 |    46 |    33 |    15 |     5 | HF4882  |
+| Betula      |               22 |  15.5195016 |   15.578328 |   15.959328 |   14.849856 |    32 |     5 |     8 |     2 | HF3667  |
+| Betula      |               22 |   15.299436 |    15.04188 |   14.487144 |   12.697968 |   118 |    28 |    20 |     5 | HF1758  |
+| Betula      |               21 |   15.253716 |   15.203424 |   14.548104 |   14.581632 |    70 |    35 |    22 |     4 | ST40589 |
+| Betula      |               27 |  14.9742144 |   15.115032 |   14.612112 |    9.912096 |   101 |    24 |    14 |     3 | HF1562  |
+| Betula      |               43 |  14.9629368 |   14.785848 |   14.499336 |   13.810488 |   113 |    23 |    22 |     4 | HF895   |
+| Betula      |               28 |  14.9035008 |   15.398496 |   14.852904 |   12.097512 |   116 |    27 |    22 |     3 | HF896   |
+| Betula      |               23 |   14.894052 |   14.743176 |    14.35608 |   15.157704 |   117 |    23 |    25 |     2 | HF2049  |
+| Betula      |               44 |  14.8657056 |   14.670024 |   13.962888 |   13.911072 |    88 |    23 |    19 |     2 | HF1445  |
+| Betula      |               31 |  14.7940776 |   14.816328 |   13.935456 |    12.74064 |    40 |    19 |    15 |     5 | HF6917  |
+| Betula      |               23 |  14.6779488 |   14.956536 |    15.42288 |   14.301216 |    14 |     4 |    14 |     2 | HF5858  |
+| Betula      |               35 |   14.445996 |   14.161008 |   13.584936 |   13.557504 |    92 |    22 |    12 |     4 | HF5068  |
+| Betula      |               24 |  14.3975328 |   14.712696 |   13.978128 |   11.411712 |    39 |    23 |    11 |     1 | HF6913  |
+| Betula      |               51 |  14.2762224 |   14.069568 |   13.597128 |   13.734288 |    46 |    36 |    15 |     4 | HF5223  |
+| Betula      |               33 |  14.1738096 |    14.21892 |   13.261848 |   13.283184 |    51 |    22 |    18 |     4 | HF366   |
+| Betula      |               31 |  14.1677136 |   14.292072 |     13.9446 |    8.220456 |    47 |    11 |    24 |     2 | HF3212  |
+| Betula      |               24 |   14.061948 |   14.023848 |   13.341096 |   10.067544 |    74 |    15 |    22 |     2 | HF5250  |
+| Betula      |               50 |  14.0595096 |   13.755624 |   13.133832 |   12.036552 |   117 |    22 |    20 |     3 | HF3558  |
+| Betula      |               28 |  13.9561824 |   13.511784 |    13.24356 |   13.194792 |    43 |    31 |    24 |     4 | HF6387  |
+| Betula      |               33 |   13.947648 |   13.758672 |    13.27404 |    12.00912 |    51 |    39 |    14 |     3 | HF6851  |
+| Betula      |               28 |  13.8656568 |   13.938504 |   13.965936 |   14.060424 |    76 |    16 |    20 |     7 | HF1789  |
+| Betula      |               34 |  13.8098784 |   13.798296 |      12.954 |    11.52144 |   112 |    21 |    17 |     3 | HF4658  |
+| Betula      |               35 |  13.7522712 |   13.597128 |   13.191744 |   12.765024 |    50 |    38 |    22 |     5 | HF6858  |
+| Betula      |               49 |    13.73886 |   13.621512 |   12.774168 |    9.595104 |   158 |    15 |    13 |     2 | HF5007  |
+| Betula      |               26 |  13.7379456 |    13.31976 |    12.83208 |   12.685776 |   110 |    23 |    20 |     3 | HF3083  |
+| Betula      |               31 |  13.7178288 |    14.06652 |   13.706856 |   12.777216 |    46 |    27 |    10 |     1 | HF5282  |
+| Betula      |               23 |  13.6846056 |   12.889992 |    13.13688 |   11.542776 |   103 |    17 |    21 |     2 | HF5545  |
+| Betula      |               37 |  13.6745472 |   13.862304 |    13.13688 |   12.963144 |   112 |    27 |    22 |     6 | HF3703  |
+| Betula      |               23 |   13.659612 |   12.902184 |   13.484352 |   11.667744 |    46 |    38 |    14 |     3 | HF720   |
+| Carya       |               26 |  23.8853472 |   24.143208 |   23.487888 |   15.816072 |    34 |    40 |    21 |     4 | ST33238 |
+| Carya       |               28 |  22.9685088 |    23.04288 |   22.588728 |   21.543264 |    98 |    20 |    21 |     5 | HF2198  |
+| Carya       |               21 |  21.3609936 |     21.1836 |     20.8026 |    20.36064 |    43 |    37 |    25 |     5 | ST66384 |
+| Carya       |               26 |  20.9495136 |    20.83308 |    19.97964 |   18.742152 |    48 |    25 |     7 |     4 | SS02758 |
+| Carya       |               23 |   20.883372 |   20.903184 |   19.961352 |   19.068288 |    46 |    19 |    28 |     6 | HF1185  |
+| Carya       |               23 |  20.8068672 |    21.57984 |   21.720048 |   19.702272 |    40 |    21 |    13 |     4 | SS02185 |
+| Carya       |               23 |  20.3874624 |   20.263104 |   20.159472 |   19.680936 |    46 |    52 |    36 |     3 | ST49102 |
+| Carya       |               24 |  20.1174096 |   20.183856 |   19.866864 |    20.02536 |    44 |    53 |    23 |     5 | ST73740 |
+| Carya       |               24 |  19.6684392 |    20.45208 |   20.022312 |   15.785592 |    43 |    85 |    13 |     2 | ST73743 |
+| Carya       |               23 |  19.0902336 |   19.299936 |    18.45564 |    16.93164 |   110 |    28 |    23 |     3 | HF2402  |
+| Carya       |               25 |   19.085052 |   19.485864 |   19.053048 |   15.995904 |    46 |    26 |    13 |     2 | ST71962 |
+| Carya       |               23 |  18.4794144 |    18.77568 |   18.522696 |   16.605504 |    38 |    48 |    26 |     4 | ST15567 |
+| Carya       |               22 |  15.9325056 |    15.30096 |   15.950184 |   14.892528 |    40 |    42 |    19 |     4 | SS03222 |
+| Carya       |               22 |    15.83436 |   15.947136 |   15.294864 |    12.86256 |    85 |    20 |    17 |     2 | ST13440 |
+| Carya       |               26 |  15.3658824 |    15.27048 |     14.4018 |   13.155168 |    72 |    19 |    21 |     3 | ST40074 |
+| Carya       |               28 |  14.5490184 |   14.990064 |     14.3256 |    8.820912 |    37 |    23 |    18 |     3 | HF3475  |
+| Carya       |               24 |  14.4865344 |   14.435328 |   13.557504 |    11.52144 |    38 |    37 |    17 |     4 | HF1550  |
+| Catalpa     |               33 |  24.2099592 |   25.027128 |   24.301704 |   23.506176 |   242 |    53 |    12 |     1 | ST36828 |
+| Catalpa     |               35 |  23.3473752 |   23.762208 |    23.10384 |   21.476208 |    46 |    63 |    11 |     4 | SS02330 |
+| Catalpa     |               25 |  21.9449904 |   21.750528 |   21.247608 |   21.500592 |   168 |    30 |    24 |     5 | ST67348 |
+| Catalpa     |               23 |  21.0147408 |    21.36648 |     20.4978 |   15.550896 |    47 |    31 |    11 |     3 | SS02052 |
+| Catalpa     |               36 |   20.767548 |   20.366736 |    19.87296 |   19.315176 |    48 |    56 |    14 |     4 | ST66824 |
+| Catalpa     | 33.8582677165354 |  20.4938376 |   20.506944 |    19.91868 |   19.565112 |   153 |    29 |    16 |     5 | AS04952 |
+| Catalpa     | 33.4645669291339 |  20.2268328 |   20.622768 |   20.241768 |    17.84604 |    45 |    27 |    17 |     2 | AS01624 |
+| Catalpa     |               35 |  19.4331336 |   18.815304 |   19.315176 |    15.83436 |    45 |    42 |     9 |     4 | ST58930 |
+| Catalpa     |               31 |  19.0274448 |   19.062192 |    18.94332 |   16.422624 |    42 |    62 |    22 |     3 | SS02324 |
+| Catalpa     | 44.8818897637795 |  18.7113672 |   18.733008 |   18.571464 |   14.557248 |    92 |    44 |    16 |     2 | AS02141 |
+| Catalpa     |               27 |  18.2185056 |   18.495264 |   17.931384 |   15.364968 |    29 |    13 |     5 |     2 | SS02043 |
+| Catalpa     |               31 |  17.5241712 |   17.385792 |   17.010888 |   15.809976 |   103 |    32 |    20 |     3 | ST72126 |
+| Catalpa     |               29 |  17.4647352 |   17.437608 |    16.73352 |   18.010632 |    27 |    18 |     2 |     3 | SS02322 |
+| Catalpa     |               41 |  17.2016928 |   17.224248 |    16.80972 |   15.907512 |   118 |    81 |    20 |     4 | ST42767 |
+| Catalpa     |               22 |  17.1654216 |   17.090136 |   16.742664 |   14.023848 |   343 |    34 |    21 |     5 | ST12365 |
+| Catalpa     |               29 |  16.8840912 |   16.904208 |   16.910304 |    15.98676 |    76 |    20 |    22 |     2 | ST52460 |
+| Catalpa     |               25 |  16.7408352 |   17.248632 |   17.041368 |    8.894064 |    82 |    43 |    16 |     1 | ST58927 |
+| Catalpa     |               24 |  16.7185848 |   17.016984 |   17.452848 |    13.42644 |     8 |     9 |     3 |     3 | SS02332 |
+| Catalpa     |               24 |  16.6838376 |   16.888968 |    16.47444 |    15.94104 |    45 |    68 |    21 |     3 | ST08233 |
+| Catalpa     |               26 |  16.6109904 |   16.907256 |   16.480536 |   16.038576 |    97 |    31 |     8 |     5 | ST10611 |
+| Catalpa     |               29 |  16.3028376 |   16.666464 |    15.74292 |   13.612368 |    46 |    58 |    15 |     3 | ST58872 |
+| Catalpa     | 29.5275590551181 |   15.976092 |   16.029432 |   15.563088 |   11.210544 |    99 |    36 |    25 |     2 | AS02540 |
+| Catalpa     |               32 |  15.8901384 |   16.218408 |   15.444216 |    14.87424 |    45 |    34 |    12 |     4 | ST14266 |
+| Catalpa     |               21 |  15.4375104 |    15.59052 |   14.990064 |   13.082016 |   125 |    23 |    15 |     2 | ST70097 |
+| Catalpa     |               31 |  14.9888448 |    15.25524 |   14.944344 |   13.621512 |   102 |    34 |    20 |     3 | ST67067 |
+| Catalpa     | 33.4645669291339 |  14.5642584 |   13.840968 |   13.688568 |   12.752832 |    48 |    29 |    22 |     5 | AS02477 |
+| Catalpa     |               27 |  14.3365728 |   14.606016 |   13.859256 |    12.43584 |    46 |    27 |    28 |     3 | ST58871 |
+| Catalpa     |               28 |   9.6630744 |   10.040112 |     10.1346 |    9.689592 |    48 |    50 |    65 |     5 | ST87019 |
+| Celtis      |               48 |  25.3922784 |   26.295096 |   25.886664 |   24.996648 |    38 |    77 |    30 |     2 | ST11707 |
+| Celtis      |               25 |  25.1075952 |   25.408128 |   24.646128 |   23.981664 |    30 |    18 |     9 |    11 | ST26319 |
+| Celtis      |               34 |   24.790908 |   24.771096 |   24.390096 |   24.423624 |   100 |    29 |    20 |     3 | ST63692 |
+| Celtis      |               35 |  24.1136424 |   24.039576 |   23.969472 |   22.872192 |    41 |    37 |    13 |     5 | SS00615 |
+| Celtis      |               22 |  23.6390688 |   23.981664 |   23.006304 |   23.106888 |   175 |    63 |    14 |     5 | ST52946 |
+| Celtis      |               40 |   23.612856 |      23.622 |   23.777448 |   20.153376 |    68 |    18 |    22 |     2 | ST63693 |
+| Celtis      |               31 |  23.1422448 |    23.37816 |   22.893528 |   20.814792 |    85 |    23 |    23 |     3 | ST32052 |
+| Celtis      |               22 |  22.9505256 |   23.237952 |   22.674072 |   22.055328 |    41 |    31 |    13 |     5 | SS03150 |
+| Celtis      |               31 |    22.57806 |   22.960584 |   22.924008 |    21.42744 |    51 |    51 |    24 |     3 | SS02271 |
+| Celtis      |               29 |   22.491192 |   22.482048 |   22.378416 |   20.549616 |    92 |    23 |    23 |     3 | ST63589 |
+| Celtis      |               30 |  21.4539576 |   21.973032 |   21.131784 |   20.973288 |    25 |    26 |    29 |     5 | TS01466 |
+| Celtis      |               25 |  21.3929976 |    21.27504 |   21.101304 |    19.26336 |    75 |    19 |    16 |     1 | ST37058 |
+| Celtis      |               35 |  21.2793072 |   21.470112 |   21.418296 |    18.10512 |    47 |    47 |    25 |     2 | ST11734 |
+| Celtis      |               29 |  21.2680296 |    21.65604 |    21.16836 |   20.439888 |    47 |    26 |    24 |     3 | HF2785  |
+| Celtis      |               33 |  21.1589112 |   20.958048 |    20.74164 |     20.4216 |    46 |    27 |    21 |     3 | ST35152 |
+| Celtis      |               25 |   21.083016 |    20.86356 |   20.430744 |   20.784312 |   309 |    29 |    25 |     9 | ST78441 |
+| Celtis      | 33.0708661417323 |  21.0119976 |   20.747736 |   20.150328 |   20.753832 |    46 |    17 |    24 |     4 | AS05205 |
+| Celtis      |               38 |  21.0119976 |   21.147024 |   20.793456 |   20.674584 |   100 |    44 |    21 |     2 | ST28303 |
+| Celtis      | 39.7637795275591 |  20.8611216 |    20.98548 |   20.092416 |   20.052792 |    13 |     3 |     3 |     3 | AS05071 |
+| Celtis      |               34 |  20.7276192 |   20.948904 |   20.897088 |   19.671792 |    42 |    31 |    19 |     4 | ST63731 |
+| Celtis      |               26 |  20.2567032 |   20.897088 |   20.363688 |   19.970496 |    42 |    58 |    25 |     2 | ST11391 |
+| Celtis      |               31 |   20.112228 |   20.336256 |   19.757136 |   19.985736 |   107 |    28 |    23 |     4 | ST59637 |
+| Celtis      |               29 |    19.85772 |   19.961352 |    19.76628 |   18.751296 |    89 |    44 |    21 |     1 | ST70167 |
+| Celtis      |               22 |  19.7717664 |   20.107656 |   19.132296 |    20.07108 |   122 |    24 |     7 |     3 | ST53041 |
+| Celtis      |               22 |    19.47672 |   19.348704 |   19.001232 |   17.458944 |    89 |    17 |    11 |     5 | SS02624 |
+| Celtis      |               34 |  19.4114928 |   19.665696 |   19.053048 |    18.45564 |    45 |    30 |    23 |     4 | ST58643 |
+| Celtis      |               31 |  18.9923928 |   19.257264 |   18.614136 |   17.955768 |   172 |    59 |    32 |     5 | ST25184 |
+| Celtis      | 24.0157480314961 |   18.906744 |   18.891504 |   18.778728 |   17.212056 |    77 |    43 |    17 |     4 | AS03201 |
+| Celtis      |               36 |   18.838164 |   19.470624 |   19.208496 |    15.98676 |    61 |    19 |    21 |     1 | ST63713 |
+| Celtis      |               29 |   18.801588 |   18.894552 |   18.693384 |   18.662904 |    95 |    60 |    24 |     3 | ST70522 |
+| Celtis      |               32 |   18.748248 |   18.452592 |   18.495264 |   18.711672 |    94 |    24 |    21 |     4 | ST59390 |
+| Celtis      | 36.2204724409449 |  18.7168536 |   19.013424 |   18.339816 |   16.675608 |    41 |    29 |    25 |     3 | AS00498 |
+| Celtis      |               30 |  18.6936888 |   18.800064 |   18.202656 |   15.852648 |    31 |    20 |    25 |     1 | ST57275 |
+| Celtis      | 40.5511811023622 |  18.6433968 |   18.812256 |   18.220944 |    18.07464 |    56 |    17 |    30 |     3 | AS00452 |
+| Celtis      |               28 |    18.47088 |   18.614136 |   17.980152 |   15.630144 |    87 |    39 |    21 |     2 | ST70291 |
+| Celtis      |               25 |   18.359628 |   18.824448 |    17.84604 |   16.212312 |    36 |    80 |    14 |     3 | ST40521 |
+| Celtis      |               28 |  18.3206136 |   18.291048 |   17.885664 |   17.757648 |    45 |    25 |    29 |     3 | ST48788 |
+| Celtis      | 31.1023622047244 |   18.083784 |   18.086832 |    17.31264 |   16.254984 |    45 |    30 |    11 |     2 | AS01697 |
+| Celtis      |               34 |   18.009108 |   18.117312 |   17.736312 |   18.080736 |    42 |    30 |    26 |     3 | ST36576 |
+| Celtis      |  34.251968503937 |    18.00606 |   17.818608 |     17.6784 |   16.407384 |    72 |    34 |    16 |     2 | AS04775 |
+| Fraxinus    |               43 |   25.645872 |   25.767792 |   25.856184 |   25.188672 |   106 |    43 |    32 |     5 | ST14603 |
+| Fraxinus    |               36 |  22.9828344 |   22.680168 |   22.546056 |   17.590008 |   147 |    40 |    27 |     1 | ST15038 |
+| Fraxinus    |               38 |  22.8045264 |   22.628352 |   22.003512 |   21.387816 |    90 |    51 |    26 |     4 | ST16316 |
+| Fraxinus    |               22 |  22.6838256 |   22.698456 |   22.247352 |   22.195536 |    92 |    32 |    20 |     5 | ST89333 |
+| Fraxinus    |               31 |  22.5091752 |   23.070312 |    22.46376 |   16.425672 |    43 |    50 |    29 |     3 | SS01331 |
+| Fraxinus    |               35 |  22.2583248 |   22.195536 |   21.619464 |   20.525232 |    51 |    50 |    27 |     2 | SS02832 |
+| Fraxinus    |               40 |  22.1184216 |   21.942552 |   21.872448 |   20.820888 |   109 |    49 |    37 |     3 | ST70358 |
+| Fraxinus    |               38 |    22.09038 |   22.518624 |    21.53412 |   20.449032 |    47 |    50 |    15 |     4 | ST30959 |
+| Fraxinus    |               34 |    21.81606 |   22.073616 |   21.195792 |   20.028408 |    90 |    62 |    18 |     4 | ST11212 |
+| Fraxinus    |               40 |  21.6313512 |   21.415248 |    21.70176 |   22.683216 |   113 |    23 |    28 |     4 | ST64025 |
+| Fraxinus    |               28 |   21.211032 |   20.692872 |   20.503896 |    18.24228 |    54 |    47 |    19 |     1 | ST84293 |
+| Fraxinus    |               25 |  21.0519264 |    21.42744 |   21.079968 |   20.958048 |    42 |    38 |    23 |     4 | ST34493 |
+| Fraxinus    |               22 |  20.8922112 |   20.442936 |   20.427696 |   18.492216 |    68 |    16 |    17 |     4 | SS00243 |
+| Fraxinus    |               24 |  20.7620616 |   20.945856 |    21.13788 |   19.485864 |   118 |    25 |    28 |     3 | ST63747 |
+| Fraxinus    |               26 |  20.7495648 |    20.83308 |   20.363688 |   19.373088 |   118 |    55 |    19 |     2 | ST77140 |
+| Fraxinus    |               34 |    20.66544 |    20.68068 |   19.775424 |   18.205704 |    99 |    33 |    24 |     2 | ST67815 |
+| Fraxinus    |               37 |  20.5139544 |    21.27504 |   20.845272 |   18.492216 |    33 |    31 |    12 |     2 | ST31193 |
+| Fraxinus    |               21 |  20.4328776 |   20.156424 |   20.293584 |   20.046696 |    42 |    41 |    27 |     8 | ST08303 |
+| Fraxinus    |               31 |  20.4289152 |   20.217384 |   20.311872 |   20.555712 |   106 |    41 |    16 |     3 | ST09952 |
+| Fraxinus    |               21 |  20.4045312 |   20.921472 |      20.193 |   20.656296 |    32 |    30 |    12 |     6 | SS01490 |
+| Fraxinus    |               25 |  20.3868528 |   20.607528 |   19.623024 |    18.77568 |    39 |    29 |    21 |     2 | ST34786 |
+| Fraxinus    |               25 |  20.2877928 |   20.412456 |   19.958304 |   19.117056 |    43 |    85 |    20 |     3 | ST59203 |
+| Fraxinus    |               26 |  20.2591416 |   20.403312 |   19.824192 |    18.48612 |   103 |    42 |    25 |     4 | ST67829 |
+| Fraxinus    |               26 |  20.2472544 |   20.205192 |     19.8882 |   19.053048 |    30 |    42 |    57 |     5 | ST14285 |
+| Fraxinus    |               25 |  20.2085448 |   19.930872 |   19.214592 |   18.559272 |    70 |    21 |    31 |     5 | ST41958 |
+| Fraxinus    |               32 |  20.2054968 |   19.976592 |   19.376136 |   18.854928 |    45 |    22 |    23 |     7 | HF2313  |
+| Fraxinus    |               21 |  20.1737976 |    20.33016 |     19.3548 |   18.620232 |    26 |    28 |    24 |     5 | ST41695 |
+| Fraxinus    |               38 |  20.1658728 |   20.762976 |   20.720304 |   20.022312 |   167 |    49 |    30 |     5 | ST64101 |
+| Fraxinus    |               23 |  20.1603864 |   20.080224 |   19.412712 |   18.583656 |   125 |    26 |    21 |     4 | ST21631 |
+| Fraxinus    |               22 |  20.1494136 |   20.278344 |   19.366992 |   16.666464 |    88 |    24 |    22 |     1 | ST63696 |
+| Fraxinus    |               22 |  20.1451464 |   20.083272 |   20.449032 |   18.275808 |    38 |    48 |    35 |     5 | ST27726 |
+| Fraxinus    |               21 |  20.1113136 |    20.33016 |   19.967448 |   20.232624 |   114 |    23 |    25 |     3 | ST63746 |
+| Fraxinus    |               26 |  20.1058272 |   20.531328 |   19.601688 |   18.815304 |    70 |    21 |    15 |     3 | ST70506 |
+| Fraxinus    |               24 |   20.052792 |   20.144232 |   20.308824 |   17.315688 |    43 |    63 |    22 |     4 | ST59205 |
+| Fraxinus    |               22 |  19.9997568 |   20.260056 |     19.5072 |       19.05 |    40 |    47 |    29 |     4 | ST41013 |
+| Fraxinus    |               25 |  19.9912224 |   20.531328 |   20.138136 |   17.422368 |    99 |    48 |    26 |     3 | ST68095 |
+| Fraxinus    |               22 |  19.9208136 |   20.235672 |   19.257264 |   16.895064 |    44 |    47 |    33 |     1 | ST41303 |
+| Fraxinus    |               27 |   19.920204 |    20.08632 |    20.01012 |   18.245328 |   102 |    34 |    29 |     5 | HF5420  |
+| Fraxinus    |               30 |  19.9083168 |   19.257264 |   19.955256 |   18.854928 |    82 |    25 |    12 |     4 | ST39200 |
+| Fraxinus    |               31 |  19.8784464 |   19.693128 |   19.028664 |   17.568672 |   112 |    22 |    23 |     3 | ST31598 |
+| Ginkgo      |               22 |    16.28394 |   16.102584 |   15.752064 |   13.069824 |   105 |    34 |    36 |     4 | ST05181 |
+| Ginkgo      |               21 |   15.147036 |   14.764512 |   14.465808 |    9.079992 |    46 |    32 |    14 |     2 | ST72216 |
+| Ginkgo      |               21 |   13.565124 |    13.22832 |   13.124688 |    9.823704 |    43 |    41 |    21 |     4 | ST33022 |
+| Gleditsia   |               24 |   25.223724 |   24.822912 |   25.167336 |   23.503128 |   102 |    28 |    29 |     6 | HF400   |
+| Gleditsia   |               25 |  22.7072952 |   22.792944 |   21.988272 |   19.604736 |   110 |    42 |    22 |     3 | ST49312 |
+| Gleditsia   |               44 |  22.6173792 |   22.030944 |   22.015704 |   19.958304 |    38 |    30 |    28 |     4 | ST68174 |
+| Gleditsia   | 29.1338582677165 |  22.5728784 |   22.226016 |    21.96084 |   20.211288 |    41 |    30 |    27 |     2 | AS03546 |
+| Gleditsia   |               24 |  22.3461072 |   22.088856 |     21.4122 |   19.434048 |   105 |    49 |    27 |     3 | ST49396 |
+| Gleditsia   |               21 |  22.3262952 |   22.533864 |   22.165056 |   21.098256 |   104 |    25 |    21 |     3 | HF1983  |
+| Gleditsia   |               28 |  22.0626432 |   21.357336 |   21.308568 |   20.016216 |    43 |    45 |    25 |     3 | ST68161 |
+| Gleditsia   |               26 |   21.873972 |   22.055328 |   21.220176 |   20.308824 |    23 |    18 |    13 |     2 | HF323   |
+| Gleditsia   |               30 |  21.6054432 |   21.979128 |   21.918168 |   17.675352 |    51 |    42 |    24 |     3 | HF654   |
+| Gleditsia   |               25 |  21.6023952 |   20.644104 |   20.961096 |    17.32788 |   209 |    24 |    25 |     4 | ST07516 |
+| Gleditsia   |               29 |  21.5338152 |   21.445728 |   20.616672 |   15.718536 |    74 |    24 |    23 |     2 | ST49506 |
+| Gleditsia   |               26 |   21.476208 |   21.360384 |   20.537424 |   17.638776 |   226 |    50 |    23 |     5 | ST49743 |
+| Gleditsia   |               26 |  21.4631016 |   20.717256 |   20.702016 |   16.782288 |   106 |    38 |    26 |     4 | ST18291 |
+| Gleditsia   |               29 |  21.3990936 |   21.832824 |   21.022056 |     17.0688 |    52 |    28 |    22 |     3 | HF2781  |
+| Gleditsia   |               24 |   21.369528 |   20.887944 |    20.60448 |   17.949672 |    49 |    31 |    25 |     3 | ST35741 |
+| Gleditsia   |               25 |  21.1814664 |   20.851368 |   20.317968 |   12.591288 |    45 |    42 |    21 |     3 | ST36690 |
+| Gleditsia   |               24 |  21.1616544 |   20.906232 |    20.23872 |   16.873728 |    53 |    61 |    13 |     4 | ST81759 |
+| Gleditsia   |               28 |  21.1613496 |    20.98548 |   20.445984 |   17.330928 |    47 |    35 |    20 |     5 | ST67575 |
+| Gleditsia   |               23 |  21.1494624 |   21.826728 |   21.070824 |   18.144744 |    37 |    31 |    22 |     4 | ST50401 |
+| Gleditsia   |               26 |  21.1275168 |     20.3454 |   20.232624 |     6.58368 |    33 |    15 |    16 |     1 | ST36678 |
+| Gleditsia   |               24 |    21.03882 |   20.506944 |   20.427696 |   17.288256 |    88 |    41 |    15 |     4 | ST56095 |
+| Gleditsia   |               40 |  21.0180936 |   21.271992 |   20.354544 |   18.376392 |   349 |    60 |    15 |     3 | HF858   |
+| Gleditsia   |               24 |   21.011388 |   20.897088 |   20.625816 |   17.172432 |   112 |    20 |    24 |     2 | ST18290 |
+| Gleditsia   |               24 |  20.9681064 |   20.260056 |   20.135088 |   15.410688 |    34 |    23 |    18 |     1 | ST03942 |
+| Gleditsia   |               23 |  20.9364072 |   20.369784 |   20.007072 |   16.166592 |    42 |    53 |    25 |     3 | ST73079 |
+| Gleditsia   |               25 |  20.7760824 |   20.595336 |   20.113752 |   18.172176 |    88 |    51 |    25 |     5 | SS03435 |
+| Gleditsia   |               31 |  20.7459072 |    20.46732 |   19.961352 |   16.410432 |   290 |    38 |    18 |     3 | HF1150  |
+| Gleditsia   |               28 |    20.66544 |   20.903184 |    20.46732 |   19.702272 |    50 |    57 |    24 |     2 | ST04613 |
+| Gleditsia   |               24 |  20.6386176 |    20.58924 |   20.232624 |   16.776192 |    33 |    17 |    18 |     3 | ST50402 |
+| Gleditsia   |               22 |  20.6343504 |   20.897088 |   20.455128 |   17.995392 |   108 |    24 |    20 |     3 | ST03515 |
+| Gleditsia   |               27 |  20.6300832 |   20.519136 |   20.424648 |   17.035272 |    36 |    24 |    14 |     3 | ST36894 |
+| Gleditsia   |               30 |  20.5304136 |   19.714464 |   19.623024 |   15.325344 |    52 |    25 |    24 |     2 | HF645   |
+| Gleditsia   |               29 |   20.517612 |   20.494752 |   19.647408 |   18.797016 |   100 |    27 |    19 |     2 | HF1811  |
+| Gleditsia   |               27 |   20.473416 |   20.272248 |   19.574256 |    16.80972 |   185 |    17 |    21 |     2 | ST80381 |
+| Gleditsia   |               29 |  20.4706728 |   20.290536 |   20.202144 |   17.852136 |    48 |    63 |    17 |     3 | ST36060 |
+| Gleditsia   |               22 |    20.46732 |   20.061936 |   19.559016 |    16.24584 |   103 |    43 |    33 |     5 | ST81082 |
+| Gleditsia   |               42 |  20.4289152 |   20.369784 |   19.778472 |   17.279112 |   105 |    25 |    16 |     1 | HF4215  |
+| Gleditsia   |               23 |    20.39874 |    20.54352 |   19.754088 |   16.014192 |    47 |    57 |    29 |     2 | ST41010 |
+| Gleditsia   |               25 |  20.3969112 |   19.863816 |   19.668744 |   15.502128 |   125 |    33 |    16 |     3 | ST19955 |
+| Gleditsia   |               22 |  20.3923392 |   20.388072 |   19.747992 |   16.767048 |    43 |    40 |    32 |     3 | ST41654 |
+| Gymnocladus |               27 |  17.1559728 |   16.258032 |     16.2306 |   13.786104 |   113 |    26 |    17 |     3 | HF2727  |
+| Gymnocladus |               22 |  15.7633416 |   15.944088 |   15.130272 |    11.68908 |   126 |    24 |    26 |     1 | ST10604 |
+| Juglans     | 43.3070866141732 |  23.4092496 |   23.609808 |    22.76856 |    21.22932 |    49 |    38 |    23 |     2 | AS03576 |
+| Juglans     | 32.6771653543307 |  22.6310952 |   22.945344 |   22.256496 |   16.715232 |   187 |    24 |    22 |     2 | AS04252 |
+| Juglans     |  31.496062992126 |  22.4646744 |   22.457664 |   21.521928 |   17.681448 |    52 |    16 |    15 |     1 | AS02810 |
+| Juglans     |               26 |  22.2589344 |   22.332696 |    21.70176 |   13.392912 |    55 |    26 |    19 |     2 | ST25012 |
+| Juglans     |               21 |  21.6920064 |    21.62556 |     20.8788 |    8.272272 |   166 |    23 |    19 |     2 | TS01463 |
+| Juglans     |               22 |  21.5487504 |   22.015704 |   21.750528 |   15.517368 |    38 |    40 |    28 |     2 | SS02285 |
+| Juglans     |               26 |  21.4582248 |   21.662136 |     21.0312 |   18.940272 |    77 |    36 |    24 |     4 | ST70191 |
+| Juglans     | 24.8031496062992 |  21.3667848 |     20.8788 |    20.98548 |   18.382488 |    98 |    50 |    25 |     2 | AS05388 |
+| Juglans     | 20.0787401574803 |  21.2259672 |    20.89404 |   20.485608 |    15.75816 |    48 |    36 |    25 |     3 | AS04782 |
+| Juglans     |               36 |  21.0336384 |   21.464016 |   21.524976 |    8.705088 |    38 |    37 |    25 |     2 | SS00721 |
+| Juglans     | 27.9527559055118 |   20.904708 |   21.204936 |   20.638008 |   18.876264 |    34 |    30 |    27 |     3 | AS03493 |
+| Juglans     | 22.0472440944882 |  20.2195176 |   20.202144 |    19.38528 |   16.102584 |    38 |    49 |    13 |     2 | AS03870 |
+| Juglans     | 30.3149606299213 |    20.13966 |   20.293584 |    19.76628 |   14.374368 |    36 |    25 |    23 |     3 | AS03522 |
+| Juglans     | 33.4645669291339 |   20.014692 |   20.674584 |   19.882104 |    17.11452 |    41 |    25 |    21 |     2 | AS03505 |
+| Juglans     |               23 |  19.8354696 |   19.885152 |   19.815048 |   17.352264 |    37 |    25 |    27 |     2 | ST38309 |
+| Juglans     |               36 |  19.7592696 |   19.915632 |   19.373088 |   16.190976 |   123 |    23 |    28 |     3 | HF7297  |
+| Juglans     |               31 |  19.7455536 |   20.491704 |   20.287488 |    12.74064 |    37 |    23 |    17 |     2 | ST32779 |
+| Juglans     |               24 |  19.5885816 |   19.257264 |   18.830544 |   15.566136 |   150 |    24 |    24 |     5 | ST20528 |
+| Juglans     | 23.6220472440945 |   19.578828 |    18.92808 |   19.162776 |   17.077944 |    31 |    23 |    18 |     2 | AS02714 |
+| Juglans     |               30 |  19.0762128 |   18.726912 |   18.236184 |   17.593056 |    43 |    37 |    28 |     4 | TS01102 |
+| Juglans     |               26 |  19.0710312 |   19.744944 |    18.77568 |   17.565624 |    43 |    21 |    23 |     3 | ST58766 |
+| Juglans     |               24 |  18.7698888 |   18.266664 |   18.031968 |   13.341096 |    67 |    20 |    17 |     1 | HF6393  |
+| Juglans     | 23.6220472440945 |  18.7448952 |      19.431 |   18.473928 |   16.133064 |    41 |    23 |    28 |     1 | AS02748 |
+| Juglans     |               33 |   18.681192 |    19.08048 |     18.2118 |   17.123664 |   127 |    24 |    16 |     2 | ST72469 |
+| Juglans     |               24 |  18.5528712 |   18.803112 |   18.857976 |   16.190976 |    65 |    18 |    27 |     4 | ST80092 |
+| Juglans     |               21 |  18.4364376 |    18.62328 |   18.321528 |   16.495776 |    21 |    18 |    16 |     5 | HF5145  |
+| Juglans     |               33 |  18.2980584 |   18.495264 |   17.900904 |   15.252192 |    33 |    21 |    19 |     3 | ST42187 |
+| Juglans     | 29.5275590551181 |  18.2828184 |    17.86128 |    17.89176 |   12.368784 |   119 |    13 |    14 |     2 | AS02834 |
+| Juglans     |               26 |  18.0767736 |   18.202656 |     18.0594 |   16.873728 |    46 |    50 |    23 |     4 | SS03257 |
+| Juglans     |               25 |  17.3120304 |   17.788128 |   17.041368 |   15.090648 |    22 |    29 |    22 |     2 | ST20199 |
+| Juglans     |               27 |  17.3068488 |    17.26692 |   16.635984 |   14.420088 |    38 |    37 |    27 |     1 | ST20200 |
+| Juglans     |               23 |  17.2492416 |   17.727168 |   16.925544 |   13.764768 |    50 |    47 |    14 |     5 | ST45769 |
+| Juglans     |               25 |   17.163288 |   17.138904 |   17.050512 |   13.673328 |    95 |    26 |    19 |     2 | ST42003 |
+| Juglans     | 21.6535433070866 |  17.1428664 |   16.468344 |   16.892016 |   13.962888 |    41 |    20 |    19 |     1 | AS02514 |
+| Juglans     | 25.5905511811024 |  17.0072304 |   16.998696 |   16.739616 |   15.157704 |    32 |    33 |    25 |     2 | AS02373 |
+| Juglans     |               35 |  16.9755312 |   17.666208 |   16.727424 |    8.491728 |    57 |    16 |    19 |     1 | HF1599  |
+| Juglans     |               27 |  16.7002968 |   16.660368 |   16.834104 |   13.417296 |    38 |    59 |    32 |     3 | ST72289 |
+| Juglans     |               26 |  16.6807896 |     16.3068 |   17.065752 |   16.157448 |    37 |    21 |    23 |     4 | ST53791 |
+| Juglans     |               26 |  16.2757104 |   16.925544 |   16.651224 |    13.12164 |    54 |    42 |    24 |     2 | ST04466 |
+| Juglans     |               25 |   16.204692 |   15.459456 |   16.401288 |   11.448288 |    74 |    17 |    55 |     2 | ST88626 |
+| Picea       |               11 |   25.830276 |   25.773888 |   25.795224 |   22.698456 |   194 |    44 |    18 |     4 | ST33216 |
+| Picea       |               21 |  23.3577384 |     23.4696 |    22.52472 |   20.153376 |    69 |    84 |    38 |     5 | SS01247 |
+| Picea       |               23 |  21.8946984 |    21.80844 |   21.265896 |   19.086576 |    50 |    71 |    22 |     2 | ST08014 |
+| Picea       | 13.7795275590551 |   21.403056 |   20.964144 |   20.979384 |   18.534888 |    43 |    25 |    21 |     3 | AS04292 |
+| Picea       | 25.5905511811024 |  21.3295992 |   21.323808 |   20.561808 |   17.574768 |    39 |    19 |    25 |     3 | AS02894 |
+| Picea       | 27.5590551181102 |  21.1122768 |   21.378672 |   20.461224 |    15.97152 |    43 |    71 |    21 |     1 | AS01482 |
+| Picea       |               21 |  20.7532224 |   21.262848 |   20.317968 |   18.717768 |    50 |    59 |    26 |     7 | SS01239 |
+| Picea       |  28.740157480315 |  20.5782672 |   20.622768 |   19.738848 |   17.794224 |   347 |    29 |    28 |     5 | AS04950 |
+| Picea       |               28 |  20.2167744 |   20.226528 |   20.122896 |   19.763232 |   109 |    33 |    22 |    10 | SS00367 |
+| Picea       |               28 |  19.9010016 |    20.07108 |   19.760184 |   16.197072 |    18 |    17 |    14 |     3 | HF1376  |
+| Picea       |               16 |  19.4712336 |   19.510248 |   18.510504 |   15.724632 |    63 |    19 |    13 |     4 | SS03349 |
+| Picea       |               18 |  19.1356488 |   18.970752 |   18.233136 |   16.895064 |   108 |    39 |    28 |     5 | SS03330 |
+| Picea       |               11 |  19.0158624 |    18.37944 |    18.34896 |    13.19784 |    80 |    26 |    22 |     2 | HF2818  |
+| Picea       |               12 |  18.9747144 |    18.54708 |   18.434304 |   18.035016 |    85 |    25 |    24 |     4 | HF1960  |
+| Picea       |               18 |  18.9503304 |   19.031712 |   18.065496 |   16.934688 |    44 |    69 |    33 |     2 | SS02816 |
+| Picea       |               23 |  18.3724296 |   18.355056 |    17.40408 |   16.757904 |    50 |    50 |    32 |     4 | HF5574  |
+| Picea       |               22 |  18.3389016 |   18.245328 |   17.721072 |   16.053816 |    59 |    72 |    28 |     3 | ST86209 |
+| Picea       |               51 |  18.2267352 |    17.58696 |   17.443704 |     8.51916 |    52 |    58 |    32 |     3 | HF3080  |
+| Picea       |               16 |  18.2212488 |   18.062448 |   18.099024 |   13.420344 |     9 |     5 |    11 |     1 | ST53516 |
+| Picea       |               18 |  18.0965856 |   17.654016 |   17.468088 |   14.825472 |    24 |    34 |    26 |     4 | HF3669  |
+| Picea       |               13 |  17.8042824 |    18.48612 |   17.775936 |    16.01724 |    49 |    80 |    24 |     5 | ST42334 |
+| Picea       |               15 |  17.6436528 |   17.797272 |    17.12976 |   17.364456 |    45 |    60 |    33 |     3 | ST42581 |
+| Picea       |               13 |  17.1684696 |   16.709136 |    17.28216 |   16.828008 |   108 |    28 |    31 |     6 | TS01479 |
+| Picea       |               14 |  17.1651168 |   17.108424 |   16.270224 |   10.229088 |    39 |    27 |    16 |     2 | HF6497  |
+| Picea       |               11 |  17.1218352 |   16.952976 |    16.58112 |     10.9728 |   104 |    19 |    15 |     2 | HF4037  |
+| Picea       | 16.1417322834646 |  17.1193968 |   16.904208 |   16.852392 |   17.279112 |    27 |    16 |    18 |     3 | AS04294 |
+| Picea       |               16 |  17.0758104 |   17.288256 |   16.739616 |     7.55904 |   109 |    14 |    21 |     3 | HF5966  |
+| Picea       |               14 |   16.843248 |   16.645128 |   16.602456 |   16.568928 |    88 |    18 |    21 |     3 | ST86121 |
+| Picea       |               18 |  16.6768272 |   16.532352 |   15.736824 |   12.996672 |    36 |    30 |    36 |     3 | ST53483 |
+| Picea       | 14.9606299212598 |  16.4598096 |   16.684752 |   15.761208 |   10.533888 |    49 |    24 |    26 |     1 | AS04443 |
+| Picea       |               12 |  16.4534088 |   16.803624 |    16.03248 |   15.489936 |    52 |    21 |    11 |     1 | HF723   |
+| Picea       | 17.3228346456693 |   16.361664 |   16.401288 |   15.898368 |   11.981688 |    42 |    28 |    12 |     1 | AS04903 |
+| Picea       | 13.7795275590551 |  16.2650424 |   15.432024 |    15.65148 |   14.395704 |    46 |    22 |    20 |     3 | AS05024 |
+| Picea       |               17 |  16.2150552 |   16.069056 |   15.541752 |    14.08176 |   108 |    59 |    39 |     6 | ST69992 |
+| Picea       |               12 |  16.1915856 |    16.59636 |   16.386048 |   14.819376 |   104 |    33 |    22 |     2 | HF2076  |
+| Picea       |               49 |  16.1629344 |   15.776448 |   15.252192 |   12.777216 |    51 |    70 |    35 |     6 | HF7273  |
+| Picea       | 13.7795275590551 |  16.1108136 |    15.74292 |   15.115032 |    13.06068 |    40 |    31 |    15 |     2 | AS01056 |
+| Picea       |               14 |    16.09344 |   15.459456 |    15.19428 |    11.84148 |   162 |    18 |    24 |     3 | HF6314  |
+| Picea       |               15 |  16.0474152 |   16.157448 |   16.392144 |    7.607808 |    44 |    26 |     9 |     1 | HF2784  |
+| Picea       | 18.8976377952756 |  15.7587696 |   15.617952 |    14.84376 |   12.856464 |    44 |    70 |    28 |     7 | AS04682 |
+| Pinus       |               22 |   23.108412 |   22.914864 |   22.229064 |   19.824192 |    47 |   101 |    33 |     3 | ST12429 |
+| Pinus       |               22 |   21.652992 |   22.183344 |    21.70176 |   20.546568 |    50 |    62 |    13 |     4 | HF4707  |
+| Pinus       |               27 |  21.4073232 |   21.296376 |   20.912328 |   18.144744 |    47 |    31 |    13 |     2 | HF4666  |
+| Pinus       |               32 |  20.0229216 |    20.08632 |   19.251168 |    8.196072 |    47 |    46 |    30 |     3 | HF4665  |
+| Pinus       |               25 |  19.0365888 |   18.720816 |   18.635472 |   16.364712 |   114 |    38 |    33 |     2 | ST52803 |
+| Pinus       |               23 |  18.2063136 |   18.184368 |   17.501616 |   16.861536 |   105 |    67 |    33 |     3 | SS01851 |
+| Pinus       |               21 |  14.8111464 |   15.017496 |   15.639288 |     9.09828 |   140 |    37 |    33 |     3 | TS01345 |
+| Pinus       |               30 |  13.9257024 |    14.90472 |   14.353032 |   14.106144 |    44 |    38 |    16 |     2 | ST14177 |
+| Pinus       |               27 |  13.6647936 |   12.749784 |   13.310616 |   10.610088 |    45 |    32 |    34 |     2 | HF1060  |
+| Pinus       |               21 |  13.5767064 |    13.51788 |   12.743688 |   10.131552 |    52 |    61 |    38 |     2 | ST38981 |
+| Pinus       |               21 |  11.7695472 |   11.484864 |   11.241024 |   11.076432 |    48 |    29 |    18 |     4 | HF6019  |
+| Platanus    |               37 |  26.9424912 |   27.130248 |    26.15184 |   22.893528 |    97 |    53 |    16 |     6 | ST22430 |
+| Platanus    |               31 |  22.1373192 |   22.183344 |   21.866352 |   18.278856 |   137 |    25 |    21 |     4 | HF3658  |
+| Platanus    |               24 |  22.0382592 |   22.427184 |   21.546312 |    14.26464 |    89 |    14 |    26 |     2 | SS01004 |
+| Platanus    |               26 |  21.4920576 |   21.019008 |    20.52828 |   17.096232 |   123 |    23 |    25 |     5 | ST76851 |
+| Platanus    |               25 |  19.5507864 |   20.046696 |   19.641312 |   19.635216 |   109 |    51 |    29 |     7 | SS00996 |
+| Platanus    |               34 |  19.4197224 |   18.861024 |   19.168872 |   18.361152 |    40 |    30 |    17 |     4 | ST37620 |
+| Platanus    |               30 |  19.3176144 |   19.345656 |     18.5166 |   16.547592 |    98 |    25 |    29 |     3 | ST63222 |
+| Platanus    |               23 |   19.267932 |    19.84248 |   19.028664 |    5.590032 |    45 |    32 |    20 |     1 | ST48754 |
+| Platanus    |               25 |    18.28038 |   17.446752 |   17.547336 |   15.368016 |   151 |    42 |    12 |     5 | ST19544 |
+| Platanus    | 27.5590551181102 |   17.269968 |   17.187672 |   16.952976 |    7.775448 |   104 |    29 |    25 |     4 | AS05393 |
+| Populus     |               22 |    31.85922 |   32.320992 |   31.376112 |   29.193744 |    54 |    15 |    16 |     3 | TS00737 |
+| Populus     |               49 |  30.5004216 |   30.376368 |   30.367224 |   23.213568 |    25 |    20 |    31 |     2 | TS00733 |
+| Populus     |               44 |  29.7518328 |   29.742384 |   29.492448 |   23.420832 |    47 |    39 |    27 |     1 | TS00748 |
+| Populus     |               30 |   28.908756 |   28.571952 |   27.925776 |    27.38628 |    92 |    26 |    24 |     3 | TS00808 |
+| Populus     |               30 |  28.2263088 |    27.63012 |   28.120848 |   26.249376 |    96 |    51 |    28 |     6 | ST54418 |
+| Populus     |               49 |  27.9160224 |   27.163776 |   27.651456 |    27.95016 |    60 |    57 |    43 |     4 | TP00205 |
+| Populus     |               44 |  27.3881088 |   27.227784 |   27.575256 |   25.676352 |    91 |    22 |    28 |     3 | SS00337 |
+| Populus     |               27 |  26.2399272 |   26.956512 |   26.828496 |    26.07564 |    34 |    47 |    29 |     3 | TS00728 |
+| Populus     |               28 |  26.0143752 |    26.73096 |   26.130504 |   27.300936 |    31 |    32 |    25 |     7 | HF3782  |
+| Populus     | 31.1023622047244 |  25.7668776 |   24.792432 |   25.392888 |   25.203912 |    45 |    24 |    28 |     3 | AS00416 |
+| Populus     |               26 |  25.5961896 |   25.645872 |   25.886664 |   21.393912 |    79 |    40 |    20 |     4 | ST72301 |
+| Populus     |               29 |  25.5120648 |   25.947624 |   25.213056 |   24.545544 |    50 |    29 |    23 |     3 | ST86107 |
+| Populus     |               34 |  25.0143264 |   25.264872 |    25.77084 |     24.4602 |    46 |    31 |    28 |     5 | HF269   |
+| Populus     |               48 |  24.9640344 |    25.05456 |   24.207216 |    21.54936 |   104 |    26 |    21 |     4 | HF398   |
+| Populus     |               52 |  24.9390408 |    25.03932 |   24.438864 |   23.969472 |    38 |    20 |    28 |     3 | ST27721 |
+| Populus     |               43 |  24.9000264 |   24.926544 |   24.249888 |   23.433024 |    50 |    57 |    33 |     3 | ST65438 |
+| Populus     |               74 |  24.8613168 |    24.03348 |   24.990552 |   25.566624 |    44 |    26 |    31 |     4 | HF4135  |
+| Populus     |               40 |   24.638508 |   24.496776 |   24.121872 |   24.390096 |   109 |    27 |    17 |     6 | SS03345 |
+| Populus     |               35 |  24.6113808 |     24.5364 |   23.984712 |   23.692104 |    42 |    40 |    30 |     3 | ST72805 |
+| Populus     |               31 |  24.3452904 |    24.74976 |   24.451056 |   23.963376 |   112 |    25 |    30 |     4 | ST32217 |
+| Populus     | 33.4645669291339 |  23.9106456 |   23.594568 |   23.228808 |   22.878288 |    44 |    16 |    29 |     4 | AS00412 |
+| Populus     |               39 |  23.8134144 |   23.228808 |    22.89048 |   20.826984 |    84 |    26 |    23 |     5 | HF1998  |
+| Populus     | 40.1574803149606 |  23.7512352 |   23.582376 |   23.481792 |   23.259288 |   146 |    46 |    32 |     4 | AS04580 |
+| Populus     |               26 |  23.7177072 |   23.143464 |   22.960584 |   21.659088 |    56 |    15 |    15 |     2 | ST13873 |
+| Populus     | 27.9527559055118 |  23.3677968 |   23.579328 |   23.064216 |   22.299168 |    42 |    35 |    24 |     4 | AS04568 |
+| Populus     | 43.7007874015748 |  23.3281728 |    22.66188 |   23.457408 |   23.219664 |    63 |    13 |    27 |     2 | AS04633 |
+| Populus     | 33.0708661417323 |  23.2937304 |   23.234904 |   22.430232 |    22.03704 |    40 |    29 |    26 |     5 | AS00390 |
+| Populus     |               36 |   23.152608 |   23.369016 |   22.954488 |   23.207472 |    86 |    23 |    26 |     2 | ST13168 |
+| Populus     |               44 |  23.0837232 |   22.664928 |   22.381464 |   21.360384 |    97 |    37 |    34 |     2 | ST08548 |
+| Populus     | 35.8267716535433 |  23.0757984 |   22.686264 |   22.079712 |    20.33016 |    36 |    53 |    30 |     6 | AS00321 |
+| Populus     | 36.6141732283465 |  22.9694232 |   23.161752 |   23.140416 |    22.57044 |    33 |    25 |    22 |     5 | AS00307 |
+| Populus     |               41 |  22.7627688 |   22.795992 |    23.63724 |   18.095976 |    70 |    21 |    25 |     3 | TS00811 |
+| Populus     | 56.2992125984252 |  22.7374704 |   22.213824 |    22.35708 |   21.695664 |    46 |    15 |    33 |     5 | AS00388 |
+| Populus     | 50.3937007874016 |   22.614636 |   23.579328 |    22.81428 |   23.381208 |    43 |    49 |    12 |     3 | AS05498 |
+| Populus     | 29.9212598425197 |  22.3747584 |   22.643592 |   21.866352 |   21.195792 |   154 |    24 |    21 |     2 | AS00293 |
+| Populus     | 32.2834645669291 |  22.3421448 |   22.393656 |   22.597872 |   22.872192 |   100 |    31 |    23 |     3 | AS00252 |
+| Populus     |               36 |  22.2281496 |   22.149816 |    21.27504 |   21.314664 |   234 |    29 |    25 |     2 | ST74168 |
+| Populus     | 28.3464566929134 |    22.11324 |   21.829776 |   21.756624 |     18.4404 |    52 |    27 |    33 |     3 | AS01542 |
+| Populus     |               21 |  22.0181424 |   21.101304 |   21.055584 |    21.00072 |    38 |    28 |    22 |     5 | TP00341 |
+| Populus     | 39.7637795275591 |  21.9718128 |   22.073616 |   22.338792 |   21.771864 |    79 |    26 |    29 |     3 | AS00286 |
+| Quercus     |               37 |  30.4367184 |   29.556456 |   30.348936 |    29.47416 |    41 |    31 |    25 |     4 | SS01670 |
+| Quercus     |               36 |  29.8472352 |   29.876496 |    29.76372 |   20.141184 |    41 |    21 |    24 |     3 | SS01691 |
+| Quercus     |               38 |  29.0529264 |   29.099256 |   29.059632 |   28.632912 |   153 |    21 |    17 |     2 | SS01672 |
+| Quercus     |               22 |  28.6079184 |   28.069032 |   28.065984 |   27.819096 |    81 |    28 |    10 |     1 | ST27011 |
+| Quercus     |               35 |  28.5862776 |   28.989528 |   29.117544 |   29.074872 |    43 |    24 |    15 |     3 | SS01697 |
+| Quercus     |               42 |  28.4768544 |   28.181808 |   28.678632 |   27.374088 |   101 |    41 |    26 |     5 | ST27505 |
+| Quercus     |               23 |  28.3427424 |   28.325064 |   28.014168 |   26.386536 |    32 |    27 |    14 |     2 | SS01669 |
+| Quercus     |               41 |   28.250388 |   28.398216 |   28.264104 |       26.67 |   181 |    18 |    25 |     3 | SS01683 |
+| Quercus     |               29 |   28.189428 |    27.38628 |    27.76728 |   27.794712 |    31 |    25 |     6 |     3 | SS01647 |
+| Quercus     |               35 |  27.4143216 |   26.423112 |   27.236928 |   25.152096 |   190 |    31 |    21 |     3 | SS01678 |
+| Quercus     |               43 |   26.093928 |   25.673304 |   25.447752 |   26.371296 |    15 |    10 |    14 |     4 | SS01663 |
+| Quercus     |               28 |  25.9470144 |   26.118312 |   25.624536 |   25.173432 |   149 |    25 |    21 |     4 | SS01784 |
+| Quercus     |               23 |  25.9390896 |    25.48128 |   25.901904 |     26.0604 |     8 |    11 |    16 |     6 | SS02122 |
+| Quercus     |               31 |  25.8857496 |    25.63368 |   25.886664 |     25.2984 |    72 |    34 |    24 |     3 | ST27506 |
+| Quercus     |               23 |   25.728168 |   25.761696 |    25.16124 |   22.530816 |    43 |    22 |    23 |     3 | SS00675 |
+| Quercus     |               28 |   25.476708 |   25.456896 |   24.911304 |   24.222456 |    92 |    56 |    24 |     4 | ST27411 |
+| Quercus     |               37 |  25.4215392 |   25.667208 |      25.146 |   25.127712 |   119 |    25 |    31 |     5 | ST63185 |
+| Quercus     |               32 |  25.1466096 |   25.536144 |    25.84704 |   25.213056 |   131 |    31 |    26 |     4 | SS00335 |
+| Quercus     |               34 |  24.7784112 |   24.624792 |   24.822912 |   23.414736 |   102 |    28 |    21 |     5 | ST65806 |
+| Quercus     |               26 |  24.6528336 |    24.49068 |   23.871936 |   24.432768 |    38 |    19 |    22 |     4 | SS02128 |
+| Quercus     |               23 |  24.5629176 |   23.945088 |   23.826216 |    23.66772 |   229 |    30 |    27 |     4 | SS01705 |
+| Quercus     |               25 |  24.5184168 |   24.496776 |   23.920704 |   21.253704 |    44 |    29 |    21 |     3 | SS01946 |
+| Quercus     | 55.1181102362205 |  24.5025672 |   24.335232 |   24.606504 |   22.899624 |   110 |    29 |    21 |     3 | AS05417 |
+| Quercus     |               29 |    24.48306 |     23.7744 |    23.91156 |   23.640288 |    30 |    15 |    20 |     3 | SS01131 |
+| Quercus     |               27 |  24.3705888 |   24.365712 |   23.734776 |   22.671024 |    36 |    30 |    23 |     2 | SS01132 |
+| Quercus     |               26 |     24.0411 |   23.387304 |   23.183088 |   20.601432 |    39 |    30 |    20 |     2 | SS01226 |
+| Quercus     |               30 |  23.9517936 |   23.908512 |   23.746968 |   23.173944 |    45 |    40 |    10 |     5 | SS01094 |
+| Quercus     |               33 |  23.8085376 |    23.91156 |     23.9268 |   23.295864 |   104 |    24 |    28 |     4 | ST63198 |
+| Quercus     |               29 |  23.8036608 |   23.369016 |   23.420832 |     23.4696 |    54 |    15 |    23 |     5 | ST63137 |
+| Quercus     |               27 |  23.7006384 |   23.341584 |   23.262336 |   22.899624 |    31 |    18 |    21 |     5 | HF850   |
+| Quercus     |               29 |  23.6713776 |   23.594568 |   23.039832 |    21.67128 |    49 |    31 |    39 |     4 | ST51714 |
+| Quercus     |               23 |  23.6530896 |   23.643336 |   23.061168 |   21.622512 |    84 |    24 |    23 |     4 | SS01777 |
+| Quercus     |               30 |  23.4110784 |   23.990808 |   24.252936 |   24.222456 |   109 |    45 |    18 |     6 | ST26917 |
+| Quercus     |               25 |   23.391876 |   23.554944 |   22.988016 |   21.918168 |    79 |    21 |    23 |     3 | ST32838 |
+| Quercus     |               29 |  23.2483152 |   22.664928 |   22.917912 |   21.409152 |    40 |    26 |    25 |     1 | SS02228 |
+| Quercus     |               40 |  23.1849168 |    22.81428 |   22.472904 |   20.613624 |   117 |    29 |    18 |     3 | HF5540  |
+| Quercus     |               26 |  23.1620568 |   23.326344 |   22.329648 |   21.820632 |    39 |    25 |    24 |     3 | HF4164  |
+| Quercus     |               25 |  23.1538272 |    23.50008 |   22.911816 |   19.516344 |    88 |    45 |    38 |     4 | ST48697 |
+| Quercus     |               31 |   23.099268 |    23.14956 |   23.128224 |   23.219664 |    88 |    17 |    14 |     5 | ST32466 |
+| Quercus     |               27 |  23.0666544 |   22.485096 |   22.369272 |   21.744432 |    39 |    23 |    22 |     2 | ST33101 |
+| Robinia     |               23 |  26.4054336 |   26.740104 |   26.615136 |   24.697944 |    74 |    17 |    18 |     4 | HF4196  |
+| Robinia     |               25 |  25.2660912 |   25.667208 |   24.813768 |    21.74748 |    89 |    23 |    28 |     2 | SS00424 |
+| Robinia     |               22 |  23.8454184 |   24.725376 |   24.161496 |   23.061168 |   116 |    26 |    23 |     6 | SS00417 |
+| Robinia     |               35 |  23.0751888 |   22.856952 |   22.317456 |   17.291304 |   123 |    30 |    33 |     2 | HF2443  |
+| Robinia     |               33 |  21.7803984 |   21.616416 |    22.44852 |   19.702272 |    95 |    23 |    22 |     4 | SS00419 |
+| Robinia     |               25 |   20.869656 |   21.223224 |    21.42744 |   21.116544 |   104 |    26 |    22 |     4 | HF2193  |
+| Robinia     |               31 |  20.4136752 |   20.540472 |   20.080224 |   16.279368 |    42 |    60 |    15 |     4 | ST63779 |
+| Robinia     |               22 |  18.0432456 |    18.18132 |   17.269968 |    16.03248 |    37 |    47 |    23 |     3 | TS01198 |
+| Robinia     |               28 |  17.9548536 |   17.867376 |   17.087088 |   15.867888 |    50 |    32 |     5 |     4 | HF6070  |
+| Robinia     |               38 |  17.6119536 |   18.284952 |    17.72412 |   16.568928 |    49 |    28 |    55 |     3 | ST52517 |
+| Robinia     |               24 |   15.364968 |   15.197328 |   15.502128 |    9.534144 |    44 |    59 |    20 |     1 | ST21993 |
+| Salix       |               57 |  22.4244408 |   22.140672 |   21.637752 |     21.1074 |    40 |    38 |    26 |     5 | ST52429 |
+| Salix       |               38 |  17.2141896 |   17.964912 |   17.407128 |   12.697968 |    51 |    17 |    23 |     2 | HF2538  |
+| Tilia       |               23 |   24.987504 |   24.832056 |     24.4602 |   23.460456 |    39 |    42 |    11 |     8 | ST31545 |
+| Tilia       |               26 |  23.7841536 |   24.036528 |   23.948136 |   23.170896 |    51 |    50 |    10 |     6 | ST32102 |
+| Tilia       |               23 |  23.6619288 |    24.14016 |   24.609552 |   24.451056 |    40 |    35 |    27 |     5 | SS00783 |
+| Tilia       |               22 |  23.3053128 |   23.259288 |   23.183088 |   22.710648 |   143 |    25 |    13 |     8 | SS02096 |
+| Tilia       |               26 |  22.7886768 |   23.265384 |   23.036784 |   21.790152 |   157 |    53 |    33 |     4 | ST32171 |
+| Tilia       |               23 |  22.7359464 |   22.924008 |   22.375368 |    21.83892 |    32 |    30 |    16 |     5 | SS00768 |
+| Tilia       |               23 |  22.5442272 |   22.521672 |   22.488144 |    22.06752 |   118 |    32 |    19 |     4 | ST13511 |
+| Tilia       |               24 |  22.3503744 |   22.634448 |   22.414992 |    22.92096 |    47 |    46 |    12 |     5 | ST31571 |
+| Tilia       |               50 |   22.290024 |    22.49424 |     21.6408 |   16.194024 |    29 |    23 |    19 |     5 | HF4120  |
+| Tilia       |               24 |  21.7621104 |   21.988272 |   21.022056 |   17.187672 |    49 |    70 |    29 |     5 | ST12276 |
+| Tilia       |               26 |  21.2604096 |     20.8788 |   20.567904 |   19.196304 |   170 |    23 |    21 |     3 | ST33941 |
+| Tilia       |               22 |  21.2031072 |   21.421344 |    21.24456 |    20.77212 |    32 |    22 |    24 |     6 | ST31776 |
+| Tilia       |               22 |   21.195792 |   21.515832 |   21.180552 |    18.39468 |    30 |    27 |    18 |     2 | ST31811 |
+| Tilia       |               38 |  20.9638392 |   21.415248 |   20.839176 |   20.473416 |   129 |    55 |    22 |     6 | ST11027 |
+| Tilia       |               26 |  20.9074512 |   21.043392 |   20.321016 |   19.485864 |    39 |    55 |     6 |     4 | ST72751 |
+| Tilia       |               34 |   20.700492 |   20.698968 |   19.854672 |   19.229832 |    47 |    28 |    12 |     2 | ST31628 |
+| Tilia       |               29 |   20.676108 |   20.205192 |   19.702272 |   20.564856 |    48 |    58 |    12 |     5 | ST72910 |
+| Tilia       |               23 |  20.6724504 |   20.958048 |    20.43684 |    11.26236 |    48 |    22 |    15 |     2 | ST09196 |
+| Tilia       |               22 |  20.6657448 |   20.409408 |   19.839432 |   19.196304 |   104 |    32 |     8 |     4 | ST10619 |
+| Tilia       |               34 |  20.4920088 |   20.750784 |      20.193 |    20.14728 |    28 |    23 |    13 |     5 | ST35978 |
+| Tilia       |              121 |  20.3670408 |   20.854416 |   20.845272 |   18.193512 |    31 |    24 |    21 |     8 | HF4127  |
+| Tilia       |               26 |  20.3231496 |   20.064984 |   20.098512 |    19.44624 |    50 |     6 |    23 |     4 | ST07731 |
+| Tilia       |               30 |  20.2871832 |     20.0406 |   19.348704 |    9.195816 |   252 |    41 |    11 |     2 | ST69814 |
+| Tilia       |               28 |  20.2749912 |   20.064984 |   19.452336 |   18.388584 |    46 |    44 |    23 |     3 | ST73073 |
+| Tilia       |               29 |  20.2442064 |   20.424648 |   19.458432 |   17.410176 |    51 |    68 |    26 |     3 | ST13064 |
+| Tilia       |               38 |   20.194524 |   20.260056 |   21.022056 |   21.165312 |   274 |    29 |    27 |     5 | ST32487 |
+| Tilia       |               23 |  20.1216768 |     20.2692 |   19.653504 |   19.235928 |    45 |    46 |    19 |     2 | ST63469 |
+| Tilia       |               22 |  20.0165208 |   20.403312 |   19.607784 |   19.062192 |    43 |    53 |    22 |     5 | SS02283 |
+| Tilia       |               22 |    19.98726 |   19.671792 |   19.077432 |   15.230856 |   101 |    21 |    14 |     3 | ST80723 |
+| Tilia       |               24 |  19.9214232 |   19.854672 |   18.937224 |   18.672048 |   107 |    41 |    13 |     5 | ST70327 |
+| Tilia       |               35 |   19.876008 |    19.85772 |   19.123152 |   18.839688 |    34 |    44 |    11 |     3 | ST63658 |
+| Tilia       |               22 |  19.8113904 |   20.000976 |   19.031712 |   15.873984 |    50 |    95 |    63 |     3 | ST28139 |
+| Tilia       |               27 |   19.702272 |   19.577304 |    18.92808 |   16.968216 |    51 |    92 |    35 |     6 | ST88320 |
+| Tilia       |               30 |  19.5538344 |   19.577304 |   18.824448 |   17.836896 |    44 |    24 |     9 |     3 | ST24723 |
+| Tilia       |               39 |  19.5334128 |   19.641312 |   19.083528 |   16.425672 |    45 |    46 |    32 |     2 | ST70139 |
+| Tilia       |               21 |  19.4687952 |   19.982688 |    20.31492 |    18.88236 |    41 |    46 |    13 |     5 | ST38412 |
+| Tilia       |               22 |  19.4273424 |   19.205448 |   18.464784 |   17.858232 |    48 |    39 |    20 |     4 | ST29966 |
+| Tilia       |               42 |  19.4245992 |   20.037552 |    19.97964 |   18.336768 |   102 |    30 |    11 |     1 | ST10620 |
+| Tilia       |               29 |  19.1984376 |    19.23288 |   19.242024 |    17.48028 |    54 |    27 |    23 |     7 | ST16699 |
+| Tilia       |               22 |  19.1152272 |   19.016472 |   18.370296 |   17.522952 |   114 |    41 |    10 |     5 | ST69739 |
+| Ulmus       |               26 |  24.3785136 |   23.487888 |   23.433024 |   19.763232 |   109 |    48 |    24 |     7 | SS02680 |
+| Ulmus       |               32 |   23.323296 |   23.308056 |   23.070312 |    21.99132 |   116 |    33 |    24 |     4 | ST18253 |
+| Ulmus       |               25 |   23.189184 |   23.228808 |    22.92096 |   21.936456 |   128 |    38 |    21 |     4 | SS02999 |
+| Ulmus       |               21 |  23.0959152 |   23.295864 |   22.588728 |     22.0218 |    67 |    28 |     9 |     3 | ST48949 |
+| Ulmus       |               34 |  22.9307136 |   23.158704 |    23.34768 |   22.530816 |   100 |    62 |    20 |     5 | ST35378 |
+| Ulmus       |               41 |  22.6658424 |   22.506432 |   22.122384 |   20.540472 |    45 |    41 |    16 |     2 | ST38524 |
+| Ulmus       |               45 |  22.5661728 |   21.985224 |   22.719792 |   22.232112 |    43 |    42 |    14 |     6 | ST33223 |
+| Ulmus       |               21 |   22.172676 |   22.064472 |   21.421344 |   19.915632 |    39 |    33 |     9 |     2 | ST31031 |
+| Ulmus       |               21 |   21.901404 |    21.77796 |   21.028152 |   18.708624 |   112 |    23 |    19 |     3 | SS01776 |
+| Ulmus       |               26 |  21.3311232 |   20.805648 |   21.189696 |   18.641568 |    72 |    16 |    22 |     2 | ST23560 |
+| Ulmus       |               35 |  21.3201504 |   21.348192 |   20.409408 |   20.278344 |    89 |    45 |    30 |     4 | ST50747 |
+| Ulmus       |               40 |   21.316188 |   21.537168 |   21.354288 |      21.336 |    36 |    31 |    37 |     4 | ST59825 |
+| Ulmus       |               39 |   21.151596 |   21.235416 |   21.143976 |   19.540728 |    50 |    85 |    37 |     6 | ST87494 |
+| Ulmus       |               28 |  20.9300064 |   20.747736 |   20.631912 |   19.488912 |    75 |    33 |    24 |     4 | ST25867 |
+| Ulmus       |               38 |  20.9263488 |    20.90928 |   20.366736 |   19.802856 |    98 |    33 |    31 |     4 | ST57946 |
+| Ulmus       |               45 |   20.906232 |   21.073872 |   20.598384 |    19.99488 |   121 |    30 |    29 |     3 | ST08052 |
+| Ulmus       |               36 |  20.5956408 |   20.683728 |   20.077176 |    19.32432 |    49 |    33 |    15 |     4 | SS02884 |
+| Ulmus       |               34 |  20.4508608 |   20.415504 |   20.244816 |   20.110704 |   119 |    44 |    26 |     2 | ST67878 |
+| Ulmus       |               38 |  20.4496416 |   20.705064 |   20.479512 |   19.193256 |    96 |    37 |    28 |     2 | ST35199 |
+| Ulmus       |               31 |   20.415504 |   20.290536 |   20.049744 |   19.296888 |   121 |    17 |    19 |     4 | ST38201 |
+| Ulmus       |               38 |  20.0860152 |   20.019264 |   20.183856 |   20.506944 |    47 |    10 |    12 |     3 | ST35249 |
+| Ulmus       | 25.1968503937008 |  19.8497952 |   19.946112 |   19.129248 |   17.958816 |    81 |    43 |     8 |     3 | AS03174 |
+| Ulmus       |               36 |  19.8229728 |   19.424904 |   19.223736 |   18.339816 |    81 |    28 |    25 |     4 | ST35200 |
+| Ulmus       |               39 |  19.5321936 |   19.586448 |    18.94332 |   19.366992 |    47 |    33 |    28 |     4 | ST68878 |
+| Ulmus       |               21 |  19.5111624 |   19.409664 |   19.104864 |   18.446496 |    47 |    34 |    27 |     6 | ST50224 |
+| Ulmus       |               39 |    19.46148 |    19.64436 |   20.445984 |   19.412712 |    92 |    34 |    17 |     3 | ST67662 |
+| Ulmus       |               22 |    19.44624 |   19.351752 |   18.946368 |   17.468088 |    93 |    18 |     7 |     3 | HF1876  |
+| Ulmus       |               24 |  19.4428872 |    19.52244 |    20.28444 |   20.080224 |   102 |    24 |    31 |     2 | ST52295 |
+| Ulmus       |               44 |    19.30908 |   19.379184 |   18.483072 |   17.888712 |   147 |    31 |    38 |     5 | TS01344 |
+| Ulmus       |               38 |  19.1606424 |   19.574256 |    18.83664 |   19.696176 |    47 |    50 |    25 |     3 | ST69606 |
+| Ulmus       |               38 |  19.1286384 |   19.226784 |    18.47088 |    18.71472 |    46 |    23 |    25 |     2 | ST37025 |
+| Ulmus       |               26 |   19.068288 |   18.839688 |     18.5928 |   18.230088 |    44 |    14 |    10 |     5 | ST25260 |
+| Ulmus       |               38 |  19.0503048 |    18.86712 |    18.50136 |   18.153888 |    43 |    27 |    29 |     2 | ST36960 |
+| Ulmus       |               34 |  19.0030608 |    19.29384 |   18.434304 |   20.281392 |   122 |    58 |    18 |     6 | ST11894 |
+| Ulmus       |               34 |  18.9820296 |   18.998184 |   18.955512 |   15.663672 |    46 |    51 |    15 |     3 | ST74592 |
+| Ulmus       |               29 |  18.9780672 |    19.09572 |    18.92808 |   18.062448 |   125 |    39 |    27 |     2 | ST08579 |
+| Ulmus       |               31 |  18.9442344 |   18.891504 |   19.178016 |    18.37944 |   107 |    34 |    25 |     4 | ST67931 |
+| Ulmus       |               31 |  18.8951616 |    19.14144 |   18.617184 |   19.251168 |   109 |    43 |    15 |     2 | ST39299 |
+| Ulmus       |               33 |  18.8741304 |   18.845784 |     18.4404 |   16.983456 |   135 |    16 |    14 |     4 | ST48838 |
+| Ulmus       |               24 |   18.809208 |   18.665952 |   19.223736 |    18.92808 |    46 |    24 |    28 |     4 | ST24951 |
+#+END_SRC
 
 ****** revised extraction using just the trees identified as not growing above
 
@@ -2703,10 +3421,10 @@ no.grow.uid <- hg$uid
 
                                             #uids <- c("ST14603", "ST14604", "ST14599", "ST14547")
 
-    fs2017 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_las/", full.names = F)
-    fs2016 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2016_las/", full.names = F)
-    fs2009 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/", full.names = F)
-    fs2005 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2005_las/", full.names = F)
+    fs2017 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2017_normlas/", full.names = F)
+    fs2016 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2016_normlas/", full.names = F)
+    fs2009 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_normlas/", full.names = F)
+    fs2005 <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2005_normlas/", full.names = F)
 
                                             #make sure there is only one of each trees
     uids2017 <- str_extract(fs2017, "^[A-Za-z0-9]+")
@@ -2760,10 +3478,10 @@ no.grow.uid <- hg$uid
 
     out <- foreach(i = (1:nrow(uids_df)), .packages = c("stringr","lidR", "rgeos"), .combine = "rbind") %dopar% {  
 
-        path2017 <- paste0(treelasdir, "trees_2017_las/", uids_df$path2017[i])
-        path2016 <- paste0(treelasdir, "trees_2016_las/", uids_df$path2016[i])
-        path2009 <- paste0(treelasdir, "trees_2009_las/", uids_df$path2009[i])
-        path2005 <- paste0(treelasdir, "trees_2005_las/", uids_df$path2005[i])
+        path2017 <- paste0(treelasdir, "trees_2017_normlas/", uids_df$path2017[i])
+        path2016 <- paste0(treelasdir, "trees_2016_normlas/", uids_df$path2016[i])
+        path2009 <- paste0(treelasdir, "trees_2009_normlas/", uids_df$path2009[i])
+        path2005 <- paste0(treelasdir, "trees_2005_normlas/", uids_df$path2005[i])
 
         l2017 <- readLAS(path2017, select = "")
         l2017@data$Z <-     l2017@data$Z  * .3048  # convert to meters
@@ -2823,7 +3541,7 @@ no.grow.uid <- hg$uid
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/ng_bias.png :width 1000 :bg transparent :res 100 :height 800
+#+begin_src R :exports results :results graphics :file figs/ng_bias_n.png :width 1000 :bg transparent :res 100 :height 800
 
   ggplot(ngh, aes(x = pulse_density, y = mean_bias, group = uid, color = Genus, ymin = mean_bias - sd_bias, ymax = mean_bias + sd_bias)) + 
       geom_line() + 
@@ -2834,6 +3552,8 @@ no.grow.uid <- hg$uid
 #+end_src
 
 #+RESULTS:
+[[file:figs/ng_bias_n.png]]
+
 [[file:figs/ng_bias.png]]
 
 #+begin_src R :exports results :results graphics :file figs/ng_bias_focus1.png :width 1000 :bg transparent :res 100 :height 800
@@ -2895,7 +3615,7 @@ no.grow.uid <- hg$uid
 #+RESULTS:
 
 
-#+begin_src R :exports results :results graphics :file figs/avg_bias_focus1_otherGenera2_.png :bg transparent :width 1000 :res 120
+#+begin_src R :exports results :results graphics :file figs/avg_bias_focus1_otherGenera2_n.png :bg transparent :width 1000 :res 120
 
   pd <-  filter(nghs, Genus %in% c("Fraxinus", "Acer", "Gleditsia", "Ginkgo", "Gymnocladus", "Picea", "Pinus", "Quercus", "Platanus", "Populus", "Juglans"))
 
@@ -2914,6 +3634,8 @@ p
 #+end_src
 
 #+RESULTS:
+[[file:figs/avg_bias_focus1_otherGenera2_n.png]]
+
 [[file:figs/avg_bias_focus1_otherGenera2_.png]]
 #+begin_src R :exports results :results graphics :file figs/avg_bias_focus1_otherGenera1.pngvg_.png :bg transparent :width 1000 :res 120
 
@@ -2994,7 +3716,27 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_40_f.png :width 1300 :height 800 :bg transparent :res 100
+#+begin_src R
+  library(ggthemes)
+      terk <- list(theme_solarized_2(base_size = 16) +
+                   theme(legend.title = element_text(size = 10),
+                         legend.text = element_text(size = 8),
+                         axis.ticks = element_line(size = .3),
+                         rect = element_rect(fill = "transparent"),
+                         panel.background = element_rect(fill = "transparent"),
+                         panel.grid.major = element_line(color = "#839496", size = .1),
+                         panel.grid.minor = element_line(color = "#839496", size = .05)))
+
+  base1 <- "#93a1a1"
+  blue <- scale_color_solarized("blue")
+
+  red <- solarized_pal("red")(1)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_40_n.png :width 1300 :height 800 :bg transparent :res 100
 
   n <- 40
   set.seed(6)
@@ -3014,7 +3756,7 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 #+end_src
 
 #+RESULTS:
-[[file:figs/correction_nogrowth_40_f.png]]
+[[file:figs/correction_nogrowth_40_n.png]]
 
 
 
@@ -3024,14 +3766,14 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 ****** compare the two corrections
 | [[file:figs/correction_nogrowth_40.png]] | [[file:figs/correction_oldway.png]] |
 
+
 ****** Fitting many weighted regressions and getting estimates
 #+begin_src R
+  d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
+    d$year <- d$year - 2005
 
     # filter the trees out that aren't in the spceies that we ahve corrections for 
     d <- d[complete.cases(d),]
-
-  # set year 2005 to 0
-  d$year <- d$year - 2005
 
             lms <- list()
             uids <- unique(d$uid)
@@ -3041,8 +3783,6 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
       names(lms) <- uids
         saveRDS(lms, "/home/erker/hgt_data/madison_tree_inventories/hgt/ng_growth_rates_lms.rds")
 #+end_src
-
-#+RESULTS:
 
 #+begin_src R
       growth.rates <- sapply(lms, function(lm) coef(lm)[2])
@@ -3056,45 +3796,144 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 #+RESULTS:
 
+****** dropping trees with impossible growth or removal and replacements
+#+begin_src R
+    d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
+    d <- d[complete.cases(d),]
+      d$year <- d$year - 2005
+      ds <- d %>% select(uid, year, emp_height) %>% pivot_wider(names_from = year, values_from = emp_height)
+
+      bad_uids <- ds %>%
+          mutate(dif1716_big = abs(`12` - `11`) > 1.5,
+                 dif1609_big = abs(`11` - `4`) > 10,
+                 dif1609_vryneg = `11` - `4` <  -2,
+                 dif0905_vryneg = `4` - `0` <  -2) %>%
+          filter(dif1716_big == T | dif1609_big == T | dif1609_vryneg | dif0905_vryneg) %>%
+          pull(uid)
+
+  growth.rates.f <- filter(growth.rates, ! uid %in% bad_uids)
+
+  d <- filter(d, ! uid %in% bad_uids)
+
+#+end_src
+
+#+RESULTS:
+
+****** replotting height by year for some trees with weighted ols line
+#+begin_src R
+    library(ggthemes)
+        terk <- list(theme_solarized_2(base_size = 16) +
+                     theme(legend.title = element_text(size = 10),
+                           legend.text = element_text(size = 8),
+                           axis.ticks = element_line(size = .3),
+                           rect = element_rect(fill = "transparent"),
+                           panel.background = element_rect(fill = "transparent"),
+                           panel.grid.major = element_line(color = "#839496", size = .1),
+                           panel.grid.minor = element_line(color = "#839496", size = .05)))
+
+    base1 <- "#93a1a1"
+  base01 <- "#586e75"
+    blue <- scale_color_solarized("blue")
+    red <- solarized_pal("red")(1)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_40_m.png :width 1300 :height 800 :bg transparent :res 100
+
+  n <- 40
+  set.seed(2)
+  uids <- sample(unique(d$uid), n)
+  df <- filter(d, uid %in% uids)
+
+    ggplot(data = df) + 
+        geom_line(aes(y = emp_height, x = year + 2005, group = uid), color = "darkgray") +
+        geom_line(aes(y = cor_height, x = year + 2005, group = uid), color = red) +
+        geom_linerange(aes(ymax = cor_height + 1.96 * sd_bias, ymin = cor_height - 1.96 *sd_bias, x = year + 2005), color = red) + 
+        facet_wrap(~uid, ncol = 8) +
+        terk +
+        scale_x_continuous(breaks = c(2005,2009, 2017)) +
+        scale_y_continuous(name = "height (m)") +
+        theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction_nogrowth_40_m.png]]
+
+
+#+begin_src R :exports results :results graphics :file figs/correction_nogrowth_40_m_smooth_lm.png :width 1300 :height 800 :bg transparent :res 100
+
+  n <- 40
+  set.seed(7)  # 7 is a good seed for visualizing a range of situations.  y axis is nice scale too.
+  uids <- sample(unique(d$uid), n)
+  df <- filter(d, uid %in% uids)
+
+    ggplot(data = df) + 
+      stat_smooth(method = "lm", aes(y = emp_height, x = year + 2005, group = uid), color = base01, size = .5, se = F) +
+      stat_smooth(method = "lm", aes(y = cor_height, x = year + 2005, weight = (1 / sd_bias^2), group = uid), fill = "red", alpha = .2, color = red, size = .5, se = T) +
+        geom_point(aes(y = emp_height, x = year + 2005, group = uid), color = base01) +
+        geom_point(aes(y = cor_height, x = year + 2005, group = uid), color = red) +
+        geom_linerange(aes(ymax = cor_height + 1.96 * sd_bias, ymin = cor_height - 1.96 *sd_bias, x = year + 2005), color = red) + 
+        facet_wrap(~uid, ncol = 8) +
+        terk +
+        scale_x_continuous(name = "year",breaks = c(2005,2009, 2017)) +
+        scale_y_continuous(name = "height (m)") +
+        theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/correction_nogrowth_40_m_smooth_lm.png]]
+
+
+
 ****** plots of growth rates
 
 ******* histogram
 #+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm.png :width 1000 :res 120 :bg transparent
-  ggplot(growth.rates, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
+  ggplot(growth.rates.f, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
     terk +
-    scale_x_continuous("growth rate (ft/year)")
+    scale_x_continuous("growth rate (m/year)")
 #+end_src
 
 #+RESULTS:
 [[file:figs/ng_growthrates_lm.png]]
 
-#+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm_clip.png :width 1000 :res 120 :bg transparent
-  ggplot(growth.rates, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2, color = base1) +
+#+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm_clip_n.png :width 1000 :res 120 :bg transparent
+  ggplot(growth.rates.f, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2, color = base1) +
     terk +
     scale_x_continuous("growth rate (cm/year)", lim = c(-100,100), breaks = c(-100,-50,0, round(mean(growth.rates$growth.rate * 100),1), 50, 100)) +
     geom_vline(data = growth.rates, aes(xintercept = mean(growth.rate)*100), color = red)
 #+end_src
 
 #+RESULTS:
+[[file:figs/ng_growthrates_lm_clip_n.png]]
+
+
 [[file:figs/ng_growthrates_lm_clip.png]]
 
 ******* plot suspect growth rates
 #+begin_src R :exports results :results graphics :file figs/correction_nogrowth_suspect_high.png :width 1300 :height 800 :bg transparent :res 100
   d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
-    dn <- left_join(d, growth.rates)
+    dn <- left_join(d, growth.rates.f)
 
   dn <- dn[complete.cases(dn),]
 
-      df <- dn[dn$growth.rate > 1,]
+      df <- dn[dn$growth.rate < -.4,]
 
         ggplot(data = df) + 
             geom_line(aes(y = emp_height, x = year, group = uid), color = base1) +
             geom_line(aes(y = cor_height, x = year, group = uid), color = red) +
             geom_linerange(aes(ymax = cor_height + 1.96 * sd_bias, ymin = cor_height - 1.96 *sd_bias, x = year), color = red) + 
             facet_wrap(~uid, ncol = 8) +
-            terk +
             scale_x_continuous(breaks = c(2005,2009, 2017)) +
-            theme(axis.text.x = element_text(angle = 60, hjust = 1))
+            theme_minimal() +
+              theme(axis.text.x = element_text(angle = 60, hjust = 1))
 
 
 #+end_src
@@ -3104,10 +3943,12 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 ******* growth by height 
 #+begin_src R :exports results :results graphics :file figs/ng_rate_by_int.png :bg transparent :width 1000 :res 100
-hn <- left_join(h, growth.rates)
+  hn <- left_join(h, growth.rates.f)
 
-  ggplot(hn, aes(x = emp_max2005, y = growth.rate)) + geom_point(color = base1, size = .5, alpha = .5) + terk +
-    geom_smooth()
+    ggplot(hn, aes(x = emp_max2005, y = growth.rate)) + geom_point(size = .5, alpha = .5) + 
+        terklight +
+      geom_smooth() #+
+#      facet_wrap(~abs(growth.rate.se / growth.rate) < .1, ncol = 2)
 #+end_src
 
 #+RESULTS:
@@ -3161,6 +4002,16 @@ join growth rates to trees
                          panel.grid.major = element_line(color = "#839496", size = .1),
                          panel.grid.minor = element_line(color = "#839496", size = .05)))
 
+      terklight <- list(theme_minimal(base_size = 16) +
+                   theme(legend.title = element_text(size = 10),
+                         legend.text = element_text(size = 8),
+                         axis.ticks = element_line(size = .3),
+                         rect = element_rect(fill = "transparent"),
+                         panel.background = element_rect(fill = "transparent"),
+                         panel.grid.major = element_line(color = "#839496", size = .2),
+                         panel.grid.minor = element_line(color = "#839496", size = .1)))
+
+
   base1 <- "#93a1a1"
 #  blue <- scale_color_solarized("blue")
   green <- solarized_pal("green")(1)
@@ -3173,7 +4024,7 @@ join growth rates to trees
 #+begin_src R :exports results :results graphics :file figs/trees_growth.png :width 1000 :height 800 :bg transparent
   p <-   ggplot(tdf, aes(x = coords.x1, y = coords.x2, color = growth.rate)) + geom_point(size = .8, alpha = .8) +
       coord_equal() +
-      terk +
+      terklight +
       scale_color_distiller(limits = c(-.3, .3), direction = 1, palette = "RdYlGn")
   p
 #+end_src
@@ -3211,12 +4062,74 @@ hn <- hn[complete.cases(hn),]
 #+RESULTS:
 
 #+begin_src R :exports results :results graphics :file figs/growth_species.png :bg transparent :width 1000
-ggplot(hn, aes(y = growth.rate, x = Genus)) + geom_boxplot() +
-terk
+  ggplot(hn, aes(y = growth.rate, x = Genus)) + geom_boxplot() +
+    stat_summary(fun.y = "mean", geom = "point", color = red) +
+  terklight
 #+end_src
 
 #+RESULTS:
 [[file:figs/growth_species.png]]
+
+#+begin_src R :exports results :results graphics :file figs/growth_species_mean.png :bg transparent :width 1000 :res 120
+  library(Hmisc)
+  library(forcats)
+
+  hns <- hn %>%
+    group_by(Genus) %>%
+      dplyr::summarize(mgr = mean(growth.rate),
+                n = n(),
+                se = sd(growth.rate) / sqrt(n)) %>%
+    mutate(Genus = fct_reorder(Genus, mgr))
+
+
+      ggplot(hns, aes(x = Genus, y = mgr, ymin = mgr - 1.96 * se, ymax = mgr + 1.96 * se)) +  geom_pointrange() +
+        terklight +
+        coord_flip()
+#+end_src
+
+#+RESULTS:
+[[file:figs/growth_species_mean.png]]
+
+
+#+begin_src R :exports results :results graphics :file figs/growth_species_mean_sizeclass.png :bg transparent :width 1000 :res 120
+  library(Hmisc)
+  library(forcats)
+
+  hns <- hn %>%
+    mutate(size_class = ifelse(emp_max2005 < 10, "small", ifelse(emp_max2005 > 20, "large", "medium"))) %>%
+    group_by(Genus, size_class) %>%
+      dplyr::summarize(mgr = mean(growth.rate),
+                n = n(),
+                se = sd(growth.rate) / sqrt(n)) %>%
+    ungroup() %>%
+    mutate(Genus = fct_reorder(Genus, mgr))
+
+
+      ggplot(hns, aes(x = Genus, y = mgr, ymin = mgr - 1.96 * se, ymax = mgr + 1.96 * se)) +  geom_pointrange() +
+        terklight +
+        coord_flip() + 
+        facet_wrap(~ size_class, ncol = 3)
+#+end_src
+
+#+RESULTS:
+[[file:figs/growth_species_mean_sizeclass.png]]
+
+#+begin_src R :exports results :results graphics :file figs/growth_species_mean_sizeclass2.png :width 1000 :res 120 :bg transparent
+
+  ggplot(hns, aes(x = Genus, y = mgr, ymin = mgr - 1.96 * se, ymax = mgr + 1.96 * se, color = size_class)) +  geom_pointrange() +
+    terklight +
+    coord_flip()
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/growth_species_mean_sizeclass2.png]]
+
+******* make a model and plot species effect controling for height  I SHOULD JOIN ALL THE DATA (hyperspectral etc first before I do modelling).
+
+#+begin_src R
+
+#+end_src
 
 **** crop lidar to the tenney oak for visualization of bias situation.
 
@@ -3801,6 +4714,15 @@ plot(to2009)
 *** I need to think hard about how i'm going to structure this paper.
 - maybe just figure out how to correct for bias and report the growths
 - then as extension link to traits etc to try to explain growth.
+*** other covariates
+
+- position in topography
+- % impervious within 20m
+- % impervious within 100m
+- mean height of first returns within 20m of tree
+- traits from hyperspectral imagery
+- distance to road?
+
 
 *** modeling
 
@@ -3941,10 +4863,49 @@ https://link.springer.com/article/10.1186/s40663-018-0146-y
 
 file:///home/erker/Downloads/remotesensing-10-00347.pdf
 
+
 https://www.sciencedirect.com/science/article/pii/S0034425717302316#f0005
 
 https://www.tandfonline.com/doi/abs/10.5589/m06-030
 
+Assessing species-level biases in tree heights
+estimated from terrain-optimized leaf-off airborne
+laser scanner (ALS) data
+
+
+** cite:parent_volin_2015
+
+ALS optimized for terrain underestimates tree height.
+
+They did find statistically significant differences between species in
+estimating height, but they were small (<2m)
+
+#+BEGIN_QUOTE
+Variation in the accuracies of ALS-estimated tree heights are presumably due to
+differences in branching architecture among species – laser pulses may pass more easily
+through leaf-off canopies with lower branch densities. Compound-leaf species tend to
+have lower branch densities (i.e. twigs/leaf area; twig mass/leaf area) than simple-leaf
+species (Yang, Li, and Sun 2009; White 1983) and, thus, may be expected to have greater
+bias in ALS-based heights. This expectation was supported by Wasser et al. (2013) who
+found that plot average height biases were greater for compound-leaf plots, dominated by
+black walnut (Juglans nigra), green ash (Fraxinus pennsylvanica), and honey locust
+(Gleditsia triacanthos), than for simple-leaf plots dominated by red maple, black cherry,
+and red oak. However, for tree height estimates, our data did not find greater bias for
+compound-leaf species (i.e. white ash, hickories, honey locust) as a whole and we found
+considerable overlap between compound-, simple-, and needle-leaf species. These results
+suggest that branching density may not be a separable characteristic between compound-
+and simple-leaf species – the majority of species in our study were not included in Yang,
+Li, and Sun (2009) and White (1983). Another possible interpretation is that ALS-based
+tree height estimates are not particularly sensitive to species-specific variations in branch
+density given the resolution of our data. Although significant, the differences we found
+among the species we studied were relatively small (bias < 2 m). With higher resolution
+ALS data, Brandtberg et al. (2003) found no significant differences in ALS tree height
+biases among oaks, maple, and yellow poplar (Liriodendron tulipifera). With moderate
+resolution ALS data, Ørka, Næsset, and Bollandsås (2010) did find species to be a
+significant co-predictor of tree height but it had a negligible effect on the model
+performance.
+
+#+END_QUOTE
 
 * accidentally deleted
 ** extract heights from normalized lidar at location of trees
