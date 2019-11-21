@@ -1318,3 +1318,519 @@ m1 <- lmer(cor_height ~ year + (1 | uid), data = hc, weights = 1/ sdbias^2)
 
 
 
+
+* comparing CHMs - more for visualization in 2d
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-18 Mon 15:54
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+** difference in chm 2016 - 2009
+
+#+begin_src R
+  library(raster)
+  r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/height_norm_2016.tif")
+  r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/height_norm_2009.tif")
+  diff <- r2016 - r2009
+  writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_all_2016-2009.tif")
+
+#+end_src
+
+#+RESULTS:
+: Error in .local(.Object, ...) : 
+: 
+: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
+:   Cannot create a RasterLayer object from this file. (file does not exist)
+: Error: object 'r2009' not found
+
+** difference in tree chm 2016 - 2009
+
+#+begin_src R
+    library(raster)
+    r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_height_norm_2016.tif")
+    r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_height_norm_2009.tif")
+  r6e <- crop(r2016, e)
+  r9e <- crop(r2009, e)
+
+  r6e[is.na(r6e)] <- 0
+  r9e[is.na(r9e)] <- 0
+
+  s <- stack(r6e, r9e)
+
+    diff <- overlay(r6e, r9e, fun = function(x,y) {x - y})
+
+
+
+    writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009.tif", overwrite = T)
+
+  diff[diff == 0] <- NA
+
+  diffsmooth <- focal(diff,  w=matrix(1/9,nrow=3,ncol=3))
+
+  writeRaster(diffsmooth, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_smoothed.tif", overwrite = T)
+
+
+  r6es <- focal(r6e,  w=matrix(1/9,nrow=3,ncol=3))
+  r9es <- focal(r9e,  w=matrix(1/9,nrow=3,ncol=3))
+
+  r6t <- r6es > 6
+  r9t <- r9es > 6
+
+
+  difft <- overlay(r6t, r9t, fun = function(x,y) {x - y})
+  writeRaster(difft, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_tree_y_n.tif", overwrite = T)
+#+end_src
+
+#+RESULTS:
+: Error in .local(.Object, ...) : 
+: 
+: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
+:   Cannot create a RasterLayer object from this file. (file does not exist)
+: Error: object 'r2009' not found
+
+
+
+
+* see what it looks like extracting heights from chms....
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-18 Mon 15:54
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/work to get heights of trees
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+** Use a sample of the trees
+
+#+begin_src R
+  library(velox)
+  library(raster)
+
+  p <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+
+  set.seed(1)
+  s <- sample(1:length(p), 20)
+
+  ps <- p[s,]
+
+  shapefile(ps, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_sub.shp", overwrite = T)
+
+  years <- c(2005, 2009, 2010, 2016, 2017)
+
+    res <- lapply(years, function(year) {
+        in.dir <- paste0("~/hgt_data//madison_lidar_",year,"_heights/all_chm/")
+        fs <- list.files(in.dir,
+                         pattern = ".*.tif$")
+        out <- lapply(fs, function(f) {
+            r.v <- velox(paste0(in.dir, f))
+            o <- r.v$extract(sp = ps)
+            o <- unlist(lapply(o, function(x) max(x, na.rm = T)))
+            o
+        })
+        hgt <- apply(do.call("cbind",out),1, max)
+        cbind(hgt, UID = ps$UID)
+        saveRDS(hgt, paste0("~/hgt_data/madison_tree_inventories/hgt/height_",year,".rds"))
+        hgt
+    })
+
+#+end_src
+
+** look at heights
+
+#+begin_src R
+library(ggplot2)
+library(dplyr)
+library(stringr)
+  library(raster)
+  library(tidyr)
+
+    ps <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_sub.shp")
+
+    height2005 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2005.rds")
+    height2009 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+  height2010 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2010.rds")
+    height2016 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+  height2017 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2017.rds")
+
+  ps@data$height2005 <- height2005
+  ps@data$height2009 <- height2009
+  ps@data$height2010 <- height2010
+  ps@data$height2016 <- height2016
+  ps@data$height2017 <- height2017
+
+  d <- ps@data
+
+  dg <- gather(d, year, height, -UID, -DBH, -Genus, -Species) %>%
+      mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/test_heights.png :height 600 :width 800
+#  uid.no.neg.inf <- dg %>% group_by(UID) %>% summarize(height_m = mean(height)) %>% filter(height_m != -Inf) %>% pull(UID)
+
+    ggplot(dg, aes(x = year, y = height, group = UID)) + 
+        geom_line() 
+#+ 
+ #     facet_wrap(~Genus) 
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/test_heights.png]]
+
+
+
+* accidentally deleted
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-18 Mon 16:03
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+** extract heights from normalized lidar at location of trees
+
+*** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
+  
+ - read in points and make a buffer of 5 ft radius around each point (they are
+   almost always in the center of the tree)
+ - for each year lidar, clip to buffer/polygon and extract the maximum height within that buffer and assign it to the tree
+ 
+ Really I should come up with some clever rules for thinning out the
+ tree dataset.  If I have small trees next to big trees, the small
+ trees look like they are tall, but really they are being overtopped by
+ the big trees.
+ 
+ - consider making buffers based on the trees dbh.  if two trees
+   intersect, keep the bigger of the two.
+ 
+ 
+ Also need to beware of non street trees overhanging street trees.
+ 
+
+*** clip lidar to tree buffers and extract tallest return
+**** 2009
+ #+begin_src R
+   library(doParallel)
+   library(foreach)
+   library(lidR)
+   library(dplyr)
+   library(stringr)
+ 
+   b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+   b <- spTransform(b, crs("+init=epsg:7599"))
+   b@data <- select(b@data, UID)
+ 
+   fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar",
+                    pattern = ".*.las",
+                    full.names = T)
+ 
+ 
+   # crop the polygons so that a huge object doesn't need to be sent to each node
+   cl <- makeCluster(4)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+       l <- readLAS(f)
+       proj4string(l) <- "+init=epsg:7599"
+       bc <- crop(b, extent(l))
+       if(!is.null(bc)) {
+           i <- str_extract(f, "lc2t[0-9]+")
+           shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"), overwrite = T)
+       }
+   }
+   closeAllConnections()
+ 
+   rm(b)
+ 
+   # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+ 
+   cl <- makeCluster(7)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {  
+       l <- readLAS(f)
+      i <- str_extract(f, "lc2t[0-9]+")
+       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"))
+       lc <- lasclip(l, bc)
+       m <- lapply(lc, function(ls) {
+           max(ls@data$Z)
+       })
+       o <- cbind(UID = bc@data$UID, height_2009 = unlist(m)
+       saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/",i,".rds"))
+   }
+ 
+   closeAllConnections()
+ 
+ #+end_src
+ 
+ 
+ save as heights
+ #+begin_src R
+   hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/", full.names = T)
+   hs <- lapply(hs, readRDS)
+ 
+   h2009 <- do.call("rbind", hs)
+ 
+   saveRDS(h2009, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+ #+end_src
+ 
+
+ 
+*** join heights to trees
+ 
+ #+begin_src R
+   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+ 
+ #+end_src
+ 
+ #+begin_src R
+   library(raster)
+   library(dplyr)
+
+   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+   tb <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+
+   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+   height_2016 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+
+   height_2009 <- as.data.frame(height_2009, stringsAsFactors = F) %>%
+       mutate(height_2009 = as.numeric(height_2009))
+
+   height_2009 <- height_2009 %>%
+       group_by(UID) %>%
+       summarize(height_2009 = max(height_2009, na.rm = T))
+
+   height_2016 <- as.data.frame(height_2016, stringsAsFactors = F) %>%
+       mutate(height_2016 = as.numeric(height_2016))
+
+   height_2016 <- height_2016 %>%
+       group_by(UID) %>%
+       summarize(height_2016 = max(height_2016, na.rm = T))
+
+
+   heights <- left_join(height_2009, height_2016, by = "UID") %>%
+       mutate(growth = height_2016 - height_2009)
+
+
+   trees@data <- left_join(trees@data, heights)
+
+   shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
+
+ #+end_src
+
+
+* accidentally deleted
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-18 Mon 16:03
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+** extract heights from normalized lidar at location of trees
+
+*** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
+  
+ - read in points and make a buffer of 5 ft radius around each point (they are
+   almost always in the center of the tree)
+ - for each year lidar, clip to buffer/polygon and extract the maximum height within that buffer and assign it to the tree
+ 
+ Really I should come up with some clever rules for thinning out the
+ tree dataset.  If I have small trees next to big trees, the small
+ trees look like they are tall, but really they are being overtopped by
+ the big trees.
+ 
+ - consider making buffers based on the trees dbh.  if two trees
+   intersect, keep the bigger of the two.
+ 
+ 
+ Also need to beware of non street trees overhanging street trees.
+ 
+
+*** clip lidar to tree buffers and extract tallest return
+**** 2009
+ #+begin_src R
+   library(doParallel)
+   library(foreach)
+   library(lidR)
+   library(dplyr)
+   library(stringr)
+ 
+   b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+   b <- spTransform(b, crs("+init=epsg:7599"))
+   b@data <- select(b@data, UID)
+ 
+   fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar",
+                    pattern = ".*.las",
+                    full.names = T)
+ 
+ 
+   # crop the polygons so that a huge object doesn't need to be sent to each node
+   cl <- makeCluster(4)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+       l <- readLAS(f)
+       proj4string(l) <- "+init=epsg:7599"
+       bc <- crop(b, extent(l))
+       if(!is.null(bc)) {
+           i <- str_extract(f, "lc2t[0-9]+")
+           shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"), overwrite = T)
+       }
+   }
+   closeAllConnections()
+ 
+   rm(b)
+ 
+   # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
+ 
+   cl <- makeCluster(7)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {  
+       l <- readLAS(f)
+      i <- str_extract(f, "lc2t[0-9]+")
+       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"))
+       lc <- lasclip(l, bc)
+       m <- lapply(lc, function(ls) {
+           max(ls@data$Z)
+       })
+       o <- cbind(UID = bc@data$UID, height_2009 = unlist(m)
+       saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/",i,".rds"))
+   }
+ 
+   closeAllConnections()
+ 
+ #+end_src
+ 
+ 
+ save as heights
+ #+begin_src R
+   hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/", full.names = T)
+   hs <- lapply(hs, readRDS)
+ 
+   h2009 <- do.call("rbind", hs)
+ 
+   saveRDS(h2009, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+ #+end_src
+ 
+
+ 
+*** join heights to trees
+ 
+ #+begin_src R
+   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+ 
+ #+end_src
+ 
+ #+begin_src R
+   library(raster)
+   library(dplyr)
+
+   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+
+   tb <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
+
+   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
+   height_2016 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
+
+   height_2009 <- as.data.frame(height_2009, stringsAsFactors = F) %>%
+       mutate(height_2009 = as.numeric(height_2009))
+
+   height_2009 <- height_2009 %>%
+       group_by(UID) %>%
+       summarize(height_2009 = max(height_2009, na.rm = T))
+
+   height_2016 <- as.data.frame(height_2016, stringsAsFactors = F) %>%
+       mutate(height_2016 = as.numeric(height_2016))
+
+   height_2016 <- height_2016 %>%
+       group_by(UID) %>%
+       summarize(height_2016 = max(height_2016, na.rm = T))
+
+
+   heights <- left_join(height_2009, height_2016, by = "UID") %>%
+       mutate(growth = height_2016 - height_2009)
+
+
+   trees@data <- left_join(trees@data, heights)
+
+   shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
+
+ #+end_src
+
+
+* finding mean height within 20m.  Not using this appraoch.  I can use the CHM  clip las to these buffers  
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-19 Tue 12:22
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/other covariates/mean height of first returns within 20m of tree (includes other trees and buildings etc)
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+ #+begin_src R
+   library(doParallel)
+   library(foreach)
+   library(lidR)
+   library(dplyr)
+   library(stringr)
+
+#+end_src
+
+#+RESULTS:
+: Loading required package: foreach
+: Loading required package: iterators
+: Loading required package: parallel
+
+#+begin_src R
+   b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
+   b <- spTransform(b, crs("+init=epsg:7599"))
+   b@data <- select(b@data, UID)
+
+   fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar",
+                    pattern = ".*.las",
+                    full.names = T)
+
+
+   # crop the polygons so that a huge object doesn't need to be sent to each node
+   cl <- makeCluster(4)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
+       l <- readLAS(f)
+       proj4string(l) <- "+init=epsg:7599"
+       bc <- crop(b, extent(l))
+       i <- str_extract(f, "[0-9]+_norm")
+       shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf_2016cropped/",i,".shp"))
+   }
+
+   closeAllConnections()
+
+   rm(b)
+#+end_src
+
+#+begin_src R
+   fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar",
+                    pattern = ".*.las",
+                    full.names = T)
+
+   cl <- makeCluster(4)
+   registerDoParallel(cl)
+   out <- foreach(f = fl, .packages = c("stringr","lidR", "rgeos")) %dopar% {  
+       l <- readLAS(f, filter = "-drop_z_below 6 -keep_first", select = "")
+       i <- str_extract(f, "[0-9]+_norm")
+       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf_2016cropped/",i,".shp"))
+       lapply(seq(length(bc)), function(j) {
+           if(round(gArea(bc[j,])) == 13526) {  # make sure we have the full circle.  if radius changes this will need to...
+               lc <- lasclip(l, bc[j,])
+               if(nrow(lc@data) > 0) {
+                   writeLAS(lc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2016_normlas_20mbuf/",bc[j,]$UID,"_",i,".las"))
+               }
+           }
+       })
+   }
+   closeAllConnections()
+
+ #+end_src
+
+
+

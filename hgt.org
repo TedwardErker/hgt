@@ -1,7 +1,7 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
 #+PROPERTY:  header-args:sh :eval yes
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
@@ -245,7 +245,7 @@ growth, we used a bootstrap resampling technique to estimate bias at
 different pulse densities for each genera in our dataset.  Other
 characteristics of the ALS, such as footprint size are important in
 correcting bias, but we did not have this information for all our
-datasets.
+datasets. https://www.tandfonline.com/doi/abs/10.5589/m06-030
 
 Our goal is to estimate tree growth from multiple years of ALS.  The
 primary issue with this endeavor is that tree growth and the size of
@@ -344,6 +344,14 @@ it varies.
 
 
 
+maybe use a gam with a smoother for the effect of initial height on
+growth rate.
+
+y ~ b * height
+
+b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
+
+
 Using lidar from 2005, 2009, and 2016, we 
 
 We 
@@ -357,11 +365,13 @@ finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 2005 lidar might not be good enough for a general tree canopy layer,
 but it should still be reliable for treee heights if I know the trees
 location ( street trees).
+
+
+
 ** work
-*** work to get heights of trees
-**** creating normalized lidar and also trying to create point clouds with just trees
-***** 2005 lidar
-****** create lax
+*** creating normalized lidar and also trying to create point clouds with just trees
+**** 2005 lidar
+***** create lax
 #+begin_src sh 
 cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
@@ -374,7 +384,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 #+end_src
 
 
-****** which have ground?
+***** which have ground?
 #+begin_src R
       library(stringr)
       f <- list.files("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/", pattern = ".*.las$", full.names = T)
@@ -386,7 +396,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
     })
 #+end_src
 
-****** find ground
+***** find ground
 #+begin_src R
     ctg2005 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/")
     opt_output_files(ctg2005) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/{ORIGINALFILENAME}_ground"
@@ -401,7 +411,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 #+end_src
 
-****** normalize
+***** normalize
 #+begin_src R 
 
   ctg2005ground <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/")
@@ -410,13 +420,13 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 #+end_src
 
-****** make lax for normalized
+***** make lax for normalized
 #+begin_src sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
-****** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized")
@@ -436,7 +446,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+END_SRC
 
 
-****** get extents
+***** get extents
 #+begin_src R
 
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
@@ -459,7 +469,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+RESULTS:
 
 
-****** Get tree points
+***** Get tree points
 #+begin_src R
   library(lidR)
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
@@ -528,7 +538,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 
 #+end_src
 
-****** make lax
+***** make lax
 #+BEGIN_SRC sh 
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
@@ -536,7 +546,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 
 #+RESULTS:
 
-****** tree chm
+***** tree chm
 #+begin_src R
   library(lidR)
     ctg2005trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar")
@@ -553,9 +563,9 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2005.tif
 #+END_SRC
 
-***** 2009 lidar
+**** 2009 lidar
 
-****** get tiles just over the tree inventory
+***** get tiles just over the tree inventory
 This lidar covers all of dane county.  Only get the tiles that
 intersect with the madison tree inventory.
 
@@ -587,7 +597,7 @@ writeLines(tiles)
 #+RESULTS:
 [[file:tree_tiles_2009.txt]]
 
-****** download tiles from wisconsin view ftp.  The data I had from the townsend lab hard drive had been modified and points dropped.
+***** download tiles from wisconsin view ftp.  The data I had from the townsend lab hard drive had been modified and points dropped.
 
 Download those tiles from ftp
 
@@ -612,7 +622,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
 
 #+END_SRC
 
-****** normalize
+***** normalize
 #+begin_src R
         library(lidR)
           ctg2009 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS")
@@ -639,14 +649,14 @@ num. files  : 87
 There were 50 or more warnings (use warnings() to see the first 50)
 #+end_example
 
-****** make lax for normalized
+***** make lax for normalized
 #+begin_src sh :session b
 cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
 
-****** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2009norm <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
@@ -668,7 +678,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2009.tif
 #+END_SRC
 
-****** pulse density
+***** pulse density
 #+begin_src R
   library(lidR)
     ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized")
@@ -693,7 +703,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
 
-****** get extents to select a downtown tile?
+***** get extents to select a downtown tile?
 #+begin_src R
 
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/"
@@ -885,9 +895,9 @@ chm, pitless algoright, too slow to be worth running.
   grid_canopy(ctg2009norm, 4, pitfree(c(0,6,12), c(0,1), subcircle = 6)) 
 #+end_src
 
-***** TODO FIX THE RESOLUTION!!!!!!!  2010 lidar derived (NGA)
+**** TODO FIX THE RESOLUTION!!!!!!!  2010 lidar derived (NGA)
 
-****** create height tif
+***** create height tif
 There is no raw point cloud available.  It's been "destroyed"
 (personal communication with John at the NGA (571 721 2159 or maybe
 571 721 7999)
@@ -937,7 +947,7 @@ diff <- first - ground
 #+end_src
 
 
-****** tile chm
+***** tile chm
 #+begin_src R
   library(TileManager)
 
@@ -961,9 +971,9 @@ gdalbuildvrt ../height_2010.vrt *.tif
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
 
-***** 2016 lidar
+**** 2016 lidar
 epsg 7599
-****** normalize
+***** normalize
 #+begin_src R
   library(stringr)
   library(lidR)
@@ -987,7 +997,7 @@ epsg 7599
 
 #+end_src
 
-****** create lax (las index)
+***** create lax (las index)
 
 i had to download LAStools and run make in the directory.
 
@@ -999,7 +1009,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 
 #+RESULTS:
 
-****** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
     ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
@@ -1017,7 +1027,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 #+END_SRC
 
 
-****** find the tiles that overlap with the madison tree inventory data
+***** find the tiles that overlap with the madison tree inventory data
 #+begin_src R
   dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
         fs <-   list.files(dir,
@@ -1059,7 +1069,7 @@ writeLines(tiles.w.trees)
 #+RESULTS:
 [[file:tiles.w.trees.txt]]
 
-****** extract tree points from the lidar
+***** extract tree points from the lidar
 #+begin_src R
   #   library(devtools)
   #   install_github("Jean-Romain/lidR", ref = "devel")
@@ -1142,7 +1152,7 @@ maybe do another clean up with point metrics.
 #+RESULTS:
 
 
-****** Create the tree chm
+***** Create the tree chm
 #+begin_src R
   library(lidR)
     ctg2016trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar_linefiltered/")
@@ -1183,7 +1193,7 @@ STOP here until I have a good tree chm for each year.
 
 
 
-****** testing finding trees
+***** testing finding trees
 
 
 
@@ -1273,14 +1283,14 @@ try voxel
 
 #+end_src
 
-******* point cloud viewer backedn
+****** point cloud viewer backedn
 #+begin_src R
   l <- readLAS("test2016.las", filter = "-drop_z_below 6 -keep_first")
   plot(l, backend = "pcv")
 
 #+end_src
 
-******* CHM for just trees
+****** CHM for just trees
 #+begin_src R
   library(lidR)
     ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
@@ -1421,7 +1431,7 @@ i <- 205
 #+RESULTS:
 : 1924 points below 0 found.
 
-******* old stuff
+****** old stuff
 
 
 
@@ -1485,15 +1495,15 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
-***** 2017 lidar
+**** 2017 lidar
 
-****** get metadata and reports
+***** get metadata and reports
 #+BEGIN_SRC sh :session a
 cd ~/hgt_data/dane_lidar_2017/
 wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Metadata/
 wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Reports/
 #+END_SRC
-****** download which tiles intersect with tree
+***** download which tiles intersect with tree
 download tiles
 #+BEGIN_SRC sh
 cd /home/erker/hgt_data/dane_lidar_2017/
@@ -1567,12 +1577,12 @@ plot(l, color = "Classification")
 
 #+RESULTS:
 
-****** think about checking out their raster dems
+***** think about checking out their raster dems
 #+BEGIN_SRC sh
 ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Raster_DEM_Tiles/
 #+END_SRC
 
-****** normlalize the lidar
+***** normlalize the lidar
 
 #+BEGIN_SRC sh
 
@@ -1618,13 +1628,13 @@ plot(l)
 
 #+RESULTS:
 
-****** make lax for normalized
+***** make lax for normalized
 #+begin_src sh :session b
 cd /home/erker/hgt_data/dane_lidar_2017/normalized/
 /home/erker/LAStools/bin/lasindex -i *.las
 #+end_src
 
-****** make normalized chm (this includes buildings, but excludes some points)
+***** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
   l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/normalized_notdone/1065_esri_normalized.las",
@@ -1694,7 +1704,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
 |                                                Input | file | size  | is | 16623, | 8264 |
 | 0...10...20...30...40...50...60...70...80...90...100 |    0 | done. |    |        |      |
 
-****** get the pulse density 
+***** get the pulse density 
 #+begin_src R
   library(lidR)
     ctg2017norm <- catalog("~/hgt_data/madison_lidar_2017_heights/normalized")
@@ -1714,7 +1724,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
 
-****** get lidar extents
+***** get lidar extents
 #+begin_src R
 
   dir <- "~/hgt_data/madison_lidar_2017_heights/normalized/"
@@ -1739,7 +1749,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 : Error in rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  : 
 :   Layer creation failed
 
-**** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.  Note: trees with no dbh are dropped.
+*** make tree buffer shapefile, excluding neighbors that are too close with a lower DBH.  Note: trees with no dbh are dropped.
 #+begin_src R
    library(raster)
    library(rgeos)
@@ -1780,91 +1790,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 
  #+end_src
 
-**** see what it looks like extracting heights from chms....
-
-***** Use a sample of the trees
-
-#+begin_src R
-  library(velox)
-  library(raster)
-
-  p <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
-
-  set.seed(1)
-  s <- sample(1:length(p), 20)
-
-  ps <- p[s,]
-
-  shapefile(ps, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_sub.shp", overwrite = T)
-
-  years <- c(2005, 2009, 2010, 2016, 2017)
-
-    res <- lapply(years, function(year) {
-        in.dir <- paste0("~/hgt_data//madison_lidar_",year,"_heights/all_chm/")
-        fs <- list.files(in.dir,
-                         pattern = ".*.tif$")
-        out <- lapply(fs, function(f) {
-            r.v <- velox(paste0(in.dir, f))
-            o <- r.v$extract(sp = ps)
-            o <- unlist(lapply(o, function(x) max(x, na.rm = T)))
-            o
-        })
-        hgt <- apply(do.call("cbind",out),1, max)
-        cbind(hgt, UID = ps$UID)
-        saveRDS(hgt, paste0("~/hgt_data/madison_tree_inventories/hgt/height_",year,".rds"))
-        hgt
-    })
-
-#+end_src
-
-***** look at heights
-
-#+begin_src R
-library(ggplot2)
-library(dplyr)
-library(stringr)
-  library(raster)
-  library(tidyr)
-
-    ps <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_sub.shp")
-
-    height2005 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2005.rds")
-    height2009 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
-  height2010 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2010.rds")
-    height2016 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
-  height2017 <- readRDS("~/hgt_data/madison_tree_inventories/hgt/height_2017.rds")
-
-  ps@data$height2005 <- height2005
-  ps@data$height2009 <- height2009
-  ps@data$height2010 <- height2010
-  ps@data$height2016 <- height2016
-  ps@data$height2017 <- height2017
-
-  d <- ps@data
-
-  dg <- gather(d, year, height, -UID, -DBH, -Genus, -Species) %>%
-      mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
-#+end_src
-
-#+RESULTS:
-
-#+begin_src R :exports results :results graphics :file figs/test_heights.png :height 600 :width 800
-#  uid.no.neg.inf <- dg %>% group_by(UID) %>% summarize(height_m = mean(height)) %>% filter(height_m != -Inf) %>% pull(UID)
-
-    ggplot(dg, aes(x = year, y = height, group = UID)) + 
-        geom_line() 
-#+ 
- #     facet_wrap(~Genus) 
-
-
-#+end_src
-
-#+RESULTS:
-[[file:figs/test_heights.png]]
-
-
-
-*** TODO extract lidar clouds within tree buffers  Note: since I have tree points, I"m going to sample from the entire lidar point cloud
+*** extract lidar clouds within tree buffers  Note: since I have tree points, I"m going to sample from the entire lidar point cloud
 
 I extract points at each tree from the tree point filtered point clouds, save in
 "tree _ year _ treelas".  Extract points at each tree from the
@@ -1874,7 +1800,7 @@ I think that the benefit of having all the points is greater than the
 penalty of potentially including some non-tree points.  But I haven't
 really tested this.
 
-***** 2017
+**** 2017
  #+begin_src R
    library(doParallel)
    library(foreach)
@@ -1929,7 +1855,7 @@ really tested this.
    closeAllConnections()
 
  #+end_src
-***** 2016
+**** 2016
  #+begin_src R
    library(doParallel)
    library(foreach)
@@ -2014,7 +1940,7 @@ really tested this.
    closeAllConnections()
 
  #+end_src
-***** 2009
+**** 2009
 #+begin_src R
   library(doParallel)
   library(foreach)
@@ -2106,7 +2032,7 @@ and needs to get filled with just tree lidar point clouds.
 
  #+end_src
 
-***** 2005
+**** 2005
  #+begin_src R
       library(doParallel)
       library(foreach)
@@ -2194,7 +2120,7 @@ and needs to get filled with just tree lidar point clouds.
 
  #+end_src
 
-***** test
+**** test
 #+begin_src R
 library(lidR)
 
@@ -2205,7 +2131,7 @@ plot(l2009)
 
 #+RESULTS:
 
-**** TODO extract height and estimate bias for trees
+*** extract height and estimate bias for trees
 
 plan [2019-11-08 Fri]:
 
@@ -2283,8 +2209,7 @@ points.  But less important if averaging across many treees.
 
 
 
-
-***** original extraction of heights and bias correction
+**** original extraction of heights and bias correction
 #+begin_src R
     library(raster)
     library(dplyr)
@@ -2444,8 +2369,7 @@ points.  But less important if averaging across many treees.
 
 
 
-
-***** plotting the original bias correction method
+**** plotting the original bias correction method
 #+begin_src R
 library(lidR)
 library(dplyr)
@@ -2692,7 +2616,7 @@ F-statistic: 0.0001478 on 1 and 2 DF,  p-value: 0.9914
 Coeffiecient estimates are better than if a point were dropped, and
 better than if you assume all points contain equal information.
 
-***** Drop Trees with "bad" data
+**** Drop Trees with "bad" data
 
 #+begin_src R
   hs <- hc %>% select(uid, year, emp_height) %>% pivot_wider(names_from = year, values_from = emp_height)
@@ -2708,7 +2632,7 @@ better than if you assume all points contain equal information.
   hc <- filter(hc, ! uid %in% bad_uids)
 #+end_src
 
-***** Fitting many weighted regressions and getting estimates
+**** Fitting many weighted regressions and getting estimates
 #+begin_src R
 
         lms <- list()
@@ -2794,8 +2718,7 @@ join growth rates to trees
 
 #+end_src
 
-
-***** revised bias correction (only trees that have stopped growing)
+**** revised bias correction (only trees that have stopped growing)
 Revised way of doing bias with just trees already almost at their
 maximum height by species.
 
@@ -2811,7 +2734,7 @@ Here i'm saying that a tree that hasn't grown can be used to find by
 how much the different lidar point densitys underestimate height.
 
 
-****** read in extracted heights from above and find trees that haven't grown
+***** read in extracted heights from above and find trees that haven't grown
 
 there is a bit of circularity here so I need to be smart about how I
 select which trees haven't grown.
@@ -3400,7 +3323,7 @@ this is only going to work for large genera.
 | Ulmus       |               24 |   18.809208 |   18.665952 |   19.223736 |    18.92808 |    46 |    24 |    28 |     4 | ST24951 |
 #+END_SRC
 
-****** revised extraction using just the trees identified as not growing above
+***** revised extraction using just the trees identified as not growing above
 
 #+begin_src R
 no.grow.uid <- hg$uid
@@ -3524,7 +3447,7 @@ no.grow.uid <- hg$uid
 
 #+end_src
 
-****** plotting
+***** plotting
 #+begin_src R
         trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
 
@@ -3659,7 +3582,7 @@ ggplotly(p)
 
 #+RESULTS:
 
-****** save new correction
+***** save new correction
 
 Calculate the mean bias for each Genus.  This is the correction that
 I will apply to the data
@@ -3673,7 +3596,7 @@ I will apply to the data
 #+end_src
 
 #+RESULTS:
-****** apply new correction
+***** apply new correction
 Apply the species specific correction derived from large not growing
 trees to the data.
 
@@ -3762,12 +3685,10 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 
 
-
-****** compare the two corrections
+***** compare the two corrections
 | [[file:figs/correction_nogrowth_40.png]] | [[file:figs/correction_oldway.png]] |
 
-
-****** Fitting many weighted regressions and getting estimates
+***** Fitting many weighted regressions and getting estimates
 #+begin_src R
   d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
     d$year <- d$year - 2005
@@ -3796,7 +3717,7 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 #+RESULTS:
 
-****** dropping trees with impossible growth or removal and replacements
+***** dropping trees with impossible growth or removal and replacements
 #+begin_src R
     d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
     d <- d[complete.cases(d),]
@@ -3819,7 +3740,7 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 #+RESULTS:
 
-****** replotting height by year for some trees with weighted ols line
+***** replotting height by year for some trees with weighted ols line
 #+begin_src R
     library(ggthemes)
         terk <- list(theme_solarized_2(base_size = 16) +
@@ -3891,10 +3812,9 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 [[file:figs/correction_nogrowth_40_m_smooth_lm.png]]
 
 
+***** plots of growth rates
 
-****** plots of growth rates
-
-******* histogram
+****** histogram
 #+begin_src R :exports results :results graphics :file figs/ng_growthrates_lm.png :width 1000 :res 120 :bg transparent
   ggplot(growth.rates.f, aes(x = growth.rate)) + geom_histogram(binwidth = .03, color = base1) +
     terk +
@@ -3917,7 +3837,7 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 
 [[file:figs/ng_growthrates_lm_clip.png]]
 
-******* plot suspect growth rates
+****** plot suspect growth rates
 #+begin_src R :exports results :results graphics :file figs/correction_nogrowth_suspect_high.png :width 1300 :height 800 :bg transparent :res 100
   d <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_longform.rds")
     dn <- left_join(d, growth.rates.f)
@@ -3941,7 +3861,7 @@ saveRDS(d, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_
 #+RESULTS:
 [[file:figs/correction_nogrowth_suspect_high.png]]
 
-******* growth by height 
+****** growth by height 
 #+begin_src R :exports results :results graphics :file figs/ng_rate_by_int.png :bg transparent :width 1000 :res 100
   hn <- left_join(h, growth.rates.f)
 
@@ -3961,7 +3881,7 @@ saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedhei
 
 #+RESULTS:
 
-******* growth in space
+****** growth in space
 join growth rates to trees
 
 #+begin_src R
@@ -4051,7 +3971,7 @@ ggplotly(p)
 #+RESULTS:
 [[file:figs/trees_growth_bin.png]]
 
-******* growth by species
+****** growth by species
 #+begin_src R
     hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
 
@@ -4125,12 +4045,13 @@ hn <- hn[complete.cases(hn),]
 #+RESULTS:
 [[file:figs/growth_species_mean_sizeclass2.png]]
 
-******* make a model and plot species effect controling for height  I SHOULD JOIN ALL THE DATA (hyperspectral etc first before I do modelling).
+****** make a model and plot species effect controling for height  I SHOULD JOIN ALL THE DATA (hyperspectral etc first before I do modelling).
 
 #+begin_src R
 
 #+end_src
 
+*** example trees for visualization
 **** crop lidar to the tenney oak for visualization of bias situation.
 
 I could make a 2d plot of the points (z on y axis and 
@@ -4709,13 +4630,7 @@ plot(to2009)
 
 [[file:figs/ST45429.png]]
 
-
-*** the subsampling down to get bias by species could be it's own paper maybe...
-*** I need to think hard about how i'm going to structure this paper.
-- maybe just figure out how to correct for bias and report the growths
-- then as extension link to traits etc to try to explain growth.
 *** other covariates
-
 - position in topography
 - % impervious within 20m
 - % impervious within 100m
@@ -4723,139 +4638,884 @@ plot(to2009)
 - traits from hyperspectral imagery
 - distance to road?
 
+**** foliar traits from imaging spectroscopy
 
-*** modeling
+***** load 2016 tree chm to create tree mask
 
-maybe use a gam with a smoother for the effect of initial height on
-growth rate.
+****** scale up to 15 ft pixels
 
-y ~ b * height
+#+BEGIN_SRC sh
+cd /home/erker/hgt_data/madison_lidar_2016_heights/
+gdal_edit.py -a_nodata -3.4e+38 tree_height_norm_2016_cpy.tif
 
-b ~ s(initial.height) + foliar traits + environment (proximity to road etc)
+#+END_SRC
 
-*** adjusting chms
-see this paper:
-https://www.tandfonline.com/doi/abs/10.5589/m06-030
-*** comparing CHMs - more for visualization in 2d
-**** difference in chm 2016 - 2009
+#+RESULTS:
+
+Convert less than 0 to 0 for averaging
+#+BEGIN_SRC sh :session a
+cd /home/erker/hgt_data/madison_lidar_2016_heights/
+gdal_calc.py -A tree_height_norm_2016.tif --outfile=tree_height_norm_2016_zeros.tif --type=Byte --calc="A*(A>0)"
+#+END_SRC
+
+#+RESULTS:
+: 0 .. 10 .. 20 .. 30 .. 40 .. 50 .. 60 .. 70 .. 80 .. 90 .. 100 - Done
+
+Scale up with average height
+#+BEGIN_SRC sh :results verbatim
+cd /home/erker/hgt_data/madison_lidar_2016_heights/
+gdalwarp -srcnodata -inf -tr 15 15 -r average -t_srs epsg:7599 -tap tree_height_norm_2016_zeros.tif tree_height_norm_2016_15ft.tif
+#+END_SRC
+
+#+RESULTS:
+: Creating output file that is 5334P x 4334L.
+: Processing input file tree_height_norm_2016_zeros.tif.
+: Copying nodata values from source tree_height_norm_2016_zeros.tif to destination tree_height_norm_2016_15ft.tif.
+: 0...10...20...30...40...50...60...70...80...90...100 - done.
+
+Make Mask
+#+BEGIN_SRC sh
+cd /home/erker/hgt_data/madison_lidar_2016_heights/
+gdal_calc.py -A tree_height_norm_2016_15ft.tif --outfile=tree_height_norm_2016_mask.tif --type=Byte --calc="0*(A<=30)" --calc="1*(A>30)" 
+#+END_SRC
+
+#+RESULTS:
+: 0 .. 10 .. 20 .. 30 .. 40 .. 50 .. 60 .. 70 .. 80 .. 90 .. 100 - Done
+
+***** reproject foliar traits
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 N_merged.tif N_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that         | is     | 9764P       | x   | 7409L.      |                  |
+| Processing                                           | input    | file   | N_merged.tif. |        |             |     |             |                  |
+| Using                                                | internal | nodata | values       | (e.g.  | 0)          | for | image       | N_merged.tif.     |
+| Copying                                              | nodata   | values | from         | source | N_merged.tif | to  | destination | N_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |              |        |             |     |             |                  |
+
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 LMA_merged.tif LMA_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that           | is     | 9764P         | x   | 7409L.      |                    |
+| Processing                                           | input    | file   | LMA_merged.tif. |        |               |     |             |                    |
+| Using                                                | internal | nodata | values         | (e.g.  | 0)            | for | image       | LMA_merged.tif.     |
+| Copying                                              | nodata   | values | from           | source | LMA_merged.tif | to  | destination | LMA_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |                |        |               |     |             |                    |
+
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 lignin_merged.tif lignin_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that              | is     | 9764P            | x   | 7409L.      |                       |
+| Processing                                           | input    | file   | lignin_merged.tif. |        |                  |     |             |                       |
+| Using                                                | internal | nodata | values            | (e.g.  | 0)               | for | image       | lignin_merged.tif.     |
+| Copying                                              | nodata   | values | from              | source | lignin_merged.tif | to  | destination | lignin_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |                   |        |                  |     |             |                       |
+
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 chl_merged.tif chl_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that           | is     | 9764P         | x   | 7409L.      |                    |
+| Processing                                           | input    | file   | chl_merged.tif. |        |               |     |             |                    |
+| Using                                                | internal | nodata | values         | (e.g.  | 0)            | for | image       | chl_merged.tif.     |
+| Copying                                              | nodata   | values | from           | source | chl_merged.tif | to  | destination | chl_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |                |        |               |     |             |                    |
+
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 Sugar_merged.tif Sugar_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that             | is     | 9764P           | x   | 7409L.      |                      |
+| Processing                                           | input    | file   | Sugar_merged.tif. |        |                 |     |             |                      |
+| Using                                                | internal | nodata | values           | (e.g.  | 0)              | for | image       | Sugar_merged.tif.     |
+| Copying                                              | nodata   | values | from             | source | Sugar_merged.tif | to  | destination | Sugar_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |                  |        |                 |     |             |                      |
+
+#+begin_src sh
+cd /home/erker/hgt_data/madison_aviris/
+gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 TotPhen_merged.tif TotPhen_merged_7599.tif
+#+end_src
+
+#+RESULTS:
+| Creating                                             | output   | file   | that               | is     | 9764P             | x   | 7409L.      |                        |
+| Processing                                           | input    | file   | TotPhen_merged.tif. |        |                   |     |             |                        |
+| Using                                                | internal | nodata | values             | (e.g.  | 0)                | for | image       | TotPhen_merged.tif.     |
+| Copying                                              | nodata   | values | from               | source | TotPhen_merged.tif | to  | destination | TotPhen_merged_7599.tif. |
+| 0...10...20...30...40...50...60...70...80...90...100 | 0        | done.  |                    |        |                   |     |             |                        |
+
+***** mask the foliar traits
+
+#+begin_src sh :session a
+cd /home/erker/hgt_data/madison_aviris/
+gdal_merge.py -separate -o lignin_merged_7599_masked_int.tif lignin_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A lignin_merged_7599_masked_int.tif -B lignin_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=lignin_merged_7599_masked.tif --calc="A*B"
+
+gdal_merge.py -separate -o N_merged_7599_masked_int.tif N_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A N_merged_7599_masked_int.tif -B N_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=N_merged_7599_masked.tif --calc="A*B"
+
+gdal_merge.py -separate -o LMA_merged_7599_masked_int.tif LMA_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A LMA_merged_7599_masked_int.tif -B LMA_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=LMA_merged_7599_masked.tif --calc="A*B"
+
+gdal_merge.py -separate -o chl_merged_7599_masked_int.tif chl_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A chl_merged_7599_masked_int.tif -B chl_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=chl_merged_7599_masked.tif --calc="A*B"
+
+gdal_merge.py -separate -o Sugar_merged_7599_masked_int.tif Sugar_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A Sugar_merged_7599_masked_int.tif -B Sugar_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=Sugar_merged_7599_masked.tif --calc="A*B"
+
+gdal_merge.py -separate -o TotPhen_merged_7599_masked_int.tif TotPhen_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_calc.py -A TotPhen_merged_7599_masked_int.tif -B TotPhen_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=TotPhen_merged_7599_masked.tif --calc="A*B"
+
+
+#+end_src
+
+#+RESULTS:
+|                                                      |                                                      |       |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+| 0...10...20...30...40...50...60...70...80...90...100 |                                                    0 | done. |       |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+|                                                    $ | 0...10...20...30...40...50...60...70...80...90...100 |     0 | done. |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+|                                                    $ | 0...10...20...30...40...50...60...70...80...90...100 |     0 | done. |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+|                                                    $ | 0...10...20...30...40...50...60...70...80...90...100 |     0 | done. |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+|                                                    $ | 0...10...20...30...40...50...60...70...80...90...100 |     0 | done. |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+|                                                    $ | 0...10...20...30...40...50...60...70...80...90...100 |     0 | done. |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |     |   |      |
+|                                                    0 |                                                   .. |    10 | ..    | 20 | .. | 30 | .. | 40 | .. | 50 | .. | 60 | .. | 70 | .. | 80 | .. | 90 | .. | 100 | 0 | Done |
+
+***** extract foliar traits at trees
+#+begin_src R
+  library(raster)
+  library(dplyr)
+      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+      uids <- h$uid
+
+
+      trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+      trees@data <-   select(trees@data, UID, DBH, Genus, Species)
+      trees <- trees[trees@data$UID %in% uids,]
+    trees <- spTransform(trees, "+init=epsg:7599")
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Loading required package: sp
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:raster’:
+
+    intersect, select, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+#+end_example
+
+#+begin_src R
+
+        traitsdir <- "/home/erker/hgt_data/madison_aviris/"
+          traits <- c("TotPhen", "N", "Sugar", "LMA", "lignin", "chl")
+          tp <- paste0(traitsdir, traits, "_merged_7599_masked.tif")
+
+          e <- lapply(tp, function(p) {
+
+              r <- raster(p)
+              ex <- extract(r, trees)
+              ex
+          })
+
+      names(e) <- traits
+
+    df <- cbind(trees@data, e)
+
+  df[df == 0] <- NA # 0's are really missings
+
+    saveRDS(df, "/home/erker/hgt_data/canopy_foliar_traits.rds")
+
+#+end_src
+
+#+RESULTS:
+
+**** mean height of first returns within 20m of tree (includes other trees and buildings etc)
+
+***** make 20m buffers
+#+begin_src R
+  library(rgeos)
+
+    h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+    uids <- h$uid
+
+    # make 20m buffer
+
+    trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+    trees <- spTransform(trees, crs("+init=epsg:7599"))
+
+    trees <- trees[trees@data$UID %in% uids,]
+
+    trees@data <-   select(trees@data, UID, DBH, Genus, Species)
+
+  p <- gBuffer(trees, width = 20 / .3048, byid = T)
+     
+  shapefile(p, "/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp", overwrite = T)
+#+end_src
+
+#+RESULTS:
+
+***** Use the chm instead of the lidar clouds clipped to each tree. I'm only going to use 2016 here.  It's good quality lidar and it's closest to the aviris
+
+#+begin_src R
+      library(raster)
+      library(velox)
+      library(dplyr)
+
+       b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
+         b <- spTransform(b, crs("+init=epsg:7599"))
+         b@data <- select(b@data, UID)
+
+      fs <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/all_chm", full.names = T)
+
+      o <- sapply(fs, function(f) {
+          v <- velox(f)
+          m <- v$extract(sp = b, fun = function(x) mean(x, na.rm = TRUE))
+          m
+      })
+
+      # then average across the images because some trees may go across tiles.
+      o2 <- apply(o, 1, function(x) mean(x, na.rm = T))
+
+                                              # I LEFT OFF HERE [2019-11-18 Mon]
+
+      # these heights are in feet.  Convert to meters
+
+    o2 <- o2 * .3048
+
+  d <- data.frame(UID = b@data$UID, mean_height_wn20m = o2, stringsAsFactors = F)
+
+  saveRDS(d, "~/hgt_data/mean_height_within20m_2016.rds")
+#+end_src
+
+**** topographic position and terrain
+
+***** elevation slope aspect and topographic position index at 2 scales
+#+begin_src R :session *R2*
+    library(raster)
+  library(dplyr)
+                                          #  library(dynatopmodel)  I'm not going to get the topographic wetness index.  I think 2 scale apporach with terrain works fine
+    library(rgeos)
+
+      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds") %>%
+        filter(!duplicated(.))
+
+      uids <- h$uid
+
+
+      trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+      trees@data <-   select(trees@data, UID, DBH, Genus, Species)
+      trees <- trees[trees@data$UID %in% uids,]
+    trees <- spTransform(trees, "+init=epsg:7599")
+
+    dem <- raster("/home/erker/hgt_data/dane_dem/dane_dem.tif")
+    crs(dem) <- "+init=epsg:7599"
+
+    dem <- crop(dem, trees)
+
+    ter_5ft <- terrain(dem, neighbors = 8, opt = c("slope", "aspect", "TPI"))
+    writeRaster(ter_5ft, "~/hgt_data/dane_dem/madison_5ft_terrain.tif", overwrite = T)
+
+    dema <- raster::aggregate(dem, fact = 40)
+
+    ter_200ft <- terrain(dema, neighbors = 8, opt = c("slope", "aspect", "TPI"))
+    writeRaster(ter_200ft, "~/hgt_data/dane_dem/madison_200ft_terrain.tif", overwrite = T)
+#+end_src
+
+#+begin_src R :session *R2*
+
+  trees_ter_5ft  <- raster::extract(ter_5ft, trees, sp = T)
+
+  trees_ter_5ft@data <- trees_ter_5ft@data %>%
+      rename(tpi_5ft = tpi, slope_5ft = slope, aspect_5ft = aspect)
+
+  trees_ter_200ft  <- raster::extract(ter_200ft, trees_ter_5ft, sp = T)
+
+  trees_ter_200ft@data <- trees_ter_200ft@data %>%
+      rename(tpi_200ft = tpi, slope_200ft = slope, aspect_200ft = aspect)
+
+  trees_ter_welv <- raster::extract(dem, trees_ter_200ft, sp = T)
+
+  trees_ter_welv@data <- trees_ter_welv@data %>%
+      rename(elev = dane_dem) %>%
+      mutate(elev = elev * .3048)
+
+
+  #categorize aspect
+  dterr <- trees_ter_welv@data
+
+  dterr <- dterr %>%
+      mutate(
+
+
+  saveRDS(dterr, "~/hgt_data/terrain_at_trees.rds")
+
+#+end_src
+
+
+
+**** TODO distance to road?  need to get centerlines file
+
+#+begin_src R
+
+#+end_src
+**** TODO pct impervious etc
 
 #+begin_src R
   library(raster)
-  r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/height_norm_2016.tif")
-  r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/height_norm_2009.tif")
-  diff <- r2016 - r2009
-  writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_all_2016-2009.tif")
+
+  landcover <- raster("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea.tif")
+
+  trees20m <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
+
+
+  imp <- raster::extract(landcover, trees20m, sp = T, fun = function(x, ...) sum(x == 7) / length(x))
 
 #+end_src
 
-#+RESULTS:
-: Error in .local(.Object, ...) : 
-: 
-: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
-:   Cannot create a RasterLayer object from this file. (file does not exist)
-: Error: object 'r2009' not found
 
-**** difference in tree chm 2016 - 2009
 
+
+**** TODO sewers?
+*** modeling
+**** combine data
 #+begin_src R
-    library(raster)
-    r2016 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_height_norm_2016.tif")
-    r2009 <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_height_norm_2009.tif")
-  r6e <- crop(r2016, e)
-  r9e <- crop(r2009, e)
+        library(raster)
+        library(dplyr)
 
-  r6e[is.na(r6e)] <- 0
-  r9e[is.na(r9e)] <- 0
+            traits <- readRDS("/home/erker/hgt_data/canopy_foliar_traits.rds") %>% unique()
+            hgt_wn20m <- readRDS("/home/erker/hgt_data/mean_height_within20m_2016.rds") %>% unique()
+            terr <- readRDS("/home/erker/hgt_data/terrain_at_trees.rds") %>% unique()
 
-  s <- stack(r6e, r9e)
+        h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds") %>%
+            rename(UID = uid) %>%
+            filter(!is.na(growth.rate)) %>%
+            mutate(cor_max2005 = emp_max2005 + mean_bias05,
+                   cor_max2009 = emp_max2009 + mean_bias09)
 
-    diff <- overlay(r6e, r9e, fun = function(x,y) {x - y})
+      uids <- h$UID
 
+            trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
+            trees <- trees[!(duplicated(trees@data)),]
+            trees@data <-   select(trees@data, UID, DBH, Genus, Species)
+            trees <- trees[trees@data$UID %in% uids,]
+            trees <- spTransform(trees, "+init=epsg:7599")
 
-
-    writeRaster(diff, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009.tif", overwrite = T)
-
-  diff[diff == 0] <- NA
-
-  diffsmooth <- focal(diff,  w=matrix(1/9,nrow=3,ncol=3))
-
-  writeRaster(diffsmooth, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_smoothed.tif", overwrite = T)
-
-
-  r6es <- focal(r6e,  w=matrix(1/9,nrow=3,ncol=3))
-  r9es <- focal(r9e,  w=matrix(1/9,nrow=3,ncol=3))
-
-  r6t <- r6es > 6
-  r9t <- r9es > 6
+  # separate out street trees from the other trees
+  trees@data <- trees@data %>%
+      mutate(street = grepl("ST[0-9]+",UID))
 
 
-  difft <- overlay(r6t, r9t, fun = function(x,y) {x - y})
-  writeRaster(difft, "/media/erker/DATA_ERKER/dd/hgt/difference_height_tree_2016-2009_tree_y_n.tif", overwrite = T)
+        coords <- coordinates(trees)
+        dimnames(coords)[[2]] <- c("x", "y")
+        td <- cbind(trees@data, coords)
+
+        d <- left_join(h, td)
+
+        d <- left_join(d, terr)
+
+        d <- left_join(d, hgt_wn20m)
+
+        d <- left_join(d, traits)
+
+      saveRDS(d, "/home/erker/hgt_data/merged_data.rds")
 #+end_src
 
 #+RESULTS:
-: Error in .local(.Object, ...) : 
 : 
-: Error in .rasterObjectFromFile(x, band = band, objecttype = "RasterLayer",  : 
-:   Cannot create a RasterLayer object from this file. (file does not exist)
-: Error: object 'r2009' not found
-
-
-
-*** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
-
-
-*** extract heights from normalized lidar at location of trees---------  i SHOULD probably do this from chm for speed 
-
-*** look at data?
+: Joining, by = c("UID", "Genus")
+: 
+: Joining, by = c("UID", "Genus", "DBH", "Species")
+: 
+: Joining, by = "UID"
+: 
+: Joining, by = c("UID", "Genus", "DBH", "Species")
+**** read back in data
 #+begin_src R
-  library(dplyr)
-  library(tidyr)
-library(stringr)
+library(dplyr)
 library(ggplot2)
-  d <- tae@data
-  dg <- d %>%
-      select(UID, Genus, height2005, height2009, height2016) %>%
-      gather(., year, height, -Genus, -UID) %>%
-    mutate(year = as.numeric(str_extract(year, "[0-9]{4}")))
-  str(dg)
+
+d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
+#+end_src
+
+#+RESULTS:
+
+**** plot data
+#+begin_src R
+
+  library(ggplot2)
+  library(ggthemes)
+  library(tidyr)
+  terk <- list(theme_solarized_2(base_size = 16) +
+               theme(legend.title = element_text(size = 10),
+                     legend.text = element_text(size = 8),
+                     axis.ticks = element_line(size = .3),
+                     rect = element_rect(fill = "transparent"),
+                     panel.background = element_rect(fill = "transparent"),
+                     panel.grid.major = element_line(color = "#839496", size = .3),
+                     panel.grid.minor = element_line(color = "#839496", size = .1)),
+               blue <- scale_color_solarized("blue"))
+
+  red <- solarized_pal("red")(1)
+
+
+  d <-  readRDS("/home/erker/hgt_data/merged_data.rds")
+
+
+
+#+end_src
+
+#+RESULTS:
+
+***** height 
+
+****** 2005
+#+begin_src R :exports results :results graphics :file figs/corheight2005_growth.png :width 1000
+ggplot(d, aes(x = cor_max2005, y = growth.rate)) + geom_point(alpha = .3) + terk + geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/corheight2005_growth.png]]
+****** 2009
+#+begin_src R :exports results :results graphics :file figs/corheight2009_growth.png :width 1000
+ggplot(d, aes(x = cor_max2009, y = growth.rate)) + geom_point(alpha = .3) + terk + geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/corheight2009_growth.png]]
+
+
+***** Genera..
+***** Space
+***** traits
+
+how many trees are there with full traits?
+
+#+begin_src R
+  d %>% select(TotPhen, N, Sugar, LMA, lignin, chl) %>%
+    filter(complete.cases(.)) %>%
+      nrow
 #+end_src
 
 #+RESULTS:
 : 
-: 'data.frame':	1233 obs. of  4 variables:
-:  $ UID   : chr  "ST08437" "ST08464" "ST08504" "ST08505" ...
-:  $ Genus : chr  "Stump" "Juniperus" "Ginkgo" "Acer" ...
-:  $ year  : num  2005 2005 2005 2005 2005 ...
-:  $ height: num  23.6 -Inf -Inf 25 23.5 ...
+: [1] 21454
 
-#+begin_src R :exports results :results graphics :file figs/sample_growth.png :height 800 :width 1000 :res 120
-dgf <- filter(dg, !Genus %in% c("Stump", "Vacant"))
-dgf <- filter(dg, Genus %in% c("Fraxinus", "Gleditsia", "Acer", "Tilia", "Ulmus", "Syringa", "Prunus"))
-ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line()
-#+end_src
+#+begin_src R
 
-#+RESULTS:
-[[file:figs/sample_growth.png]]
-
-#+begin_src R :exports results :results graphics :file figs/sample_growth_facetGenus.png :height 800 :width 1000 :res 120
-  ggplot(dgf, aes(x = year, y = height, color = Genus, group = UID)) + geom_line() +
-    facet_wrap(~Genus)
-#+end_src
-
-#+RESULTS:
-[[file:figs/sample_growth_facetGenus.png]]
-
-#+begin_src R :exports results :results graphics :file figs/sample_growth_fraxinus.png :height 800 :width 1000 :res 120
-  dgff <- filter(dgf, Genus == "Fraxinus")
-    ggplot(dgff, aes(x = year, y = height, group = UID)) + geom_line() +
-      coord_cartesian(y = c(20, 70)) +
-      facet_wrap(~UID)
+  dt <- d %>%
+    select(UID, growth.rate, TotPhen, N, Sugar, LMA, lignin, chl) %>%
+    gather(trait, value, -growth.rate, -UID)
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/sample_growth_fraxinus.png]]
+
+#+begin_src R :exports results :results graphics :file figs/traits_N_growth.png :bg transparent :width 1000 :height 800 :res 100
+
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .3) + geom_smooth() + terk +
+    facet_wrap(~trait, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/traits_N_growth.png]]
+
+#+begin_src R :exports results :results graphics :file figs/traits_N_growth_methodlm.png :bg transparent
+
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point() + geom_smooth(method = "lm") + terk +
+    facet_wrap(~trait, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/traits_N_growth_methodlm.png]]
+***** mean height within 20m
+
+#+begin_src R :exports results :results graphics :file figs/meanheight20m_v_growthrate.png
+  ggplot(d, aes(x = mean_height_wn20m, y = growth.rate)) + 
+      geom_point(alpha = .1) +
+      geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/meanheight20m_v_growthrate.png]]
+
+#+begin_src R :exports results :results graphics :file figs/meanheight20m_v_growthrate_lm.png
+  ggplot(d, aes(x = mean_height_wn20m, y = growth.rate)) + 
+      geom_point(alpha = .1) +
+      geom_smooth(method = "lm")
+#+end_src
+
+#+RESULTS:
+[[file:figs/meanheight20m_v_growthrate_lm.png]]
+***** terrain large scale
+#+begin_src R
+
+  dt <- d %>%
+    select(UID, growth.rate, tpi_200ft, slope_200ft, aspect_200ft) %>%
+    gather(terr, value, -growth.rate, -UID)
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/terrain200_growth.png :bg transparent :width 1000 :height 800 :res 100
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
+    facet_wrap(~terr, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/terrain200_growth.png]]
+#+begin_src R :exports results :results graphics :file figs/terrain200_growth_lm.png :bg transparent :width 1000 :height 800 :res 100
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth(method = "lm") +
+    facet_wrap(~terr, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/terrain200_growth_lm.png]]
+
+***** terrain small scale
+#+begin_src R
+
+  dt <- d %>%
+    select(UID, growth.rate, tpi_5ft, slope_5ft, aspect_5ft) %>%
+    gather(terr, value, -growth.rate, -UID)
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth.png :bg transparent :width 1000 :height 800 :res 100
+
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
+    facet_wrap(~terr, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/terrain5_growth.png]]
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth_lm.png :bg transparent :width 1000 :height 800 :res 100
+
+  ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth(method = "lm") +
+    facet_wrap(~terr, scales = "free")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/terrain5_growth_lm.png]]
+To see if the trend is driven by exteme points
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth_tpi_noextreme.png :bg transparent :width 1000 :height 800 :res 100
+
+  ggplot(filter(dt, terr == "tpi_5ft"), aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
+    facet_wrap(~terr, scales = "free") +
+    scale_x_continuous(limits = c(-1,1))
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/terrain5_growth_tpi_noextreme.png]]
+
+***** elevation
+#+begin_src R :exports results :results graphics :file figs/elv_growth.png :width 1000 :height 800 :bg transparent
+  ggplot(d, aes(x = elev, y = growth.rate)) + geom_point() +
+    geom_smooth(method = "lm") + terk
+#+end_src
+
+#+RESULTS:
+[[file:figs/elv_growth.png]]
+
+**** multiple linear model
+
+All in.  This will remove the observations where we have missing
+data.  Instead of the 40k, it's about 20k where we ahve aviris.
+
+#+begin_src R
+
+  m1 <- lm(growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     d)
+summary(m1)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + 
+    aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + 
+    mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + 
+    chl, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.55313 -0.07544 -0.00666  0.06616  0.86590 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        9.679e-01  4.023e-02  24.057  < 2e-16 ***
+GenusAcer         -1.721e-01  2.370e-02  -7.262 3.95e-13 ***
+GenusBetula       -1.070e-01  2.496e-02  -4.287 1.82e-05 ***
+GenusCarya        -9.989e-02  2.662e-02  -3.753 0.000175 ***
+GenusCatalpa      -4.468e-02  2.763e-02  -1.617 0.105959    
+GenusCeltis       -1.720e-01  2.443e-02  -7.044 1.93e-12 ***
+GenusFraxinus     -1.344e-01  2.368e-02  -5.676 1.40e-08 ***
+GenusGinkgo       -8.687e-02  2.838e-02  -3.060 0.002213 ** 
+GenusGleditsia    -8.415e-02  2.374e-02  -3.545 0.000394 ***
+GenusGymnocladus  -6.115e-03  5.270e-02  -0.116 0.907623    
+GenusJuglans      -6.131e-02  2.506e-02  -2.447 0.014419 *  
+GenusPicea        -5.777e-03  2.426e-02  -0.238 0.811761    
+GenusPinus         6.969e-02  2.479e-02   2.811 0.004944 ** 
+GenusPlatanus      5.087e-02  3.511e-02   1.449 0.147436    
+GenusPopulus      -9.504e-02  2.621e-02  -3.626 0.000289 ***
+GenusQuercus      -1.639e-01  2.394e-02  -6.846 7.81e-12 ***
+GenusRobinia      -2.813e-02  2.622e-02  -1.073 0.283335    
+GenusSalix        -1.356e-01  5.610e-02  -2.417 0.015659 *  
+GenusThuja        -5.864e-02  2.625e-02  -2.234 0.025518 *  
+GenusTilia        -3.995e-02  2.385e-02  -1.675 0.093924 .  
+GenusUlmus        -4.465e-02  2.439e-02  -1.831 0.067166 .  
+cor_max2005       -2.964e-02  3.266e-04 -90.745  < 2e-16 ***
+tpi_5ft           -1.699e-02  3.763e-03  -4.513 6.42e-06 ***
+slope_5ft         -8.460e-03  1.629e-02  -0.519 0.603628    
+aspect_5ft         2.049e-04  4.696e-04   0.436 0.662643    
+tpi_200ft         -1.564e-03  2.960e-04  -5.285 1.27e-07 ***
+slope_200ft        7.381e-02  3.829e-02   1.928 0.053925 .  
+aspect_200ft      -1.880e-03  4.629e-04  -4.060 4.92e-05 ***
+elev              -2.842e-04  4.660e-05  -6.098 1.09e-09 ***
+mean_height_wn20m  2.613e-02  5.090e-04  51.326  < 2e-16 ***
+TotPhen           -5.289e-03  5.966e-04  -8.865  < 2e-16 ***
+N                 -1.147e-01  4.184e-03 -27.422  < 2e-16 ***
+Sugar             -3.786e-03  1.188e-03  -3.188 0.001434 ** 
+LMA               -4.930e-04  6.545e-05  -7.532 5.18e-14 ***
+lignin            -3.964e-03  2.005e-04 -19.763  < 2e-16 ***
+chl                3.705e-04  2.239e-05  16.551  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1246 on 21417 degrees of freedom
+  (20483 observations deleted due to missingness)
+Multiple R-squared:  0.4137,	Adjusted R-squared:  0.4128 
+F-statistic: 431.8 on 35 and 21417 DF,  p-value: < 2.2e-16
+#+end_example
+
+#+begin_src R :exports results :results graphics :file figs/m1_plot.png
+plot(m1)
+#+end_src
+
+#+RESULTS:
+[[file:figs/m1_plot.png]]
+
+**** I need to look at semivariogram...
+
+**** random forest
+#+begin_src R
+    library(randomForest)
+
+    dc <- d %>%
+        filter(complete.cases(.)) %>%
+        mutate(Genus = factor(Genus))
+
+    mrf <- randomForest(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + chl, 
+         data = dc,
+         localImp=T)
+
+#+end_src
+
+#+begin_src R
+mrf
+#+end_src
+
+#+RESULTS:
+: 
+: Call:
+:  randomForest(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft +      slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft +      elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin +      chl, data = dc) 
+:                Type of random forest: regression
+:                      Number of trees: 500
+: of variables tried at each split: 5
+: 
+:           Mean of squared residuals: 0.01445986
+:                     % Var explained: 45.34
+
+#+begin_src R
+importance(mrf)[order(-importance(mrf)),]
+#+end_src
+
+#+RESULTS:
+:       cor_max2005             Genus mean_height_wn20m            lignin 
+:         127.98080          88.09066          48.07855          27.52676 
+:           TotPhen                 N              elev             Sugar 
+:          26.76902          25.79470          23.08977          21.04800 
+:               chl               LMA         tpi_200ft         slope_5ft 
+:          20.33767          20.30926          20.08467          19.54760 
+:      aspect_200ft       slope_200ft           tpi_5ft        aspect_5ft 
+:          19.13344          18.87548          18.59281          17.86812
+
+
+https://cran.r-project.org/web/packages/randomForestExplainer/vignettes/randomForestExplainer.htlm
+#+begin_src R
+library(randomForestExplainer)
+
+importanceframe <- measure_importance(mrf)
+
+
+
+#+end_src
+
+#+begin_src R 
+importanceframe
+#+end_src
+
+#+RESULTS:
+#+begin_example
+            variable mean_min_depth no_of_nodes mse_increase
+1       aspect_200ft          4.476      225914 1.513944e-04
+2         aspect_5ft          4.904      230725 4.999152e-05
+3                chl          3.828      228221 1.824864e-03
+4        cor_max2005          1.114      269712 2.216328e-02
+5               elev          3.268      235043 1.146434e-03
+6              Genus          1.264       81707 8.425657e-03
+7             lignin          2.634      235963 3.326133e-03
+8                LMA          3.458      230109 6.230747e-04
+9  mean_height_wn20m          2.604      255727 6.562798e-03
+10                 N          2.974      234100 2.030878e-03
+11       slope_200ft          4.488      224368 3.465162e-04
+12         slope_5ft          4.532      233385 1.647960e-04
+13             Sugar          3.302      230277 1.340134e-03
+14           TotPhen          2.506      231409 2.808007e-03
+15         tpi_200ft          4.276      228625 2.343532e-04
+16           tpi_5ft          4.270      230493 5.204200e-05
+   node_purity_increase no_of_trees times_a_root       p_value
+1              19.06371         500            0  1.147603e-01
+2              17.99463         500            0  1.520144e-31
+3              20.55770         500            7  2.667829e-10
+4             127.71692         500          139  0.000000e+00
+5              22.89165         500           23  1.596445e-97
+6              88.23060         500          123  1.000000e+00
+7              27.40741         500           16 2.379451e-116
+8              20.45368         500           26  3.708661e-25
+9              47.53816         500            8  0.000000e+00
+10             25.91879         500            4  5.864798e-80
+11             18.82467         500            0  9.847247e-01
+12             19.57211         500            0  8.205210e-68
+13             21.04741         500           49  7.986963e-27
+14             27.15436         500           88  1.591758e-39
+15             20.05964         500            1  6.994932e-13
+16             18.68723         500           16  4.747524e-29
+#+end_example
+
+importance rankings
+
+#+begin_src R :exports results :results graphics :file figs/cor_impor.png
+plot_importance_ggpairs(importanceframe, measures = c("node_purity_increase", "mse_increase", "mean_min_depth", "p_value"))
+#+end_src
+
+#+RESULTS:
+[[file:figs/cor_impor.png]]
+
+#+begin_src R :exports results :results graphics :file figs/rf_imp_frame1.png
+
+plot_multi_way_importance(importanceframe, x_measure = "mean_min_depth", y_measure = "node_purity_increase", size_measure = "p_value", no_of_labels = 5)
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/rf_imp_frame1.png]]
+
+
+#+begin_src R
+interactions_frame <- min_depth_interactions(mrf, c("cor_max2005", "Genus", "mean_height_wn20m", "lignin", "TotPhen", "N"))
+#+end_src
+
+
+#+begin_src R :exports results :results graphics :file figs/rf_int_frame.png :width 1000
+plot_min_depth_interactions(interactions_frame)
+#+end_src
+
+#+RESULTS:
+[[file:figs/rf_int_frame.png]]
+
+
+#+begin_src R :exports results :results graphics :file figs/pred_int_meanheight20m_cormax2005.png
+plot_predict_interaction(mrf, dc, "mean_height_wn20m", "cor_max2005")
+#+end_src
+
+#+RESULTS:
+[[file:figs/pred_int_meanheight20m_cormax2005.png]]
+
+#+begin_src R :exports results :results graphics :file figs/pred_int_2.png
+plot_predict_interaction(mrf, dc, "cor_max2005", "lignin")
+#+end_src
+
+#+RESULTS:
+[[file:figs/pred_int_2.png]]
+
+#+begin_src R :exports results :results graphics :file figs/partialGenus.png :width 1000 :res 120
+  #pp <- partialPlot(x=mrf, pred.data=dc, x.var=Genus, which.class="Acer", las = 2)
+  dp <- data.frame(pp)
+  ggplot(dp, aes(x = x, y = y)) + geom_point() +
+      theme(axis.text.x = element_text(angle = 60, hjust = 1))
+#+end_src
+
+#+RESULTS:
+[[file:figs/partialGenus.png]]
+
+#+begin_src R
+library(pdp)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/partialGenusheight.png :width 1500
+#genus_by_2005height <- partial(mrf, pred.data = dc, pred.var = c("Genus", "cor_max2005"))
+plot(genus_by_2005height)
+#+end_src
+
+#+RESULTS:
+[[file:figs/partialGenusheight.png]]
+
+#+begin_src R :exports results :results graphics :file figs/partial_genus_height2.png :width 1500 :bg transparent :res 120
+  ggplot(genus_by_2005height, aes(x = cor_max2005, y = yhat, color = Genus)) + geom_line() + 
+      theme_minimal() +
+      coord_cartesian(xlim = c(5,20))
+#+end_src
+
+#+RESULTS:
+[[file:figs/partial_genus_height2.png]]
+There doesn't appear to be super strong genus x height interactions to me.
+
+
+* Results
+** Growth Rates
+- figure of distribution of growth rates
+- plot growth rates in space
+** Model Coefficients
 
 
 * papers
@@ -4906,135 +5566,4 @@ significant co-predictor of tree height but it had a negligible effect on the mo
 performance.
 
 #+END_QUOTE
-
-* accidentally deleted
-** extract heights from normalized lidar at location of trees
-
-*** I could potentially sub sample the 2017 down to the point density of 2005 to estimate the 2005 bias, then correct for it?  
-  
- - read in points and make a buffer of 5 ft radius around each point (they are
-   almost always in the center of the tree)
- - for each year lidar, clip to buffer/polygon and extract the maximum height within that buffer and assign it to the tree
- 
- Really I should come up with some clever rules for thinning out the
- tree dataset.  If I have small trees next to big trees, the small
- trees look like they are tall, but really they are being overtopped by
- the big trees.
- 
- - consider making buffers based on the trees dbh.  if two trees
-   intersect, keep the bigger of the two.
- 
- 
- Also need to beware of non street trees overhanging street trees.
- 
-
-*** clip lidar to tree buffers and extract tallest return
-**** 2009
- #+begin_src R
-   library(doParallel)
-   library(foreach)
-   library(lidR)
-   library(dplyr)
-   library(stringr)
- 
-   b <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
-   b <- spTransform(b, crs("+init=epsg:7599"))
-   b@data <- select(b@data, UID)
- 
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar",
-                    pattern = ".*.las",
-                    full.names = T)
- 
- 
-   # crop the polygons so that a huge object doesn't need to be sent to each node
-   cl <- makeCluster(4)
-   registerDoParallel(cl)
-   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {
-       l <- readLAS(f)
-       proj4string(l) <- "+init=epsg:7599"
-       bc <- crop(b, extent(l))
-       if(!is.null(bc)) {
-           i <- str_extract(f, "lc2t[0-9]+")
-           shapefile(bc, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"), overwrite = T)
-       }
-   }
-   closeAllConnections()
- 
-   rm(b)
- 
-   # tile 209_normalized doesn't have any trees in it. So I drop fl index 69.
- 
-   cl <- makeCluster(7)
-   registerDoParallel(cl)
-   out <- foreach(f = fl, .packages = c("stringr","lidR")) %dopar% {  
-       l <- readLAS(f)
-      i <- str_extract(f, "lc2t[0-9]+")
-       bc <- shapefile(paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh_2009cropped/",i,".shp"))
-       lc <- lasclip(l, bc)
-       m <- lapply(lc, function(ls) {
-           max(ls@data$Z)
-       })
-       o <- cbind(UID = bc@data$UID, height_2009 = unlist(m)
-       saveRDS(o, paste0("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/",i,".rds"))
-   }
- 
-   closeAllConnections()
- 
- #+end_src
- 
- 
- save as heights
- #+begin_src R
-   hs <- list.files("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009/", full.names = T)
-   hs <- lapply(hs, readRDS)
- 
-   h2009 <- do.call("rbind", hs)
- 
-   saveRDS(h2009, "/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
- #+end_src
- 
-
- 
-*** join heights to trees
- 
- #+begin_src R
-   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
- 
- #+end_src
- 
- #+begin_src R
-   library(raster)
-   library(dplyr)
-
-   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
-
-   tb <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_buf_excludeNearNeigh.shp")
-
-   height_2009 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2009.rds")
-   height_2016 <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/height_2016.rds")
-
-   height_2009 <- as.data.frame(height_2009, stringsAsFactors = F) %>%
-       mutate(height_2009 = as.numeric(height_2009))
-
-   height_2009 <- height_2009 %>%
-       group_by(UID) %>%
-       summarize(height_2009 = max(height_2009, na.rm = T))
-
-   height_2016 <- as.data.frame(height_2016, stringsAsFactors = F) %>%
-       mutate(height_2016 = as.numeric(height_2016))
-
-   height_2016 <- height_2016 %>%
-       group_by(UID) %>%
-       summarize(height_2016 = max(height_2016, na.rm = T))
-
-
-   heights <- left_join(height_2009, height_2016, by = "UID") %>%
-       mutate(growth = height_2016 - height_2009)
-
-
-   trees@data <- left_join(trees@data, heights)
-
-   shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithHeights.shp", overwrite = T)
-
- #+end_src
 
