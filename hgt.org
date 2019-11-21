@@ -88,6 +88,12 @@ traits.
 
 
 
+Objectives:
+- Evaluate the effectiveness of two 
+- Use repeat lidar in an urban environ
+
+
+
 
 
 ** COMMENT comments
@@ -5070,18 +5076,19 @@ d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
   library(ggplot2)
   library(ggthemes)
   library(tidyr)
-  terk <- list(theme_solarized_2(base_size = 16) +
-               theme(legend.title = element_text(size = 10),
-                     legend.text = element_text(size = 8),
-                     axis.ticks = element_line(size = .3),
-                     rect = element_rect(fill = "transparent"),
-                     panel.background = element_rect(fill = "transparent"),
-                     panel.grid.major = element_line(color = "#839496", size = .3),
-                     panel.grid.minor = element_line(color = "#839496", size = .1)),
-               blue <- scale_color_solarized("blue"))
+                                          #  terk <- list(theme_solarized_2(base_size = 16) +
+  terk <- theme_tufte(base_size = 16) +
+    theme(legend.title = element_text(size = 10),
+          legend.text = element_text(size = 8),
+          axis.ticks = element_line(size = .3), 
+          panel.grid.major = element_line(color = "#839496", size = .1),
+          panel.grid.minor = element_line(color = "#839496", size = .05))
+
+
+  blue <- scale_color_solarized("blue")
 
   red <- solarized_pal("red")(1)
-
+  base1 <- "#93a1a1"
 
   d <-  readRDS("/home/erker/hgt_data/merged_data.rds")
 
@@ -5090,6 +5097,26 @@ d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
 #+end_src
 
 #+RESULTS:
+
+***** growth rates
+
+#+begin_src R :exports results :results graphics :file figs/growthrate_histogram.png :width 1200 :res 150 :bg transparent
+  ggplot(d, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2) +
+    terk +
+    scale_x_continuous("growth rate (cm/year)", lim = c(-50,100), breaks = c(-100,-50,0, round(mean(d$growth.rate * 100),1), 50, 100)) +
+    geom_vline(data = d, aes(xintercept = mean(growth.rate)*100), color = red)
+#+end_src
+
+#+RESULTS:
+[[file:figs/growthrate_histogram.png]]
+
+How many trees
+#+begin_src R
+sum(complete.cases(d$growth.rate))
+#+end_src
+
+#+RESULTS:
+: [1] 41936
 
 ***** height 
 
@@ -5107,7 +5134,6 @@ ggplot(d, aes(x = cor_max2009, y = growth.rate)) + geom_point(alpha = .3) + terk
 
 #+RESULTS:
 [[file:figs/corheight2009_growth.png]]
-
 
 ***** Genera..
 ***** Space
@@ -5513,10 +5539,43 @@ There doesn't appear to be super strong genus x height interactions to me.
 
 * Results
 ** Growth Rates
+#+name:fig:growthrate_hist
+#+caption: Histogram of estimated growth rates for nearly 42,000 urban trees.  The sample mean growth rate is 8.7 cm / year.
+[[file:figs/growthrate_histogram.png]]
+
+
+See figure [[fig:growthrate_hist]] for distribution of growth rates.
+
 - figure of distribution of growth rates
+
+
+
 - plot growth rates in space
 ** Model Coefficients
+* Discussion
 
+
+cite:song_e_2016 estimated canopy height growth of urban trees in
+Osaka, Japan using repeat lidar.  Like our study their later
+collections had higher pulse densities (in their case, 52 pulses/m^2
+versus 11 pulses/m^2).  The relatively high pulse density across all
+their years likely means that the bias in height estimation is small,
+but the 
+
+If their early date collections are biased low, it makes growth appear
+higher than it would be in the field.  
+
+For example: mean growth from 2008-2010 (when pulse density was 52
+pulses / m^2) was 0.02+- .19 m m^{-2} yr^{-1}, and
+from 2004-2008 (when pulse density increased from 11 to 52 pulses /
+m^2) mean growth was .37 +/- .14 m m^{-2} yr^{-1}.  This has got to be due to
+the pulse density bias.
+
+
+
+Estimating canopy height from lidar has a greater bias over smaller
+areas (individual trees) compared to larger areas
+(stands) citep:song_e_2016,roussel_e_2017.
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
@@ -5567,3 +5626,201 @@ performance.
 
 #+END_QUOTE
 
+** lidar and tree growth
+
+
+*** cite:choi_e_2019
+
+**** abstract
+#+BEGIN_QUOTE
+Understanding forest dynamics is important for assessing the health of
+urban forests, which experience various disturbances, both natural
+(e.g., treefall events) and artificial (e.g., making space for
+agricultural fields). Therefore, quantifying three-dimensional changes
+in canopies is a helpful way to manage and understand urban forests
+better. Multitemporal airborne light detection and ranging (LiDAR)
+datasets enable us to quantify the vertical and lateral growth of
+trees across a landscape scale. The goal of this study is to assess
+the annual changes in the 3-D structures of canopies and forest gaps
+in an urban forest using annual airborne LiDAR datasets for
+2012–2015. The canopies were classified as high canopies and low
+canopies by a 5 m height threshold. Then, we generated pixel- and
+plot-level canopy height models and conducted change detection
+annually. The vertical growth rates and leaf area index showed
+consistent values year by year in both canopies, while the spatial
+distributions of the canopy and leaf area profile (e.g., leaf area
+density) showed inconsistent changes each year in both canopies. In
+total, high canopies expanded their foliage from 12 m height, while
+forest gap edge canopies (including low canopies) expanded their
+canopies from 5 m height. Annual change detection with LiDAR datasets
+might inform about both steady growth rates and different
+characteristics in the changes of vertical canopy structures for both
+high and low canopies in urban forests.
+#+END_QUOTE
+
+**** notes
+
+point density > 8 /m^2
+
+leaf on
+
+small spatial extent
+
+4 years of data (2012-2015)
+
+lidar is more or less consistent from year to year.
+
+their annual growth rates in "high canopy" areas is around .3 m/year.
+
+I'm having a hard time with their figures and tables, they are a bit
+out of wack.
+
+*** cite:ossola_hopton_2018
+
+https://www.sciencedirect.com/science/article/pii/S0048969717321010#f1010
+
+**** abstract
+#+BEGIN_QUOTE
+The spatial arrangement of urban vegetation depends on urban
+morphology and socio-economic settings. Urban vegetation changes over
+time because of human management. Urban trees are removed due to
+hazard prevention or aesthetic preferences. Previous research
+attributed tree loss to decreases in canopy cover. However, this
+provides little information about location and structural
+characteristics of trees lost, as well as environmental and social
+factors affecting tree loss dynamics. This is particularly relevant in
+residential landscapes where access to residential parcels for field
+surveys is limited. We tested whether multi-temporal airborne LiDAR
+and multi-spectral imagery collected at a 5-year interval can be used
+to investigate urban tree loss dynamics across residential landscapes
+in Denver, CO and Milwaukee, WI, covering 400,705 residential parcels
+in 444 census tracts. Position and stem height of trees lost were
+extracted from canopy height models calculated as the difference
+between final (year 5) and initial (year 0) vegetation height derived
+from LiDAR. Multivariate regression models were used to predict number
+and height of tree stems lost in residential parcels in each census
+tract based on urban morphological and socio-economic variables. A
+total of 28,427 stems were lost from residential parcels in Denver and
+Milwaukee over 5 years. Overall, 7% of residential parcels lost one
+stem, averaging 90.87 stems per km2. Average stem height was 10.16 m,
+though trees lost in Denver were taller compared to Milwaukee. The
+number of stems lost was higher in neighborhoods with higher canopy
+cover and developed before the 1970s. However, socio-economic
+characteristics had little effect on tree loss dynamics. The study
+provides a simple method for measuring urban tree loss dynamics within
+and across entire cities, and represents a further step toward high
+resolution assessments of the three-dimensional change of urban
+vegetation at large spatial scales.
+#+END_QUOTE
+
+**** notes
+2010 and 2015 lidar in MKE, 2008 and 2013 lidar in denver
+
+all years have the same nominal spacing (.7 points per m)
+
+they had no need to do a correction for their chm
+
+they did what i was thinking of and created 2 chms then found their
+difference. 
+
+they didn't worry about lidar underestimating height.  While the point
+densities are on average the same across years, there is variability
+across years which could be importnat (though not for their analysis
+really I don't think since their target was mostly stems).
+
+
+#+BEGIN_QUOTE
+A total of 13,427 and 15,000 tree stems (height > 5 m) were lost in
+the 5-year period from residential parcels in Denver (2008–2013) and
+Milwaukee (2010–2015), respectively. On a per area basis, this
+corresponds to an average of 99.33 ± 3.49 (Denver) and 82.41 ± 2.14
+(Milwaukee) tree stems per km2 of residential area. The tallest stems
+lost in Denver and Milwaukee were 28.04 and 23.82 m high,
+respectively. Tree stems lost in Denver were taller on average (11.42
+± 0.03 m) compared to those lost in Milwaukee (8.95 ± 0.02 m)
+(Fig. 3).
+#+END_QUOTE
+
+*** cite:song_e_2016
+https://www.sciencedirect.com/science/article/pii/S1618866716000273#fig0010
+
+**** abstract
+#+BEGIN_QUOTE
+Inter-annual canopy growth is one of the key indicators for assessing
+forest conditions, but the measurements require laborious field
+surveys. Up-to-date LiDAR remote sensing provides sufficient
+three-dimensional morphological information of the ground to monitor
+canopy heights on a broad scale. Thus, we attempted to use
+multi-temporal airborne LiDAR datasets in the estimation of vertical
+canopy growth, across various types of broad-leaved trees in a large
+urban park.
+
+The growth of broad-leaved canopies in the EXPO '70 urban forest in
+Osaka, Japan was assessed with 19 plots at the stand level and 39
+selected trees at the individual-tree level. Airborne LiDAR campaigns
+repeatedly observed the park in the summers of 2004, 2008,
+and 2010. We acquired canopy height models (CHMs) for each year from
+the height values of the uppermost laser returns at every 0.5 m
+grid. The annual canopy growth was calculated by the differences in
+CHMs and validated with the annual changes in field-measured basal
+areas and tree heights.
+
+
+LiDAR estimations revealed that the average annual canopy growth from
+2004 to 2010 was 0.26 ± 0.11 m m−2 yr−1 at the plot level and 0.26 ±
+0.10 m m−2 yr−1 at the individual-tree level. This result showed that
+growing trends were consistent at different scales through 2004 to
+2010 despite uncertainty in estimating short-term growth for small
+crown areas at the individual-tree level. This LiDAR-estimated canopy
+growth shows a moderate relation to field-measured increase of basal
+areas and average heights. The estimation uncertainties seem to result
+from the complex canopy structure and irregular crown shape of
+broad-leaved trees. Challenges still remain on how to incorporate the
+growth of understory trees, growth in the lateral direction, and gap
+dynamics inside the canopy, particularly in applying multi-temporal
+LiDAR datasets to the large-scale growth assessment.
+#+END_QUOTE
+
+**** notes  
+- small geographic area in osaka
+  - assess 39 trees and 19 plots
+- 3 years of lidar 2004 2008 2010
+- validated growth with ground measurements at plot and individual
+  tree level.
+- trees grow .26 m / year
+  - This is high, could it be due to underestimating height in early years?
+- great table with previous studies looking at canopy growth.
+  - none of the studies in the table, except the study itself were urban.
+- note the uncertainties in estimateing height from lidar, but don't
+  correct for it.
+
+- in 2004 lidar had 11 pulses /m^2, in 2008 and 2010 it was 52.  So
+  there would definitely be a greater bias in 2004, which they didn't
+  correct for.  BUt it might be insignificant since their point cloud
+  density was so high.
+
+- they note the bias is greater for individual trees than plots,
+  because the area is smaller.
+
+- their table 7 doesn't show the 2004-2008 combination.  ugh.
+  - "At the scale of individual trees, the growth trend was not clear for every period"
+  - field measures didn't agree with lidar measures over every period
+    for individual trees.
+
+- they saw trees always measure taller in 2008 than 2004.  This is
+  more evidence that there is a bias in the lidar.
+
+- field measured growth: is much lower than they found:
+#+BEGIN_QUOTE
+Field-measured
+heights of plants since 1972 in the selected long-term monitoring
+plots show the decrease in the annual growing trends, aver-
+aging from 0.24 m yr −1 during 1972–1982 to 0.10 m yr −1 during
+1995–2004.
+#+END_QUOTE
+
+but instead of recognizing the potneital bias, they think that it's
+because that's for all trees not the top of canopy trees.
+
+
+*** cite:roussel_e_2017 
