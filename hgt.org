@@ -1,7 +1,7 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
 #+PROPERTY:  header-args:sh :eval yes
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
@@ -44,6 +44,9 @@ check my paper in stat consulting office to make sure I got it all
   - growth by explanatory variable plots??
   - model plots???
 
+* key points
+
+- We 
 
 * Introduction
 
@@ -89,10 +92,26 @@ traits.
 
 
 Objectives:
-- Evaluate the effectiveness of two 
+- Evaluate the effectiveness of remote sensing technologies to
+  estimate tree growth
 - Use repeat lidar in an urban environ
 
 
+cite:marinelli_e_2019 note the challenge of mulitemporal lidar
+analyses of forest parameters since as forest changes in time pulse density
+has increased in time.  Especially true for individual trees.  They
+cite: cite:paris_bruzzone_2015 and cite:zhao_e_2018.  But I don't
+think they performed a correction for tree height.
+
+
+Existing methods for estimating ecosystem services are lacking.
+cite:erker_townsend_2019 address building energy use
+effects. cite:boukili_e_2017 address C sequestration from growth and
+find itree and UTD both over estimate.  
+When we have limited resources, we need to make sure we allocate them
+efficiently.  We don't want to spend loads of money on trees if the
+benefits of trees will be less than the benefits that could be
+achieved by allocating those resources elsewhere.
 
 
 
@@ -4990,21 +5009,142 @@ The following objects are masked from ‘package:base’:
 
 #+end_src
 **** TODO pct impervious etc
-
+***** tile landcover so velox can fit it in memory
 #+begin_src R
   library(raster)
-
   landcover <- raster("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea.tif")
-
   trees20m <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
-
-
-  imp <- raster::extract(landcover, trees20m, sp = T, fun = function(x, ...) sum(x == 7) / length(x))
+  trees20m <- trees20m[!duplicated(trees20m@data),]
+  trees20m <- spTransform(trees20m, crs(landcover))
+  crop(landcover, trees20m, filename = "/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea_treecropped.tif")  
 
 #+end_src
 
 
+#+BEGIN_SRC python
+import os, gdal
+ 
+in_path = '/home/erker/hgt_data/share_madison_utc/'
+input_filename = '3_ClassifiedUrbanArea_treecropped.tif'
+ 
+out_path = '/home/erker/hgt_data/share_madison_utc/'
+output_filename = 'tile_'
+ 
+tile_size_x = 5000
+tile_size_y = 5000
+ 
+ds = gdal.Open(in_path + input_filename)
+band = ds.GetRasterBand(1)
+xsize = band.XSize
+ysize = band.YSize
+ 
+for i in range(0, xsize, tile_size_x):
+    for j in range(0, ysize, tile_size_y):
+        com_string = "gdal_translate -of GTIFF -srcwin " + str(i)+ ", " + str(j) + ", " + str(tile_size_x) + ", " + str(tile_size_y) + " " + str(in_path) + str(input_filename) + " " + str(out_path) + str(output_filename) + str(i) + "_" + str(j) + ".tif"
+        os.system(com_string)
 
+#+END_SRC
+
+#+RESULTS:
+: None
+***** 20m
+#+begin_src R
+       library(raster)
+       library(velox)
+    library(stringr)
+         landcover <- raster("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea.tif")
+         trees20m <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
+         trees20m <- trees20m[!duplicated(trees20m@data),]
+         trees20m <- spTransform(trees20m, crs(landcover))
+       rm(landcover)
+
+     fs <- list.files("/home/erker/hgt_data/share_madison_utc/", pattern = "tile_.*", full.names = T)
+
+  o <-      lapply(fs, function(f) {
+           app <- str_extract(f, "[0-9]+_[0-9]+")
+           landcover <- velox(f)
+           imp <- landcover$extract(sp = trees20m, fun = function(x) sum(x == 7))
+           saveRDS(imp, paste0("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea_treecropped_extracted",app,".rds"))
+           imp
+       })
+
+  n <-      lapply(fs, function(f) {
+           app <- str_extract(f, "[0-9]+_[0-9]+")
+           landcover <- velox(f)
+           imp <- landcover$extract(sp = trees20m, fun = function(x) length(x))
+           saveRDS(imp, paste0("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea_treecropped_extracted",app,"_n.rds"))
+           imp
+       })
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+d <- do.call("cbind",o)
+d <- apply(d, 1, function(x) sum(x, na.rm = T))
+
+dn <- do.call("cbind",n)
+dn <- apply(dn, 1, function(x) sum(x, na.rm = T))
+
+pct_imp <- d / dn
+
+pct_imp_df <- data.frame(UID = trees20m@data$UID, pct_imp_20m = pct_imp)
+saveRDS(pct_imp_df, "/home/erker/hgt_data/pct_imp_20m.rds")
+#+end_src
+
+#+RESULTS:
+***** 100 m
+#+begin_src R
+         library(raster)
+         library(velox)
+      library(stringr)
+  library(rgeos)
+
+           landcover <- raster("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea.tif")
+           trees20m <- shapefile("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_20m_buf.shp")
+           trees20m <- trees20m[!duplicated(trees20m@data),]
+           trees20m <- spTransform(trees20m, crs(landcover))
+  trees100m <- gBuffer(trees20m, width = 80, byid = T)
+
+         rm(landcover)
+
+       fs <- list.files("/home/erker/hgt_data/share_madison_utc/", pattern = "tile_.*", full.names = T)
+
+    o <-      lapply(fs, function(f) {
+             app <- str_extract(f, "[0-9]+_[0-9]+")
+             landcover <- velox(f)
+             imp <- landcover$extract(sp = trees100m, fun = function(x) sum(x == 7))
+             saveRDS(imp, paste0("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea_treecropped_extracted",app,"_100m_.rds"))
+             imp
+         })
+
+    n <-      lapply(fs, function(f) {
+             app <- str_extract(f, "[0-9]+_[0-9]+")
+             landcover <- velox(f)
+             imp <- landcover$extract(sp = trees100m, fun = function(x) length(x))
+             saveRDS(imp, paste0("/home/erker/hgt_data/share_madison_utc/3_ClassifiedUrbanArea_treecropped_extracted",app,"_100m_n.rds"))
+             imp
+         })
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+d <- do.call("cbind",o)
+d <- apply(d, 1, function(x) sum(x, na.rm = T))
+
+dn <- do.call("cbind",n)
+dn <- apply(dn, 1, function(x) sum(x, na.rm = T))
+
+pct_imp <- d / dn
+
+pct_imp_df <- data.frame(UID = trees20m@data$UID, pct_imp_100m = pct_imp)
+saveRDS(pct_imp_df, "/home/erker/hgt_data/pct_imp_100m.rds")
+#+end_src
+
+#+RESULTS:
 
 **** TODO sewers?
 *** modeling
@@ -5016,7 +5156,8 @@ The following objects are masked from ‘package:base’:
             traits <- readRDS("/home/erker/hgt_data/canopy_foliar_traits.rds") %>% unique()
             hgt_wn20m <- readRDS("/home/erker/hgt_data/mean_height_within20m_2016.rds") %>% unique()
             terr <- readRDS("/home/erker/hgt_data/terrain_at_trees.rds") %>% unique()
-
+            imp20 <- readRDS("/home/erker/hgt_data/pct_imp_20m.rds")
+            imp100 <- readRDS("/home/erker/hgt_data/pct_imp_100m.rds")
         h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds") %>%
             rename(UID = uid) %>%
             filter(!is.na(growth.rate)) %>%
@@ -5048,18 +5189,34 @@ The following objects are masked from ‘package:base’:
 
         d <- left_join(d, traits)
 
+        d <- left_join(d, imp20)
+
+        d <- left_join(d, imp100)
+
+
       saveRDS(d, "/home/erker/hgt_data/merged_data.rds")
 #+end_src
 
 #+RESULTS:
-: 
-: Joining, by = c("UID", "Genus")
-: 
-: Joining, by = c("UID", "Genus", "DBH", "Species")
-: 
-: Joining, by = "UID"
-: 
-: Joining, by = c("UID", "Genus", "DBH", "Species")
+#+begin_example
+
+Joining, by = c("UID", "Genus")
+
+Joining, by = c("UID", "Genus", "DBH", "Species")
+
+Joining, by = "UID"
+
+Joining, by = c("UID", "Genus", "DBH", "Species")
+
+Joining, by = "UID"
+Warning message:
+Column `UID` joining character vector and factor, coercing into character vector
+
+Joining, by = "UID"
+Warning message:
+Column `UID` joining character vector and factor, coercing into character vector
+#+end_example
+
 **** read back in data
 #+begin_src R
 library(dplyr)
@@ -5069,8 +5226,22 @@ d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
 #+end_src
 
 #+RESULTS:
+#+begin_example
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+#+end_example
 
 **** plot data
+
+***** define theme
 #+begin_src R
 
   library(ggplot2)
@@ -5211,7 +5382,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/terrain200_growth.png :bg transparent :width 1000 :height 800 :res 100
+#+begin_src R :exports results :results graphics :file figs/terrain200_growth.png :bg transparent :width 1000 :height 500 :res 100
   ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
     facet_wrap(~terr, scales = "free")
 
@@ -5219,7 +5390,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 [[file:figs/terrain200_growth.png]]
-#+begin_src R :exports results :results graphics :file figs/terrain200_growth_lm.png :bg transparent :width 1000 :height 800 :res 100
+#+begin_src R :exports results :results graphics :file figs/terrain200_growth_lm.png :bg transparent :width 1000 :height 500 :res 100
   ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth(method = "lm") +
     facet_wrap(~terr, scales = "free")
 
@@ -5240,7 +5411,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/terrain5_growth.png :bg transparent :width 1000 :height 800 :res 100
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth.png :bg transparent :width 1000 :height 500 :res 100
 
   ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
     facet_wrap(~terr, scales = "free")
@@ -5249,7 +5420,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 [[file:figs/terrain5_growth.png]]
-#+begin_src R :exports results :results graphics :file figs/terrain5_growth_lm.png :bg transparent :width 1000 :height 800 :res 100
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth_lm.png :bg transparent :width 1000 :height 500 :res 100
 
   ggplot(dt, aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth(method = "lm") +
     facet_wrap(~terr, scales = "free")
@@ -5259,7 +5430,7 @@ how many trees are there with full traits?
 #+RESULTS:
 [[file:figs/terrain5_growth_lm.png]]
 To see if the trend is driven by exteme points
-#+begin_src R :exports results :results graphics :file figs/terrain5_growth_tpi_noextreme.png :bg transparent :width 1000 :height 800 :res 100
+#+begin_src R :exports results :results graphics :file figs/terrain5_growth_tpi_noextreme.png :bg transparent :width 1000 :height 500 :res 100
 
   ggplot(filter(dt, terr == "tpi_5ft"), aes(x = value, y = growth.rate)) + geom_point(alpha = .1) + terk + geom_smooth() +
     facet_wrap(~terr, scales = "free") +
@@ -5272,146 +5443,186 @@ To see if the trend is driven by exteme points
 
 ***** elevation
 #+begin_src R :exports results :results graphics :file figs/elv_growth.png :width 1000 :height 800 :bg transparent
-  ggplot(d, aes(x = elev, y = growth.rate)) + geom_point() +
+  ggplot(d, aes(x = elev, y = growth.rate)) + geom_point(alpha = .1) +
     geom_smooth(method = "lm") + terk
 #+end_src
 
 #+RESULTS:
 [[file:figs/elv_growth.png]]
 
-**** multiple linear model
+***** impervious
+#+begin_src R :exports results :results graphics :file figs/growth.rate_pctimp20m.png
+  ggplot(d, aes(x = pct_imp_20m, y = growth.rate)) + geom_point(alpha = .1) + 
+      terk +
+      geom_smooth()
+#+end_src
 
-All in.  This will remove the observations where we have missing
-data.  Instead of the 40k, it's about 20k where we ahve aviris.
+#+RESULTS:
+[[file:figs/growth.rate_pctimp20m.png]]
+
+#+begin_src R :exports results :results graphics :file figs/growth.rate_pctimp100m.png
+  ggplot(d, aes(x = pct_imp_100m, y = growth.rate)) + geom_point(alpha = .1) + 
+      terk +
+      geom_smooth()
+#+end_src
+
+#+RESULTS:
+[[file:figs/growth.rate_pctimp100m.png]]
 
 #+begin_src R
-
-  m1 <- lm(growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + chl, 
-     d)
-summary(m1)
+mimp <- lm(growth.rate ~ pct_imp_20m + pct_imp_100m, data = d)
+summary(mimp)
+mimpint  <- lm(growth.rate ~ pct_imp_20m * pct_imp_100m, data = d)
+summary(mimpint)
 #+end_src
 
 #+RESULTS:
 #+begin_example
 
 Call:
-lm(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + 
-    aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + 
-    mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + 
-    chl, data = d)
+lm(formula = growth.rate ~ pct_imp_20m + pct_imp_100m, data = d)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--0.55313 -0.07544 -0.00666  0.06616  0.86590 
+-0.65828 -0.10529 -0.01624  0.08844  1.08666 
 
 Coefficients:
-                    Estimate Std. Error t value Pr(>|t|)    
-(Intercept)        9.679e-01  4.023e-02  24.057  < 2e-16 ***
-GenusAcer         -1.721e-01  2.370e-02  -7.262 3.95e-13 ***
-GenusBetula       -1.070e-01  2.496e-02  -4.287 1.82e-05 ***
-GenusCarya        -9.989e-02  2.662e-02  -3.753 0.000175 ***
-GenusCatalpa      -4.468e-02  2.763e-02  -1.617 0.105959    
-GenusCeltis       -1.720e-01  2.443e-02  -7.044 1.93e-12 ***
-GenusFraxinus     -1.344e-01  2.368e-02  -5.676 1.40e-08 ***
-GenusGinkgo       -8.687e-02  2.838e-02  -3.060 0.002213 ** 
-GenusGleditsia    -8.415e-02  2.374e-02  -3.545 0.000394 ***
-GenusGymnocladus  -6.115e-03  5.270e-02  -0.116 0.907623    
-GenusJuglans      -6.131e-02  2.506e-02  -2.447 0.014419 *  
-GenusPicea        -5.777e-03  2.426e-02  -0.238 0.811761    
-GenusPinus         6.969e-02  2.479e-02   2.811 0.004944 ** 
-GenusPlatanus      5.087e-02  3.511e-02   1.449 0.147436    
-GenusPopulus      -9.504e-02  2.621e-02  -3.626 0.000289 ***
-GenusQuercus      -1.639e-01  2.394e-02  -6.846 7.81e-12 ***
-GenusRobinia      -2.813e-02  2.622e-02  -1.073 0.283335    
-GenusSalix        -1.356e-01  5.610e-02  -2.417 0.015659 *  
-GenusThuja        -5.864e-02  2.625e-02  -2.234 0.025518 *  
-GenusTilia        -3.995e-02  2.385e-02  -1.675 0.093924 .  
-GenusUlmus        -4.465e-02  2.439e-02  -1.831 0.067166 .  
-cor_max2005       -2.964e-02  3.266e-04 -90.745  < 2e-16 ***
-tpi_5ft           -1.699e-02  3.763e-03  -4.513 6.42e-06 ***
-slope_5ft         -8.460e-03  1.629e-02  -0.519 0.603628    
-aspect_5ft         2.049e-04  4.696e-04   0.436 0.662643    
-tpi_200ft         -1.564e-03  2.960e-04  -5.285 1.27e-07 ***
-slope_200ft        7.381e-02  3.829e-02   1.928 0.053925 .  
-aspect_200ft      -1.880e-03  4.629e-04  -4.060 4.92e-05 ***
-elev              -2.842e-04  4.660e-05  -6.098 1.09e-09 ***
-mean_height_wn20m  2.613e-02  5.090e-04  51.326  < 2e-16 ***
-TotPhen           -5.289e-03  5.966e-04  -8.865  < 2e-16 ***
-N                 -1.147e-01  4.184e-03 -27.422  < 2e-16 ***
-Sugar             -3.786e-03  1.188e-03  -3.188 0.001434 ** 
-LMA               -4.930e-04  6.545e-05  -7.532 5.18e-14 ***
-lignin            -3.964e-03  2.005e-04 -19.763  < 2e-16 ***
-chl                3.705e-04  2.239e-05  16.551  < 2e-16 ***
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   0.133405   0.001941  68.719  < 2e-16 ***
+pct_imp_20m  -0.104035   0.005298 -19.637  < 2e-16 ***
+pct_imp_100m -0.024198   0.006347  -3.813 0.000138 ***
 ---
 codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 0.1246 on 21417 degrees of freedom
-  (20483 observations deleted due to missingness)
-Multiple R-squared:  0.4137,	Adjusted R-squared:  0.4128 
-F-statistic: 431.8 on 35 and 21417 DF,  p-value: < 2.2e-16
+Residual standard error: 0.1652 on 41933 degrees of freedom
+Multiple R-squared:  0.02147,	Adjusted R-squared:  0.02143 
+F-statistic: 460.1 on 2 and 41933 DF,  p-value: < 2.2e-16
+
+Call:
+lm(formula = growth.rate ~ pct_imp_20m * pct_imp_100m, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.66116 -0.10509 -0.01586  0.08864  1.08721 
+
+Coefficients:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               0.107399   0.003711  28.941  < 2e-16 ***
+pct_imp_20m              -0.043842   0.009035  -4.852 1.23e-06 ***
+pct_imp_100m              0.052572   0.011289   4.657 3.22e-06 ***
+pct_imp_20m:pct_imp_100m -0.153230   0.018640  -8.221  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1651 on 41932 degrees of freedom
+Multiple R-squared:  0.02305,	Adjusted R-squared:  0.02298 
+F-statistic: 329.7 on 3 and 41932 DF,  p-value: < 2.2e-16
 #+end_example
 
-#+begin_src R :exports results :results graphics :file figs/m1_plot.png
-plot(m1)
+#+begin_src R :exports results :results graphics :file figs/interactionplot_imp.png :bg transparent :width 1000
+
+      dimp <- d %>%
+        select(growth.rate, pct_imp_20m, pct_imp_100m) %>%
+        mutate(local_imp = case_when(pct_imp_20m >= .45 ~ "high",
+                                     pct_imp_20m < .45 & pct_imp_20m > .2 ~ "medium",
+                                     pct_imp_20m <= .2 ~ "low"))
+
+  ggplot(dimp, aes(x = pct_imp_100m, y = growth.rate, color = local_imp)) + geom_point(alpha = .1) + geom_smooth(method = "lm") + terk +
+    facet_wrap(~local_imp)
+
+
 #+end_src
 
 #+RESULTS:
-[[file:figs/m1_plot.png]]
-
-**** I need to look at semivariogram...
-
+[[file:figs/interactionplot_imp.png]]
 **** random forest
-#+begin_src R
+:PROPERTIES:
+:header-args:R: :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
+:END:
+
+#+begin_src R 
     library(randomForest)
+    library(dplyr)
+  library(randomForestExplainer)
+    d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
 
-    dc <- d %>%
-        filter(complete.cases(.)) %>%
-        mutate(Genus = factor(Genus))
+        dc <- d %>%
+            filter(complete.cases(.)) %>%
+            mutate(Genus = factor(Genus))
 
-    mrf <- randomForest(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin + chl, 
-         data = dc,
-         localImp=T)
+    mrf <- randomForest(formula = growth.rate ~ street +
+                                                Genus + 
+                                                cor_max2005 + 
+                                                tpi_5ft +
+                                                slope_5ft +
+                                                aspect_5ft +
+                                                tpi_200ft +
+                                                slope_200ft +
+                                                aspect_200ft +
+                                                elev +
+                                                mean_height_wn20m +
+                                                pct_imp_20m +
+                                                pct_imp_100m +
+                                                TotPhen +
+                                                N +
+                                                Sugar +
+                                                LMA +
+                                                lignin +
+                                                chl, 
+             data = dc,
+             localImp=T)
 
 #+end_src
 
 #+begin_src R
+saveRDS(mrf, paste0("/home/erker/hgt_data/randomForest", date(), ".rds"))
 mrf
 #+end_src
 
 #+RESULTS:
 : 
 : Call:
-:  randomForest(formula = growth.rate ~ Genus + cor_max2005 + tpi_5ft +      slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft +      elev + mean_height_wn20m + TotPhen + N + Sugar + LMA + lignin +      chl, data = dc) 
+:  randomForest(formula = growth.rate ~ street + Genus + cor_max2005 +      tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft +      aspect_200ft + elev + mean_height_wn20m + pct_imp_20m + pct_imp_100m +      TotPhen + N + Sugar + LMA + lignin + chl, data = dc, localImp = T) 
 :                Type of random forest: regression
 :                      Number of trees: 500
-: of variables tried at each split: 5
+: of variables tried at each split: 6
 : 
-:           Mean of squared residuals: 0.01445986
-:                     % Var explained: 45.34
+:           Mean of squared residuals: 0.0140445
+:                     % Var explained: 46.91
 
 #+begin_src R
-importance(mrf)[order(-importance(mrf)),]
+importance(mrf)[order(-importance(mrf)[,1]),]
 #+end_src
 
 #+RESULTS:
-:       cor_max2005             Genus mean_height_wn20m            lignin 
-:         127.98080          88.09066          48.07855          27.52676 
-:           TotPhen                 N              elev             Sugar 
-:          26.76902          25.79470          23.08977          21.04800 
-:               chl               LMA         tpi_200ft         slope_5ft 
-:          20.33767          20.30926          20.08467          19.54760 
-:      aspect_200ft       slope_200ft           tpi_5ft        aspect_5ft 
-:          19.13344          18.87548          18.59281          17.86812
+#+begin_example
+                     %IncMSE IncNodePurity
+cor_max2005       193.432043    128.235530
+Genus             157.881437     85.472523
+mean_height_wn20m  86.311799     41.753542
+N                  51.598565     21.460069
+Sugar              47.609424     18.505970
+pct_imp_100m       47.011147     21.709408
+lignin             45.396715     21.281272
+pct_imp_20m        43.998019     23.165093
+chl                41.604856     16.638560
+elev               39.184150     20.260352
+TotPhen            38.039186     23.159458
+street             30.191499      7.423537
+LMA                29.328666     17.352873
+slope_200ft        25.648328     16.285955
+tpi_200ft          19.230626     17.435789
+slope_5ft          17.856244     16.747249
+aspect_200ft       12.259807     16.474051
+tpi_5ft             5.903415     15.854233
+aspect_5ft          4.147619     15.480831
+#+end_example
 
 
 https://cran.r-project.org/web/packages/randomForestExplainer/vignettes/randomForestExplainer.htlm
 #+begin_src R
 library(randomForestExplainer)
-
 importanceframe <- measure_importance(mrf)
-
-
-
 #+end_src
 
 #+begin_src R 
@@ -5496,7 +5707,7 @@ plot_predict_interaction(mrf, dc, "mean_height_wn20m", "cor_max2005")
 [[file:figs/pred_int_meanheight20m_cormax2005.png]]
 
 #+begin_src R :exports results :results graphics :file figs/pred_int_2.png
-plot_predict_interaction(mrf, dc, "cor_max2005", "lignin")
+plot_predict_interaction(mrf, dc, "cor_max2005", "N")
 #+end_src
 
 #+RESULTS:
@@ -5536,6 +5747,149 @@ plot(genus_by_2005height)
 [[file:figs/partial_genus_height2.png]]
 There doesn't appear to be super strong genus x height interactions to me.
 
+**** multiple linear model
+
+All in.  This will remove the observations where we have missing
+data.  Instead of the 40k, it's about 20k where we ahve aviris.
+
+#+begin_src R
+  m1 <- lm(growth.rate ~ street + Genus + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     d)
+summary(m1)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ street + Genus + cor_max2005 + tpi_5ft + 
+    slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + 
+    elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + 
+    N + Sugar + LMA + lignin + chl, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.56916 -0.07417 -0.00589  0.06532  0.85035 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               1.047e+00  4.214e-02  24.839  < 2e-16 ***
+streetTRUE               -5.495e-02  2.657e-03 -20.677  < 2e-16 ***
+GenusAcer                -1.416e-01  2.337e-02  -6.058 1.40e-09 ***
+GenusBetula              -1.090e-01  2.456e-02  -4.439 9.09e-06 ***
+GenusCarya               -7.844e-02  2.621e-02  -2.993 0.002770 ** 
+GenusCatalpa             -2.185e-02  2.722e-02  -0.803 0.422156    
+GenusCeltis              -1.400e-01  2.408e-02  -5.814 6.19e-09 ***
+GenusFraxinus            -9.415e-02  2.337e-02  -4.029 5.61e-05 ***
+GenusGinkgo              -4.823e-02  2.799e-02  -1.723 0.084861 .  
+GenusGleditsia           -4.814e-02  2.341e-02  -2.056 0.039751 *  
+GenusGymnocladus          1.574e-02  5.187e-02   0.303 0.761541    
+GenusJuglans             -4.344e-02  2.467e-02  -1.760 0.078349 .  
+GenusPicea               -1.139e-03  2.387e-02  -0.048 0.961961    
+GenusPinus                8.215e-02  2.440e-02   3.366 0.000763 ***
+GenusPlatanus             7.943e-02  3.459e-02   2.297 0.021650 *  
+GenusPopulus             -7.083e-02  2.581e-02  -2.744 0.006071 ** 
+GenusQuercus             -1.384e-01  2.358e-02  -5.871 4.41e-09 ***
+GenusRobinia             -2.505e-03  2.583e-02  -0.097 0.922737    
+GenusSalix               -9.953e-02  5.523e-02  -1.802 0.071561 .  
+GenusThuja               -5.399e-02  2.584e-02  -2.089 0.036703 *  
+GenusTilia               -3.044e-03  2.353e-02  -0.129 0.897091    
+GenusUlmus               -1.505e-02  2.404e-02  -0.626 0.531389    
+cor_max2005              -3.053e-02  3.246e-04 -94.050  < 2e-16 ***
+tpi_5ft                  -1.042e-02  3.724e-03  -2.799 0.005137 ** 
+slope_5ft                -8.803e-03  1.607e-02  -0.548 0.583923    
+aspect_5ft               -4.978e-05  4.624e-04  -0.108 0.914258    
+tpi_200ft                -1.835e-03  2.915e-04  -6.293 3.18e-10 ***
+slope_200ft               2.664e-02  3.847e-02   0.692 0.488724    
+aspect_200ft             -1.435e-03  4.566e-04  -3.144 0.001671 ** 
+elev                     -3.720e-04  4.898e-05  -7.595 3.21e-14 ***
+mean_height_wn20m         2.609e-02  5.758e-04  45.308  < 2e-16 ***
+pct_imp_20m               9.151e-02  1.292e-02   7.081 1.48e-12 ***
+pct_imp_100m              5.040e-02  1.312e-02   3.842 0.000123 ***
+TotPhen                  -3.745e-03  5.956e-04  -6.287 3.29e-10 ***
+N                        -1.103e-01  4.185e-03 -26.359  < 2e-16 ***
+Sugar                    -1.073e-02  1.254e-03  -8.558  < 2e-16 ***
+LMA                      -3.931e-04  6.503e-05  -6.045 1.52e-09 ***
+lignin                   -2.158e-03  2.194e-04  -9.831  < 2e-16 ***
+chl                       2.644e-04  2.246e-05  11.773  < 2e-16 ***
+pct_imp_20m:pct_imp_100m -2.727e-01  2.380e-02 -11.455  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1227 on 21413 degrees of freedom
+  (20483 observations deleted due to missingness)
+Multiple R-squared:  0.4323,	Adjusted R-squared:  0.4313 
+F-statistic: 418.1 on 39 and 21413 DF,  p-value: < 2.2e-16
+#+end_example
+
+No Genus
+#+begin_src R
+  m_noGenus <- lm(growth.rate ~ street + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     d)
+summary(m_noGenus)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ street + cor_max2005 + tpi_5ft + slope_5ft + 
+    aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + 
+    mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + 
+    N + Sugar + LMA + lignin + chl, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.49244 -0.08179 -0.00751  0.07295  0.96824 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               9.308e-01  3.414e-02  27.267  < 2e-16 ***
+streetTRUE               -6.443e-02  2.639e-03 -24.417  < 2e-16 ***
+cor_max2005              -3.181e-02  3.358e-04 -94.758  < 2e-16 ***
+tpi_5ft                  -1.739e-02  3.965e-03  -4.386 1.16e-05 ***
+slope_5ft                -3.665e-04  1.703e-02  -0.022   0.9828    
+aspect_5ft               -2.520e-04  4.930e-04  -0.511   0.6092    
+tpi_200ft                -2.072e-03  3.102e-04  -6.681 2.44e-11 ***
+slope_200ft               2.733e-02  4.073e-02   0.671   0.5022    
+aspect_200ft             -9.327e-04  4.862e-04  -1.918   0.0551 .  
+elev                     -2.437e-04  5.184e-05  -4.701 2.60e-06 ***
+mean_height_wn20m         2.722e-02  6.086e-04  44.715  < 2e-16 ***
+pct_imp_20m               7.877e-02  1.366e-02   5.767 8.19e-09 ***
+pct_imp_100m              7.366e-02  1.385e-02   5.317 1.07e-07 ***
+TotPhen                  -1.437e-02  4.903e-04 -29.312  < 2e-16 ***
+N                        -9.760e-02  4.335e-03 -22.513  < 2e-16 ***
+Sugar                    -3.873e-04  1.240e-03  -0.312   0.7547    
+LMA                      -2.944e-04  6.548e-05  -4.497 6.94e-06 ***
+lignin                   -4.518e-03  2.138e-04 -21.135  < 2e-16 ***
+chl                       2.496e-04  2.189e-05  11.405  < 2e-16 ***
+pct_imp_20m:pct_imp_100m -2.579e-01  2.509e-02 -10.276  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1308 on 21433 degrees of freedom
+  (20483 observations deleted due to missingness)
+Multiple R-squared:  0.3534,	Adjusted R-squared:  0.3528 
+F-statistic: 616.5 on 19 and 21433 DF,  p-value: < 2.2e-16
+#+end_example
+
+**** try nonlinear growth
+
+#+begin_src R
+      mnl <- nls(growth.rate ~ a * cor_max2005 * b / (b + cor_max2005), data = d,
+                 start = list(a = .2,
+                              b = 1),
+                 lower = c(0,)
+#+end_src
+
+#+RESULTS:
+: 
+: Error in nls(growth.rate ~ a * cor_max2005 * b/(b + cor_max2005), data = d,  : 
+:   step factor 0.000488281 reduced below 'minFactor' of 0.000976562
+
+**** I need to look at semivariogram...
+
+
 
 * Results
 ** Growth Rates
@@ -5570,6 +5924,12 @@ pulses / m^2) was 0.02+- .19 m m^{-2} yr^{-1}, and
 from 2004-2008 (when pulse density increased from 11 to 52 pulses /
 m^2) mean growth was .37 +/- .14 m m^{-2} yr^{-1}.  This has got to be due to
 the pulse density bias.
+
+They found that lidar estimattes of growth were much greater than
+field estimates, but they didn't consider that it could be due to the
+difference in pulse density.
+
+Our work is therefore a contribution to the science.
 
 
 
@@ -5822,5 +6182,69 @@ aging from 0.24 m yr −1 during 1972–1982 to 0.10 m yr −1 during
 but instead of recognizing the potneital bias, they think that it's
 because that's for all trees not the top of canopy trees.
 
-
+**** papers that cite song: https://scholar.google.com/scholar?cites=14673389929199120395&as_sdt=5,50&sciodt=0,50&hl=en
 *** cite:roussel_e_2017 
+*** https://www.researchgate.net/profile/Qin_Ma2/publication/317349956_Quantifying_individual_tree_growth_and_tree_competition_using_bi-temporal_airborne_laser_scanning_data_a_case_study_in_the_Sierra_Nevada_Mountains_California/links/59ed1e510f7e9bfdeb71accf/Quantifying-individual-tree-growth-and-tree-competition-using-bi-temporal-airborne-laser-scanning-data-a-case-study-in-the-Sierra-Nevada-Mountains-California.pdf
+
+an example of repeat lidar, but in sierra mountains.  they cite
+cite:song_e_2016.  But not urban
+
+Quantifying individual tree growth and tree competition using
+bi-temporal airborne laser scanning data: a case study in the Sierra
+Nevada Mountains, California
+Qin Ma a
+, Yanjun Su a
+, Shengli Taob,c and Qinghua Guo a,b
+*** cite:marinelli_e_2019
+**** abstract
+#+BEGIN_QUOTE
+Abstract—The repetitive acquisition of airborne Light Detection and Ranging (LiDAR) data for forest surveys is rapidly
+increasing, thus making possible the forest dynamic analysis.
+Moreover, the availability of multitemporal data enables the
+possibility to improve the forest attribute estimates performed at
+single date, especially when one LiDAR acquisition has a lower
+pulse density with respect to the other. This letter presents a
+novel approach that exploits the bi-temporal data information
+to: (i) improve the tree detection at both dates, and (ii) identify
+forest changes at single tree level. This is done by using a novel
+compound approach to the detection of trees in bi-temporal data
+based on the Bayes rule for minimum error. Significant geometric
+features are extracted for each candidate tree-top and are used to
+estimate statistical terms employed in the compound approach.
+The multitemporal information is considered by estimating (in an
+iterative way) the probabilities of transition, which take into account the temporal dependence between the LiDAR acquisitions.
+The proposed approach is evaluated on multitemporal LiDAR
+data acquired in a coniferous forest located in the Southern
+Italian Alps. Experimental results confirm the effectiveness of
+the compound detection that increases the overall accuracy (OA)
+up to 8.6% with respect to the single-date detection.
+#+END_QUOTE
+**** notes
+They note the issue with multi temporal lidar is that the pulse
+density increases in time and needs to be dealt with
+
+
+#+BEGIN_QUOTE
+years medium (e.g., 10 pulses/m2
+) and high pulse density
+(≥ 20 pulses/m2
+) data are typically acquired, older data may
+be characterized by low pulse densities (≤ 5 pulses/m2
+),
+which prevent such refined multitemporal analysis. At plot
+scale, different pulse densities do not heavily impact on the
+estimation of forest attributes [4]. In contrast, at tree level
+low pulse density acquisitions strongly affect forest dynamic
+parameters estimation
+#+END_QUOTE
+
+But I don't think they corrected for the height bias.
+
+*** cite:paris_bruzzone_2015
+*** cite:zhao_e_2018
+** Multi-scale analysis of relationship between imperviousness and urban tree height using airborne remote sensing
+
+found imperviousness wasn't related to tree height at local scale, but
+was at large scale.
+** remote sensing is important for urban forest carbon life cycle assessments.
+https://link.springer.com/article/10.1186/s13021-017-0085-x
