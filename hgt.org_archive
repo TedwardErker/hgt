@@ -1834,3 +1834,38 @@ library(stringr)
 
 
 
+
+* instead of nonlinear, I'll just going to include polynomial terms. try nonlinear growth
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-22 Fri 16:58
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/modeling
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+#+begin_src R
+x <- seq(5,20,1)
+a <- .4
+b <- -.5
+c <- 12
+y = a / (1 + exp(-b * (x - c)))
+plot(x,y)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+          mnl <- nls(growth.rate ~ a / (1 + exp(-b * (cor_max2005 - c))), data = d,
+                     start = list(a = .2,
+                                  b = 1,
+                                  c = 12),
+                     #lower = c(0,0,0),
+                     algorithm = "plinear")
+#+end_src
+
+#+RESULTS:
+: 
+: Error in nls(growth.rate ~ a/(1 + exp(-b * (cor_max2005 - c))), data = d,  : 
+:   step factor 0.000488281 reduced below 'minFactor' of 0.000976562
+

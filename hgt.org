@@ -111,7 +111,14 @@ find itree and UTD both over estimate.
 When we have limited resources, we need to make sure we allocate them
 efficiently.  We don't want to spend loads of money on trees if the
 benefits of trees will be less than the benefits that could be
-achieved by allocating those resources elsewhere.
+achieved by allocating those resources elsewhere.  At best it's a
+waste of resources, at worst it lulls us into a feeling of complancey-
+that we're doing something when we're really not.  
+- think all those science papers
+- elon musk planting million trees
+- mr beast?
+- vice and timberland avertisement for planting trees.
+
 
 
 
@@ -2391,7 +2398,6 @@ points.  But less important if averaging across many treees.
   saveRDS(out, "/home/erker/hgt_data/madison_tree_inventories/hgt/extracted_heights_bias_norm.rds")
 
 #+end_src
-
 
 
 **** plotting the original bias correction method
@@ -4939,7 +4945,8 @@ The following objects are masked from ‘package:base’:
 
 **** topographic position and terrain
 
-***** elevation slope aspect and topographic position index at 2 scales
+***** TODO elevation slope aspect and topographic position index at 2 scales SLOPE ASPECT Transformation?:https://rdrr.io/github/raff-k/GeoMorphTB/man/saTransformation.html
+
 #+begin_src R :session *R2*
     library(raster)
   library(dplyr)
@@ -5147,8 +5154,9 @@ saveRDS(pct_imp_df, "/home/erker/hgt_data/pct_imp_100m.rds")
 #+RESULTS:
 
 **** TODO sewers?
-*** modeling
-**** combine data
+
+*** combine data
+
 #+begin_src R
         library(raster)
         library(dplyr)
@@ -5216,8 +5224,8 @@ Joining, by = "UID"
 Warning message:
 Column `UID` joining character vector and factor, coercing into character vector
 #+end_example
+*** read back in data
 
-**** read back in data
 #+begin_src R
 library(dplyr)
 library(ggplot2)
@@ -5239,9 +5247,8 @@ The following objects are masked from ‘package:base’:
     intersect, setdiff, setequal, union
 #+end_example
 
-**** plot data
-
-***** define theme
+*** plot data
+**** define theme
 #+begin_src R
 
   library(ggplot2)
@@ -5269,7 +5276,7 @@ The following objects are masked from ‘package:base’:
 
 #+RESULTS:
 
-***** growth rates
+**** growth rates
 
 #+begin_src R :exports results :results graphics :file figs/growthrate_histogram.png :width 1200 :res 150 :bg transparent
   ggplot(d, aes(x = 100 * growth.rate)) + geom_histogram(binwidth = 2) +
@@ -5289,16 +5296,33 @@ sum(complete.cases(d$growth.rate))
 #+RESULTS:
 : [1] 41936
 
-***** height 
+**** height 
 
-****** 2005
+***** 2005
 #+begin_src R :exports results :results graphics :file figs/corheight2005_growth.png :width 1000
 ggplot(d, aes(x = cor_max2005, y = growth.rate)) + geom_point(alpha = .3) + terk + geom_smooth()
 #+end_src
 
 #+RESULTS:
 [[file:figs/corheight2005_growth.png]]
-****** 2009
+#+begin_src R :exports results :results graphics :file figs/corheight2005_growth_bygenus.png :width 1300
+    ggplot(d, aes(x = cor_max2005, y = growth.rate, color = Genus)) + 
+        #geom_point(alpha = .3) + 
+        terk + geom_smooth(se = F, method = "lm")
+#+end_src
+
+#+RESULTS:
+[[file:figs/corheight2005_growth_bygenus.png]]
+
+poly 4
+#+begin_src R :exports results :results graphics :file figs/corheight2005_growth_poly4smooth.png :width 1000
+ggplot(d, aes(x = cor_max2005, y = growth.rate)) + geom_point(alpha = .3) + terk + geom_smooth(method = "lm", formula = y ~ poly(x,4))
+#+end_src
+
+#+RESULTS:
+[[file:figs/corheight2005_growth_poly4smooth.png]]
+
+***** 2009
 #+begin_src R :exports results :results graphics :file figs/corheight2009_growth.png :width 1000
 ggplot(d, aes(x = cor_max2009, y = growth.rate)) + geom_point(alpha = .3) + terk + geom_smooth()
 #+end_src
@@ -5306,9 +5330,9 @@ ggplot(d, aes(x = cor_max2009, y = growth.rate)) + geom_point(alpha = .3) + terk
 #+RESULTS:
 [[file:figs/corheight2009_growth.png]]
 
-***** Genera..
-***** Space
-***** traits
+**** Genera..
+**** Space
+**** traits
 
 how many trees are there with full traits?
 
@@ -5351,7 +5375,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 [[file:figs/traits_N_growth_methodlm.png]]
-***** mean height within 20m
+**** mean height within 20m
 
 #+begin_src R :exports results :results graphics :file figs/meanheight20m_v_growthrate.png
   ggplot(d, aes(x = mean_height_wn20m, y = growth.rate)) + 
@@ -5370,7 +5394,7 @@ how many trees are there with full traits?
 
 #+RESULTS:
 [[file:figs/meanheight20m_v_growthrate_lm.png]]
-***** terrain large scale
+**** terrain large scale
 #+begin_src R
 
   dt <- d %>%
@@ -5399,7 +5423,7 @@ how many trees are there with full traits?
 #+RESULTS:
 [[file:figs/terrain200_growth_lm.png]]
 
-***** terrain small scale
+**** terrain small scale
 #+begin_src R
 
   dt <- d %>%
@@ -5441,7 +5465,7 @@ To see if the trend is driven by exteme points
 #+RESULTS:
 [[file:figs/terrain5_growth_tpi_noextreme.png]]
 
-***** elevation
+**** elevation
 #+begin_src R :exports results :results graphics :file figs/elv_growth.png :width 1000 :height 800 :bg transparent
   ggplot(d, aes(x = elev, y = growth.rate)) + geom_point(alpha = .1) +
     geom_smooth(method = "lm") + terk
@@ -5450,7 +5474,7 @@ To see if the trend is driven by exteme points
 #+RESULTS:
 [[file:figs/elv_growth.png]]
 
-***** impervious
+**** impervious
 #+begin_src R :exports results :results graphics :file figs/growth.rate_pctimp20m.png
   ggplot(d, aes(x = pct_imp_20m, y = growth.rate)) + geom_point(alpha = .1) + 
       terk +
@@ -5535,6 +5559,7 @@ F-statistic: 329.7 on 3 and 41932 DF,  p-value: < 2.2e-16
 
 #+RESULTS:
 [[file:figs/interactionplot_imp.png]]
+*** modeling
 **** random forest
 :PROPERTIES:
 :header-args:R: :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
@@ -5621,8 +5646,9 @@ aspect_5ft          4.147619     15.480831
 
 https://cran.r-project.org/web/packages/randomForestExplainer/vignettes/randomForestExplainer.htlm
 #+begin_src R
-library(randomForestExplainer)
-importanceframe <- measure_importance(mrf)
+  library(randomForestExplainer)
+  importanceframe <- measure_importance(mrf)
+  saveRDS(importanceframe, "/home/erker/hgt_data/importanceframe.rds")
 #+end_src
 
 #+begin_src R 
@@ -5632,39 +5658,45 @@ importanceframe
 #+RESULTS:
 #+begin_example
             variable mean_min_depth no_of_nodes mse_increase
-1       aspect_200ft          4.476      225914 1.513944e-04
-2         aspect_5ft          4.904      230725 4.999152e-05
-3                chl          3.828      228221 1.824864e-03
-4        cor_max2005          1.114      269712 2.216328e-02
-5               elev          3.268      235043 1.146434e-03
-6              Genus          1.264       81707 8.425657e-03
-7             lignin          2.634      235963 3.326133e-03
-8                LMA          3.458      230109 6.230747e-04
-9  mean_height_wn20m          2.604      255727 6.562798e-03
-10                 N          2.974      234100 2.030878e-03
-11       slope_200ft          4.488      224368 3.465162e-04
-12         slope_5ft          4.532      233385 1.647960e-04
-13             Sugar          3.302      230277 1.340134e-03
-14           TotPhen          2.506      231409 2.808007e-03
-15         tpi_200ft          4.276      228625 2.343532e-04
-16           tpi_5ft          4.270      230493 5.204200e-05
+1       aspect_200ft          4.774      198512 1.460101e-04
+2         aspect_5ft          5.110      203096 4.321155e-05
+3                chl          4.508      197393 1.171118e-03
+4        cor_max2005          1.040      242974 2.252830e-02
+5               elev          3.946      207654 1.257223e-03
+6              Genus          1.268       73065 8.388966e-03
+7             lignin          3.398      203250 2.085444e-03
+8                LMA          4.008      201655 5.127807e-04
+9  mean_height_wn20m          2.792      226487 5.585590e-03
+10                 N          3.576      205484 1.437910e-03
+11      pct_imp_100m          3.304      205565 1.272592e-03
+12       pct_imp_20m          2.532      204631 1.476115e-03
+13       slope_200ft          4.628      195786 3.445772e-04
+14         slope_5ft          4.828      205804 2.128061e-04
+15            street          2.696       14781 1.484333e-03
+16             Sugar          4.036      201970 1.167285e-03
+17           TotPhen          2.854      202942 2.116648e-03
+18         tpi_200ft          4.574      200218 2.365676e-04
+19           tpi_5ft          4.708      204271 6.995656e-05
    node_purity_increase no_of_trees times_a_root       p_value
-1              19.06371         500            0  1.147603e-01
-2              17.99463         500            0  1.520144e-31
-3              20.55770         500            7  2.667829e-10
-4             127.71692         500          139  0.000000e+00
-5              22.89165         500           23  1.596445e-97
-6              88.23060         500          123  1.000000e+00
-7              27.40741         500           16 2.379451e-116
-8              20.45368         500           26  3.708661e-25
-9              47.53816         500            8  0.000000e+00
-10             25.91879         500            4  5.864798e-80
-11             18.82467         500            0  9.847247e-01
-12             19.57211         500            0  8.205210e-68
-13             21.04741         500           49  7.986963e-27
-14             27.15436         500           88  1.591758e-39
-15             20.05964         500            1  6.994932e-13
-16             18.68723         500           16  4.747524e-29
+1             16.474051         500            0 4.828902e-105
+2             15.480831         500            0 4.944521e-230
+3             16.638560         500            0  7.236051e-82
+4            128.235530         500          175  0.000000e+00
+5             20.260352         500            5  0.000000e+00
+6             85.472523         500          130  1.000000e+00
+7             21.281272         500            1 4.608683e-235
+8             17.352873         500           13 1.441143e-185
+9             41.753542         500            1  0.000000e+00
+10            21.460069         500            0 4.693841e-314
+11            21.709408         500           15 3.951421e-317
+12            23.165093         500           34 1.439566e-282
+13            16.285955         500            0  1.132347e-53
+14            16.747249         500            0  0.000000e+00
+15             7.423537         500           42  1.000000e+00
+16            18.505970         500           12 6.948793e-195
+17            23.159458         500           70 4.687866e-225
+18            17.435789         500            0 6.132604e-146
+19            15.854233         500            2 9.042341e-270
 #+end_example
 
 importance rankings
@@ -5687,7 +5719,7 @@ plot_multi_way_importance(importanceframe, x_measure = "mean_min_depth", y_measu
 
 
 #+begin_src R
-interactions_frame <- min_depth_interactions(mrf, c("cor_max2005", "Genus", "mean_height_wn20m", "lignin", "TotPhen", "N"))
+interactions_frame <- min_depth_interactions(mrf, c("cor_max2005", "Genus", "mean_height_wn20m", "pct_imp_20m", "pct_imp_100m", "lignin", "TotPhen", "N"))
 #+end_src
 
 
@@ -5705,6 +5737,13 @@ plot_predict_interaction(mrf, dc, "mean_height_wn20m", "cor_max2005")
 
 #+RESULTS:
 [[file:figs/pred_int_meanheight20m_cormax2005.png]]
+#+begin_src R :exports results :results graphics :file figs/pred_int_pct_imp.png
+plot_predict_interaction(mrf, dc, "pct_imp_20m", "pct_imp_100m")
+#+end_src
+
+#+RESULTS:
+[[file:figs/pred_int_pct_imp.png]]
+
 
 #+begin_src R :exports results :results graphics :file figs/pred_int_2.png
 plot_predict_interaction(mrf, dc, "cor_max2005", "N")
@@ -5748,7 +5787,7 @@ plot(genus_by_2005height)
 There doesn't appear to be super strong genus x height interactions to me.
 
 **** multiple linear model
-
+***** all variables first go
 All in.  This will remove the observations where we have missing
 data.  Instead of the 40k, it's about 20k where we ahve aviris.
 
@@ -5822,7 +5861,7 @@ Multiple R-squared:  0.4323,	Adjusted R-squared:  0.4313
 F-statistic: 418.1 on 39 and 21413 DF,  p-value: < 2.2e-16
 #+end_example
 
-No Genus
+***** No Genus
 #+begin_src R
   m_noGenus <- lm(growth.rate ~ street + cor_max2005 + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
      d)
@@ -5873,21 +5912,335 @@ Multiple R-squared:  0.3534,	Adjusted R-squared:  0.3528
 F-statistic: 616.5 on 19 and 21433 DF,  p-value: < 2.2e-16
 #+end_example
 
-**** try nonlinear growth
+***** quadratic 2005 height
+#+begin_src R
+  m2 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     d)
+summary(m2)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ street + Genus + poly(cor_max2005, 
+    4) + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + 
+    aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + 
+    TotPhen + N + Sugar + LMA + lignin + chl, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.54436 -0.07281 -0.00578  0.06464  0.83642 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               6.808e-01  4.106e-02  16.582  < 2e-16 ***
+streetTRUE               -5.144e-02  2.623e-03 -19.612  < 2e-16 ***
+GenusAcer                -1.438e-01  2.302e-02  -6.245 4.31e-10 ***
+GenusBetula              -1.059e-01  2.420e-02  -4.375 1.22e-05 ***
+GenusCarya               -8.997e-02  2.583e-02  -3.483 0.000496 ***
+GenusCatalpa             -2.956e-02  2.681e-02  -1.102 0.270335    
+GenusCeltis              -1.412e-01  2.372e-02  -5.956 2.63e-09 ***
+GenusFraxinus            -9.329e-02  2.302e-02  -4.053 5.08e-05 ***
+GenusGinkgo              -3.985e-02  2.758e-02  -1.445 0.148485    
+GenusGleditsia           -5.252e-02  2.306e-02  -2.278 0.022766 *  
+GenusGymnocladus          7.506e-03  5.110e-02   0.147 0.883230    
+GenusJuglans             -5.054e-02  2.431e-02  -2.079 0.037622 *  
+GenusPicea               -2.995e-03  2.352e-02  -0.127 0.898673    
+GenusPinus                7.635e-02  2.404e-02   3.176 0.001498 ** 
+GenusPlatanus             6.350e-02  3.408e-02   1.863 0.062456 .  
+GenusPopulus             -1.043e-01  2.554e-02  -4.086 4.41e-05 ***
+GenusQuercus             -1.508e-01  2.324e-02  -6.489 8.86e-11 ***
+GenusRobinia             -9.954e-03  2.545e-02  -0.391 0.695695    
+GenusSalix               -1.068e-01  5.441e-02  -1.964 0.049590 *  
+GenusThuja               -5.703e-02  2.546e-02  -2.240 0.025100 *  
+GenusTilia               -5.231e-03  2.319e-02  -0.226 0.821501    
+GenusUlmus               -2.467e-02  2.369e-02  -1.042 0.297644    
+poly(cor_max2005, 4)1    -2.951e+01  3.210e-01 -91.947  < 2e-16 ***
+poly(cor_max2005, 4)2     7.085e+00  2.788e-01  25.408  < 2e-16 ***
+poly(cor_max2005, 4)3    -3.552e+00  2.353e-01 -15.092  < 2e-16 ***
+poly(cor_max2005, 4)4     1.609e+00  1.853e-01   8.685  < 2e-16 ***
+tpi_5ft                  -1.048e-02  3.669e-03  -2.857 0.004276 ** 
+slope_5ft                -1.201e-02  1.584e-02  -0.758 0.448305    
+aspect_5ft               -1.148e-04  4.555e-04  -0.252 0.800942    
+tpi_200ft                -1.513e-03  2.877e-04  -5.258 1.47e-07 ***
+slope_200ft              -3.631e-03  3.795e-02  -0.096 0.923779    
+aspect_200ft             -1.274e-03  4.498e-04  -2.831 0.004640 ** 
+elev                     -4.185e-04  4.846e-05  -8.636  < 2e-16 ***
+mean_height_wn20m         2.447e-02  5.712e-04  42.832  < 2e-16 ***
+pct_imp_20m               8.220e-02  1.274e-02   6.454 1.11e-10 ***
+pct_imp_100m              4.777e-02  1.295e-02   3.690 0.000225 ***
+TotPhen                  -3.589e-03  5.868e-04  -6.117 9.71e-10 ***
+N                        -1.031e-01  4.138e-03 -24.928  < 2e-16 ***
+Sugar                    -1.076e-02  1.236e-03  -8.712  < 2e-16 ***
+LMA                      -2.799e-04  6.422e-05  -4.358 1.32e-05 ***
+lignin                   -2.059e-03  2.162e-04  -9.522  < 2e-16 ***
+chl                       2.309e-04  2.218e-05  10.406  < 2e-16 ***
+pct_imp_20m:pct_imp_100m -2.647e-01  2.349e-02 -11.266  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1208 on 21410 degrees of freedom
+  (20483 observations deleted due to missingness)
+Multiple R-squared:  0.4492,	Adjusted R-squared:  0.4481 
+F-statistic: 415.7 on 42 and 21410 DF,  p-value: < 2.2e-16
+#+end_example
 
 #+begin_src R
-      mnl <- nls(growth.rate ~ a * cor_max2005 * b / (b + cor_max2005), data = d,
-                 start = list(a = .2,
-                              b = 1),
-                 lower = c(0,)
+AIC(m1, m2)
+#+end_src
+
+#+RESULTS:
+:    df       AIC
+: m1 41 -29108.07
+: m2 44 -29750.46
+
+***** quadratic 2005 height do a little variable selection and use AIC
+****** the observations with traits n = 21244
+#+begin_src R
+dc <- dplyr::filter(d, complete.cases(d))
+  m4 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     dc)
+  m5 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     dc)
+  m6 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + tpi_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     dc)
+  m7 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, dc)
+  m8 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, dc)
+
+AIC(m4,m5,m6,m7, m8)
+
 #+end_src
 
 #+RESULTS:
 : 
-: Error in nls(growth.rate ~ a * cor_max2005 * b/(b + cor_max2005), data = d,  : 
-:   step factor 0.000488281 reduced below 'minFactor' of 0.000976562
+:    df       AIC
+: m4 44 -29492.50
+: m5 42 -29495.92
+: m6 40 -29490.64
+: m7 36 -28597.78
+: m8 35 -28596.92
 
+****** all observations, but no traits, n = 41936
+#+begin_src R
+
+    m4 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + slope_5ft + aspect_5ft + tpi_200ft + slope_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, 
+       d)
+    m5 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, 
+       d)
+    m6 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + tpi_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, 
+       d)
+    m7 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, 
+             d)
+
+  AIC(m4,m5,m6,m7)
+
+#+end_src
+
+#+RESULTS:
+: 
+:    df       AIC
+: m4 38 -47424.49
+: m5 36 -47426.44
+: m6 34 -47406.41
+: m7 36 -47426.44
+
+Do coeffieicnets change when observations are dropped because we don't
+have traits
+#+begin_src R
+  m_traits <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     dc)
+
+  m_notraits <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m, 
+           d)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+summary(m_notraits)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ street + Genus + poly(cor_max2005, 
+    4) + tpi_5ft + aspect_5ft + tpi_200ft + aspect_200ft + elev + 
+    mean_height_wn20m + pct_imp_20m * pct_imp_100m, data = d)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.67503 -0.08049 -0.00611  0.07253  0.90228 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               4.593e-02  2.289e-02   2.007 0.044776 *  
+streetTRUE               -5.447e-02  2.485e-03 -21.917  < 2e-16 ***
+GenusAcer                -1.807e-01  1.866e-02  -9.685  < 2e-16 ***
+GenusBetula              -1.428e-01  1.952e-02  -7.315 2.62e-13 ***
+GenusCarya               -1.032e-01  2.202e-02  -4.689 2.76e-06 ***
+GenusCatalpa             -3.516e-02  2.366e-02  -1.486 0.137269    
+GenusCeltis              -1.580e-01  1.930e-02  -8.188 2.73e-16 ***
+GenusFraxinus            -9.184e-02  1.868e-02  -4.917 8.84e-07 ***
+GenusGinkgo              -4.847e-02  2.197e-02  -2.206 0.027401 *  
+GenusGleditsia           -5.284e-02  1.870e-02  -2.825 0.004727 ** 
+GenusGymnocladus         -1.573e-02  4.540e-02  -0.346 0.729032    
+GenusJuglans             -7.165e-02  2.017e-02  -3.553 0.000381 ***
+GenusPicea               -2.591e-02  1.913e-02  -1.355 0.175579    
+GenusPinus                2.331e-02  1.970e-02   1.183 0.236791    
+GenusPlatanus             3.563e-02  3.234e-02   1.102 0.270460    
+GenusPopulus             -1.030e-01  2.192e-02  -4.700 2.61e-06 ***
+GenusQuercus             -1.613e-01  1.898e-02  -8.498  < 2e-16 ***
+GenusRobinia             -9.644e-03  2.178e-02  -0.443 0.657874    
+GenusSalix               -1.281e-02  4.379e-02  -0.292 0.769957    
+GenusThuja               -1.188e-01  2.018e-02  -5.885 4.01e-09 ***
+GenusTilia               -2.781e-02  1.876e-02  -1.482 0.138315    
+GenusUlmus               -9.881e-03  1.929e-02  -0.512 0.608550    
+poly(cor_max2005, 4)1    -1.841e+01  1.992e-01 -92.457  < 2e-16 ***
+poly(cor_max2005, 4)2    -8.822e-01  1.462e-01  -6.034 1.61e-09 ***
+poly(cor_max2005, 4)3     1.109e+00  1.392e-01   7.965 1.69e-15 ***
+poly(cor_max2005, 4)4    -7.093e-01  1.383e-01  -5.131 2.90e-07 ***
+tpi_5ft                  -3.253e-03  3.088e-03  -1.053 0.292205    
+aspect_5ft               -4.636e-04  3.704e-04  -1.252 0.210737    
+tpi_200ft                -1.327e-03  2.421e-04  -5.482 4.22e-08 ***
+aspect_200ft             -1.623e-03  3.719e-04  -4.363 1.29e-05 ***
+elev                     -1.964e-04  3.504e-05  -5.605 2.09e-08 ***
+mean_height_wn20m         2.473e-02  4.569e-04  54.117  < 2e-16 ***
+pct_imp_20m               9.204e-02  9.360e-03   9.834  < 2e-16 ***
+pct_imp_100m              8.367e-02  1.006e-02   8.318  < 2e-16 ***
+pct_imp_20m:pct_imp_100m -3.617e-01  1.674e-02 -21.610  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1374 on 41890 degrees of freedom
+  (11 observations deleted due to missingness)
+Multiple R-squared:  0.3237,	Adjusted R-squared:  0.3232 
+F-statistic: 589.8 on 34 and 41890 DF,  p-value: < 2.2e-16
+#+end_example
+
+#+begin_src R
+cbind(traits = coef(summary(m_notraits))[1:35,3], notraits = coef(summary(m_traits))[1:35,3])
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                              traits    notraits
+(Intercept)                2.0068169  14.9332375
+streetTRUE               -21.9167126 -19.4843080
+GenusAcer                 -9.6854627  -6.2471261
+GenusBetula               -7.3149954  -4.3814130
+GenusCarya                -4.6885732  -3.3210501
+GenusCatalpa              -1.4860671  -1.0735124
+GenusCeltis               -8.1880095  -5.9833574
+GenusFraxinus             -4.9165698  -4.0494583
+GenusGinkgo               -2.2058351  -1.4408768
+GenusGleditsia            -2.8252022  -2.2791715
+GenusGymnocladus          -0.3464152   0.1381079
+GenusJuglans              -3.5529889  -2.0952963
+GenusPicea                -1.3545153   0.1351322
+GenusPinus                 1.1830617   3.1848226
+GenusPlatanus              1.1020192   1.8747487
+GenusPopulus              -4.7000407  -3.9921841
+GenusQuercus              -8.4980761  -6.5163533
+GenusRobinia              -0.4428542  -0.4362291
+GenusSalix                -0.2924328  -1.3449760
+GenusThuja                -5.8849151  -2.2428696
+GenusTilia                -1.4821216  -0.2168925
+GenusUlmus                -0.5121477  -1.0472265
+poly(cor_max2005, 4)1    -92.4570046 -91.5099718
+poly(cor_max2005, 4)2     -6.0339854  20.4973977
+poly(cor_max2005, 4)3      7.9653651 -12.2771267
+poly(cor_max2005, 4)4     -5.1305283   8.6055796
+tpi_5ft                   -1.0533104  -2.9635870
+aspect_5ft                -1.2515601  -0.4315439
+tpi_200ft                 -5.4823684  -5.2692117
+aspect_200ft              -4.3630850  -2.8544588
+elev                      -5.6052490  -8.6072031
+mean_height_wn20m         54.1174221  42.5596870
+pct_imp_20m                9.8337908   6.4269691
+pct_imp_100m               8.3177179   3.9228427
+pct_imp_20m:pct_imp_100m -21.6103161  -6.1206011
+#+end_example
+
+Yes.  Definitely for the species.  
+
+***** a good mlr model  I need to transform aspect somehow. or make it discrete.
+#+begin_src R
+  m5 <- lm(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + (sin(aspect_5ft*180/pi + 90) + 1) + tpi_200ft + aspect_200 + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl, 
+     dc)
+summary(m5)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ street + Genus + poly(cor_max2005, 
+    4) + tpi_5ft + (sin(aspect_5ft * 180/pi + 90) + 1) + tpi_200ft + 
+    (sin(aspect_200ft * 180/pi + 45) + 1) + elev + mean_height_wn20m + 
+    pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + 
+    lignin + chl, data = dc)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.54602 -0.07279 -0.00573  0.06447  0.83380 
+
+Coefficients:
+                                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      6.064e-01  4.096e-02  14.803  < 2e-16 ***
+streetTRUE                      -5.238e-02  2.663e-03 -19.673  < 2e-16 ***
+GenusAcer                       -1.441e-01  2.301e-02  -6.261 3.90e-10 ***
+GenusBetula                     -1.069e-01  2.433e-02  -4.395 1.11e-05 ***
+GenusCarya                      -8.946e-02  2.668e-02  -3.353  0.00080 ***
+GenusCatalpa                    -3.058e-02  2.688e-02  -1.138  0.25533    
+GenusCeltis                     -1.424e-01  2.370e-02  -6.008 1.91e-09 ***
+GenusFraxinus                   -9.372e-02  2.301e-02  -4.074 4.65e-05 ***
+GenusGinkgo                     -3.948e-02  2.755e-02  -1.433  0.15188    
+GenusGleditsia                  -5.308e-02  2.304e-02  -2.304  0.02126 *  
+GenusGymnocladus                 6.492e-03  5.107e-02   0.127  0.89885    
+GenusJuglans                    -5.152e-02  2.429e-02  -2.121  0.03395 *  
+GenusPicea                       2.969e-03  2.359e-02   0.126  0.89986    
+GenusPinus                       7.606e-02  2.402e-02   3.166  0.00155 ** 
+GenusPlatanus                    6.273e-02  3.405e-02   1.842  0.06547 .  
+GenusPopulus                    -1.026e-01  2.554e-02  -4.016 5.95e-05 ***
+GenusQuercus                    -1.520e-01  2.322e-02  -6.547 6.01e-11 ***
+GenusRobinia                    -1.173e-02  2.541e-02  -0.462  0.64425    
+GenusSalix                      -8.688e-02  6.463e-02  -1.344  0.17883    
+GenusThuja                      -5.720e-02  2.544e-02  -2.248  0.02456 *  
+GenusTilia                      -5.699e-03  2.317e-02  -0.246  0.80574    
+GenusUlmus                      -2.529e-02  2.367e-02  -1.068  0.28535    
+poly(cor_max2005, 4)1           -1.532e+01  1.676e-01 -91.445  < 2e-16 ***
+poly(cor_max2005, 4)2            2.626e+00  1.283e-01  20.467  < 2e-16 ***
+poly(cor_max2005, 4)3           -1.516e+00  1.230e-01 -12.330  < 2e-16 ***
+poly(cor_max2005, 4)4            1.051e+00  1.216e-01   8.642  < 2e-16 ***
+tpi_5ft                         -1.101e-02  3.683e-03  -2.989  0.00280 ** 
+sin(aspect_5ft * 180/pi + 90)    2.240e-03  1.178e-03   1.902  0.05722 .  
+tpi_200ft                       -1.525e-03  2.877e-04  -5.302 1.16e-07 ***
+sin(aspect_200ft * 180/pi + 45) -6.157e-04  1.171e-03  -0.526  0.59893    
+elev                            -4.130e-04  4.835e-05  -8.541  < 2e-16 ***
+mean_height_wn20m                2.440e-02  5.733e-04  42.568  < 2e-16 ***
+pct_imp_20m                      8.310e-02  1.276e-02   6.513 7.51e-11 ***
+pct_imp_100m                     5.054e-02  1.263e-02   4.002 6.30e-05 ***
+TotPhen                         -3.672e-03  5.882e-04  -6.242 4.40e-10 ***
+N                               -1.025e-01  4.140e-03 -24.765  < 2e-16 ***
+Sugar                           -1.056e-02  1.238e-03  -8.533  < 2e-16 ***
+LMA                             -2.960e-04  6.435e-05  -4.599 4.26e-06 ***
+lignin                          -2.090e-03  2.162e-04  -9.668  < 2e-16 ***
+chl                              2.264e-04  2.228e-05  10.161  < 2e-16 ***
+pct_imp_20m:pct_imp_100m        -2.675e-01  2.330e-02 -11.481  < 2e-16 ***
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1207 on 21203 degrees of freedom
+Multiple R-squared:   0.45,	Adjusted R-squared:  0.4489 
+F-statistic: 433.6 on 40 and 21203 DF,  p-value: < 2.2e-16
+#+end_example
+
+**** think about the difference in sample size.  DOn't want to throw away observations that occur outside of the aviris flight lines.
 **** I need to look at semivariogram...
+
 
 
 
@@ -5905,10 +6258,10 @@ See figure [[fig:growthrate_hist]] for distribution of growth rates.
 
 
 - plot growth rates in space
-** Model Coefficients
+** 
+** 
 * Discussion
-
-
+** growth rate estimates
 cite:song_e_2016 estimated canopy height growth of urban trees in
 Osaka, Japan using repeat lidar.  Like our study their later
 collections had higher pulse densities (in their case, 52 pulses/m^2
@@ -5936,6 +6289,12 @@ Our work is therefore a contribution to the science.
 Estimating canopy height from lidar has a greater bias over smaller
 areas (individual trees) compared to larger areas
 (stands) citep:song_e_2016,roussel_e_2017.
+** Terrain effects
+
+
+
+- no slope
+- 
 
 * papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
