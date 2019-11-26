@@ -1869,3 +1869,37 @@ plot(x,y)
 : Error in nls(growth.rate ~ a/(1 + exp(-b * (cor_max2005 - c))), data = d,  : 
 :   step factor 0.000488281 reduced below 'minFactor' of 0.000976562
 
+
+* think about the difference in sample size.  DOn't want to throw away observations that occur outside of the aviris flight lines.
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-24 Sun 09:05
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/modeling
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+I checked the coefficients for two models and they were similiar.  21k
+is still a ton.
+
+
+* georob? with spatial errors
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-11-25 Mon 11:31
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods/work/modeling
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+#+begin_src R
+  library(georob)
+
+  sm <- georob(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl,
+         dc, 
+         locations=~x+y,
+         variogram.model="RMmatern", param=c(variance=0.001, nugget=0.05, scale=150, kappa = .5),
+         fast.s.large.n = Inf)
+
+#+end_src
+
+#+RESULTS:
+
