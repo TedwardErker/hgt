@@ -2585,3 +2585,94 @@ F-statistic: 2.068e+08 on 5 and 294 DF,  p-value: < 2.2e-16
 
 
 
+
+* COMMENT Random Forest
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-12-03 Tue 14:59
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Results
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+The random forest model explained 24.28% of the variance in growth
+rates.  Table [[tab:rf_importance]] shows explanatory variables ranked in
+order of importance as determined by percent increase in mean squared
+error.  The genus, height of a tree in 2005, impervious cover within
+100m, and the average height of the surrounding 20m were the most
+important variables.  Traits and surrounding impervious cover within
+20m were next in importance.  Topographic variables were least
+important.
+
+#+name: tab:rf_importance
+|                               | Percent Increase Mean Squared Error |
+|-------------------------------+-------------------------------------|
+| height 2005                   |                                 113 |
+| Genus                         |                                 112 |
+| height within 20m             |                                  59 |
+| percent impervious 100 m      |                                  53 |
+| lignin                        |                                  46 |
+| percent impervious 20 m       |                                  45 |
+| chlorophyll                   |                                  45 |
+| Sugar                         |                                  41 |
+| nitrogen                      |                                  40 |
+| elevation                     |                                  38 |
+| total phenolics               |                                  37 |
+| neighborhood street utilities |                                  37 |
+| slope 61 m                    |                                  35 |
+| leaf mass per area            |                                  31 |
+| TPI 61 m                      |                                  22 |
+| aspect 61 m                   |                                  19 |
+| slope 1.5 m                   |                                  15 |
+| TPI 1.5 m                     |                                   7 |
+| aspect 1.5 m                  |                                   6 |
+
+The two-way interactions that occured on average at the lowest depths
+in the regression trees were between Genus and height 2005; height
+2005 and itself; and Genus and itself; and Genus and height within 20
+m.  Genus had the most interactions as might be expected since so many
+of the associations of other variables with height growth likely vary
+due to the genetic factors encoded in Genus.  
+
+
+* COMMENT Modeling  This is included below I think.
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-12-03 Tue 15:58
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+
+Multiple lienar regression
+- covariates, no genus no interactions
+- relevant interactions added
+- genus added, intercepts and interactions with some covariates
+
+Second we fit a multiple linear regression model with all covariates,
+but no interactions in order to understand how well a relatively
+simple model explained the data.  We then added a polynomial term for
+the height 2005 covariate to account for the nonlinear relationship
+between height and growth rate.  We selected a 4th order polynomial
+because it was significant at the alpha = .05 level.  
+ We then added
+interaction terms to the model based upon hypothesized interactions,
+while striving for a model that was parsimonius and relatively simple
+to explain.  We also dropped groups of covariates, such as foliar
+canopy traits, from the model to see how much they contributed to a
+model.  
+
+
+* COMMENT fit random forest
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-12-03 Tue 15:58
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: Methods
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+We first fit a random forest as an exploratory exercise to find
+important variables, detect any important interactions between
+variables and better handle nonlinear relationships between covariates
+and the response cite:breiman01_Random_forests.  We used the default
+tuning parameters in the R package =randomForest= cite:randomForest_Rpackage.  
+
