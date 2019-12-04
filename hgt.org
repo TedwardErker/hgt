@@ -1,7 +1,7 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
 #+PROPERTY:  header-args:sh :eval yes
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
@@ -16,7 +16,6 @@
 #+LATEX_CLASS_OPTIONS: [12pt]
 #+HTML_HEAD: <style type="text/css">body {font-size: 11pt; font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;margin: 30px 50px 30px 50px; }h1,h2,h3,h4,h5,h6 { font-family: Arial,Helvetica,Sans-serif; }a { text-decoration: none; }a:link { color:darkblue; } a:visited { color:darkblue; } a:hover { color:dodgerblue; }a:active { color:dodgerblue; } code {color: #602000;font-family: "Lucida Console", Monaco, monospace; font-size: 90%;}.r { color: darkred; }.ro { color: darkgreen; background-color: #eeeeee; }.r code, a code, .ro code { color: inherit; }.vigindex ul { list-style-type: none; }.vigindex ul li { list-style: none; }.vigindex a code { color: inherit; }.vigindex li code { color: inherit; }</style>
 ---------------------
-
 * COMMENT list of figures (for presentation and paper)
 
 check my paper in stat consulting office to make sure I got it all
@@ -43,30 +42,36 @@ check my paper in stat consulting office to make sure I got it all
   - summary distributions for height growth by species...
   - growth by explanatory variable plots??
   - model plots???
+- neat gifs of lidar clouds for example trees
+- calypso catherdral photo
   
 
 [[file:figs/traits_coef_comparison_nogenus.png]]
 [[file:figs/traits_coef_comparison.png]]
 
 
-
-
 * COMMENT list of figures still to do for the paper
 - City of Madison overview figure
 - map of street tree inventories with details for the neighborhoods
 - AVIRIS flightlines.
-* key points
-- Genus and height are the strongest predictors of urban tree height growth.
-- Trees growing near other trees and buildings grow faster than open
-  grown trees, possibly in response to competition for light.
+- predicted height growth map.
+* Key points
+- Genus and height are the strongest predictors of urban tree height
+  growth, but if genus is excluded from the model remotely sensed
+  foliar traits can explain nearly as much variability in growth as
+  genus.
+- Trees growing near other trees and buildings grow higher faster than
+  open grown trees, possibly in response to competition for light.
 - Percent impervious cover interacts at multiple scales to affect tree
   height growth: trees with low imperivious cover within 20m and high
   impervious cover within 100m have highest growth rates, all else
   being equal.
-- Three foliar canopy traits predicted from imaging spectroscopy:
-  nitrogen, total phenolics, and chlorophyll were significantly
-  related to growth.  Nitrogen and total phenolics had negative
-  coefficients and chlorophyll had positive coefficients.
+- Four foliar canopy traits predicted from imaging spectroscopy:
+  nitrogen, lignin, total phenolics, and chlorophyll were
+  significantly related to growth.  Nitrogen, lignin, and total
+  phenolics had negative coefficients and chlorophyll had positive
+  coefficients.  Traits contribute significantly to the model that
+  does not include genus.
 - Topography is significantly related to tree height growth, but
   effects are small.
 
@@ -265,6 +270,55 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2005.tif
 #+END_SRC
 
+**** find pulse density
+
+#+begin_src R
+          library(lidR)
+          ctg <- catalog("~/hgt_data/madison_lidar_2005_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2005_heights/grid_metrics/{ORIGINALFILENAME}"
+        opt_select(ctg) <- ""
+        opt_filter(ctg) <- "-keep_first"
+          gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
+
+
+      v <- lapply(unlist(gm), function(p) {
+          r <- raster(p)
+          getValues(r)
+      })
+
+  v <- unlist(v)
+#+end_src
+
+#+RESULTS:
+: 
+: Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
+: 
+: Processing [>-------------------------------------------]   3% (1/34) eta: 20sError: filename exists; use overwrite=TRUE
+
+#+begin_src R
+quantile(v, c(.05, .95), na.rm = T)
+  summary(v)
+#+end_src
+
+#+RESULTS:
+:   5%  95% 
+:  384 2897
+: 
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:       1    1899    2142    2064    2406    7824    4199
+
+
+
+
+keeping all
+:      5%     95% 
+:  408.00 3677.25
+: 
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:       1    2022    2360    2347    2778    9457    4199
+
+.2347
+
 *** 2009 lidar
 
 **** get tiles just over the tree inventory
@@ -380,30 +434,6 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2009.tif
 #+END_SRC
 
-**** pulse density
-#+begin_src R
-  library(lidR)
-    ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized")
-    opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/grid_density/{ORIGINALFILENAME}_gd"
-    opt_filter(ctg2009norm) <- "-drop_z_above 120"
-  gd <- grid_density(ctg2009norm, res = 15)
-#+end_src
-
-#+RESULTS:
-: Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
-: Processing [>-------------------------------------------]   1% (1/87) eta:  6mProcessing [>-------------------------------------------]   2% (2/87) eta:  4mProcessing [=>------------------------------------------]   3% (3/87) eta:  4mProcessing [=>------------------------------------------]   5% (4/87) eta:  7mProcessing [==>-----------------------------------------]   6% (5/87) eta:  9mProcessing [==>-----------------------------------------]   7% (6/87) eta: 10mProcessing [===>----------------------------------------]   8% (7/87) eta: 11mProcessing [===>----------------------------------------]   9% (8/87) eta: 11mProcessing [====>---------------------------------------]  10% (9/87) eta: 11mProcessing [====>--------------------------------------]  11% (10/87) eta: 10mProcessing [====>--------------------------------------]  13% (11/87) eta: 10mProcessing [=====>-------------------------------------]  14% (12/87) eta:  9mProcessing [=====>-------------------------------------]  15% (13/87) eta:  9mProcessing [======>------------------------------------]  16% (14/87) eta:  8mProcessing [======>------------------------------------]  17% (15/87) eta:  8mProcessing [=======>-----------------------------------]  18% (16/87) eta:  8mProcessing [=======>-----------------------------------]  20% (17/87) eta:  7mProcessing [========>----------------------------------]  21% (18/87) eta:  7mProcessing [========>----------------------------------]  22% (19/87) eta:  7mProcessing [=========>---------------------------------]  23% (20/87) eta:  6mProcessing [=========>---------------------------------]  24% (21/87) eta:  6mProcessing [==========>--------------------------------]  25% (22/87) eta:  6mProcessing [==========>--------------------------------]  26% (23/87) eta:  5mProcessing [===========>-------------------------------]  28% (24/87) eta:  5mProcessing [===========>-------------------------------]  29% (25/87) eta:  5mProcessing [============>------------------------------]  30% (26/87) eta:  5mProcessing [============>------------------------------]  31% (27/87) eta:  5mProcessing [=============>-----------------------------]  32% (28/87) eta:  5mProcessing [=============>-----------------------------]  33% (29/87) eta:  4mProcessing [==============>----------------------------]  34% (30/87) eta:  4mProcessing [==============>----------------------------]  36% (31/87) eta:  4mProcessing [===============>---------------------------]  37% (32/87) eta:  4mProcessing [===============>---------------------------]  38% (33/87) eta:  4mProcessing [================>--------------------------]  39% (34/87) eta:  4mProcessing [================>--------------------------]  40% (35/87) eta:  4mProcessing [=================>-------------------------]  41% (36/87) eta:  3mProcessing [=================>-------------------------]  43% (37/87) eta:  3mProcessing [==================>------------------------]  44% (38/87) eta:  3mProcessing [==================>------------------------]  45% (39/87) eta:  3mProcessing [===================>-----------------------]  46% (40/87) eta:  3mProcessing [===================>-----------------------]  47% (41/87) eta:  3mProcessing [====================>----------------------]  48% (42/87) eta:  3mProcessing [====================>----------------------]  49% (43/87) eta:  3mProcessing [=====================>---------------------]  51% (44/87) eta:  3mProcessing [=====================>---------------------]  52% (45/87) eta:  3mProcessing [======================>--------------------]  53% (46/87) eta:  2mProcessing [======================>--------------------]  54% (47/87) eta:  2mProcessing [=======================>-------------------]  55% (48/87) eta:  2mProcessing [=======================>-------------------]  56% (49/87) eta:  2mProcessing [========================>------------------]  57% (50/87) eta:  2mProcessing [=========================>-----------------]  60% (52/87) eta:  2mProcessing [=========================>-----------------]  61% (53/87) eta:  2mProcessing [==========================>----------------]  62% (54/87) eta:  2mProcessing [==========================>----------------]  63% (55/87) eta:  2mProcessing [===========================>---------------]  64% (56/87) eta:  2mProcessing [===========================>---------------]  66% (57/87) eta:  2mProcessing [============================>--------------]  67% (58/87) eta:  2mProcessing [=============================>-------------]  69% (60/87) eta:  1mProcessing [=============================>-------------]  70% (61/87) eta:  1mProcessing [==============================>------------]  71% (62/87) eta:  1mProcessing [==============================>------------]  72% (63/87) eta:  1mProcessing [===============================>-----------]  74% (64/87) eta:  1mProcessing [===============================>-----------]  75% (65/87) eta:  1mProcessing [================================>----------]  76% (66/87) eta:  1mProcessing [================================>----------]  77% (67/87) eta:  1mProcessing [=================================>---------]  78% (68/87) eta:  1mProcessing [=================================>---------]  79% (69/87) eta:  1mProcessing [==================================>--------]  80% (70/87) eta:  1mProcessing [==================================>--------]  82% (71/87) eta:  1mProcessing [===================================>-------]  83% (72/87) eta: 47sProcessing [===================================>-------]  84% (73/87) eta: 43sProcessing [====================================>------]  85% (74/87) eta: 40sProcessing [====================================>------]  86% (75/87) eta: 37sProcessing [=====================================>-----]  87% (76/87) eta: 34sProcessing [=====================================>-----]  89% (77/87) eta: 30sProcessing [======================================>----]  90% (78/87) eta: 27sProcessing [======================================>----]  91% (79/87) eta: 24sProcessing [=======================================>---]  92% (80/87) eta: 21sProcessing [=======================================>---]  93% (81/87) eta: 18sProcessing [========================================>--]  94% (82/87) eta: 15sProcessing [========================================>--]  95% (83/87) eta: 12sProcessing [=========================================>-]  97% (84/87) eta:  9sProcessing [=========================================>-]  98% (85/87) eta:  6sProcessing [==========================================>]  99% (86/87) eta:  3sProcessing [===========================================] 100% (87/87) eta:  0s
-: There were 50 or more warnings (use warnings() to see the first 50)
-
-it didn't finish, i'mnot sure why
-
-#+begin_src sh
-cd ~/hgt_data/madison_lidar_2017_heights/grid_density/
-
-gdalbuildvrt ../gd_2017.vrt *.tif
-#+end_src
-
-#+RESULTS:
-: 0...10...20...30...40...50...60...70...80...90...100 - done.
 
 **** get extents to select a downtown tile?
 #+begin_src R
@@ -596,6 +626,63 @@ chm, pitless algoright, too slow to be worth running.
   opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/{ORIGINALFILENAME}_chm_pitfree"
   grid_canopy(ctg2009norm, 4, pitfree(c(0,6,12), c(0,1), subcircle = 6)) 
 #+end_src
+
+**** find pulse density
+
+=grid_density= is also a function I could use
+
+#+begin_src R
+          library(lidR)
+          ctg <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2009_heights/grid_metrics/{ORIGINALFILENAME}"
+        opt_select(ctg) <- ""
+        opt_filter(ctg) <- "-keep_first"
+          gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
+
+
+      v <- lapply(unlist(gm), function(p) {
+          r <- raster(p)
+          getValues(r)
+      })
+
+  v <- unlist(v)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Loading required package: raster
+Loading required package: sp
+lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+
+Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
+
+Processing [>-------------------------------------------]   1% (1/87) eta:  4mError: filename exists; use overwrite=TRUE
+
+Error in unlist(gm) : object 'gm' not found
+
+Error in unlist(v) : object 'v' not found
+#+end_example
+
+#+begin_src R
+  quantile(v, c(.05, .95), na.rm = T)
+  summary(v)
+#+end_src
+
+#+RESULTS:
+:       5%      95% 
+:   6397.1 111051.9
+: 
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:      23   13960   24863   44320   74580  216423      14
+
+
+#+begin_src R
+  summary(v) / 10000
+#+end_src
+
+#+RESULTS:
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:  0.0023  1.3961  2.4863  4.4320  7.4581 21.6423  0.0014
 
 *** TODO FIX THE RESOLUTION!!!!!!!  2010 lidar derived (NGA)
 
@@ -1411,11 +1498,9 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
   library(lidR)
     ctg2017norm <- catalog("~/hgt_data/madison_lidar_2017_heights/normalized")
     opt_output_files(ctg2017norm) <- "~/hgt_data/madison_lidar_2017_heights/grid_density/{ORIGINALFILENAME}_gd"
-    opt_filter(ctg2017norm) <- "-drop_z_above 120 -drop_z_below 6 -keep_first"
-  gd <- grid_density(ctg2017norm, res = 15)
+    opt_filter(ctg2017norm) <- "-keep_first"
+  gd <- grid_density(ctg2017norm, res = 100 / .3048)
 #+end_src
-
-it didn't finish, i'mnot sure why
 
 #+begin_src sh
 cd ~/hgt_data/madison_lidar_2017_heights/grid_density/
@@ -1425,6 +1510,77 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
+
+#+begin_src R
+      v <- lapply(unlist(gd), function(p) {
+          r <- raster(p)
+          getValues(r)
+      })
+
+  v <- unlist(v)
+
+#+end_src
+
+
+**** find pulse density
+
+=grid_density= is also a function I could use
+
+#+begin_src R
+          library(lidR)
+          ctg <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2009_heights/grid_metrics/{ORIGINALFILENAME}"
+        opt_select(ctg) <- ""
+        opt_filter(ctg) <- "-keep_first"
+          gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
+
+
+      v <- lapply(unlist(gm), function(p) {
+          r <- raster(p)
+          getValues(r)
+      })
+
+  v <- unlist(v)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Loading required package: raster
+Loading required package: sp
+lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
+
+Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
+
+Processing [>-------------------------------------------]   1% (1/87) eta:  4mError: filename exists; use overwrite=TRUE
+
+Error in unlist(gm) : object 'gm' not found
+
+Error in unlist(v) : object 'v' not found
+#+end_example
+
+#+begin_src R
+  quantile(v, c(.05, .95), na.rm = T)
+  summary(v)
+#+end_src
+
+#+RESULTS:
+:       5%      95% 
+:   6397.1 111051.9
+: 
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:      23   13960   24863   44320   74580  216423      14
+
+
+#+begin_src R
+  summary(v) / 10000
+#+end_src
+
+#+RESULTS:
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+:  0.0023  1.3961  2.4863  4.4320  7.4581 21.6423  0.0014
+
+
+
 
 **** get lidar extents
 #+begin_src R
@@ -3932,7 +4088,7 @@ since I'm not interested in the mean, but rather the maximum.
     #plot(o2005)
 
     # I should make neat gifs...
-plot(o2017, bg = "white", colorPalette = "black")
+#plot(o2017, bg = "white", colorPalette = "black")
 
     d2017 <- o2017@data %>% mutate(year = 2017)
     d2016 <- o2016@data %>% mutate(year = 2016)
@@ -3946,66 +4102,45 @@ d <- mutate(d, Z = Z * .3048, Y = Y * .3048, X = X * .3048, year = factor(year))
 #+end_src
 
 #+RESULTS:
-#+begin_example
-Loading required package: raster
-Loading required package: sp
-lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:raster’:
-
-    intersect, select, union
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-#+end_example
 
 #+begin_src R
-      library(ggplot2)
-      library(ggthemes)
-      library(tidyr)
-                                              #  terk <- list(theme_solarized_2(base_size = 16) +
-      terk <- theme_tufte(base_size = 16) +
-        theme(legend.title = element_text(size = 15),
-              legend.text = element_text(size = 12),
-              axis.ticks = element_line(size = .3), 
-              panel.grid.major = element_line(color = "#839496", size = .1),
-              panel.grid.minor = element_line(color = "#839496", size = .05),
-              axis.title.x = element_blank(),
-              axis.text.x = element_blank(),
-              axis.ticks.x = element_blank(),
-              legend.position = "none")
+    library(ggplot2)
+    library(ggthemes)
+    library(tidyr)
+                                            #  terk <- list(theme_solarized_2(base_size = 16) +
+    terk <- theme_tufte(base_size = 16) +
+      theme(legend.title = element_text(size = 15),
+            legend.text = element_text(size = 13),
+            axis.ticks = element_line(size = .3), 
+            axis.ticks.x = element_blank(),
+            panel.grid.major = element_line(color = "#839496", size = .1),
+            panel.grid.minor = element_line(color = "#839496", size = .05),
+            legend.position = "none")
 
 
-      blue <- scale_color_solarized("blue")
+    blue <- scale_color_solarized("blue")
 
-      red <- solarized_pal("red")(1)
-      base1 <- "#93a1a1"
+    red <- solarized_pal("red")(1)
+    base1 <- "#93a1a1"
+
+        blue <- scale_color_solarized("blue")
+
+        red <- solarized_pal("red")(1)
+        base1 <- "#93a1a1"
 
 #+end_src
 
 #+RESULTS:
-: 
-: Attaching package: ‘tidyr’
-: 
-: The following object is masked from ‘package:raster’:
-: 
-:     extract
 
-#+begin_src R :exports results :results graphics :file figs/tenney_oak1.png :width 1200 :height 300 :res 100 :bg transparent
+#+begin_src R :exports results :results graphics :file figs/tenney_oak1.png :width 1000 :height 300 :res 100 :bg transparent
 
-  ggplot(d, aes(x = X, y = Z, color = year)) +
+  ggplot(d, aes(x = X - mean(X), y = Z, color = year)) +
       geom_point(size = .5) +
       coord_equal() +
       facet_wrap(~year, ncol = 4) +
     terk +
   scale_y_continuous("height (m)") +
+  scale_x_continuous("distance from center (m)") +
     scale_color_brewer(palette = "Dark2")
 
 #+end_src
@@ -4043,9 +4178,6 @@ the pulses penetrate deep into the canopy when there aren't leaves.
 
 
   #+end_src
-
-  #+RESULTS:
-  [[file:figs/tenney_oak_crosssection.png]]
 
 #+begin_src R :exports results :results graphics :file figs/tenney_oak_crosssection_vline.png :width 1200 :height 250 :res 100 :bg transparent
     dc <- filter(d, abs(X - mean(X)) < 8 * .3048)
@@ -4164,11 +4296,11 @@ ST42874
 
   l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0676_esri_normalized.las", select = "r")
     l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/54_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t81028f_ground_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t81028f_normalized.las", select = "r")
     l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile007_ground_normalized.las", select = "r")
 
 
-  p <- shapefile("/home/erker/hgt_data/ST42874.shp")
+  p <- shapefile("/home/erker/hgt_data/example_trees/ST42874.shp")
 
     o2017 <- lasclip(l2017, p)
     o2016 <- lasclip(l2016, p)
@@ -4189,26 +4321,38 @@ ST42874
 
 #+end_src
 
+#+RESULTS:
+
 #+begin_src R
-  library(ggthemes)
+    library(ggplot2)
+    library(ggthemes)
+    library(tidyr)
+                                            #  terk <- list(theme_solarized_2(base_size = 16) +
+    terk <- theme_tufte(base_size = 16) +
+      theme(legend.title = element_text(size = 15),
+            legend.text = element_text(size = 13),
+            axis.ticks = element_line(size = .3), 
+            axis.ticks.x = element_blank(),
+            panel.grid.major = element_line(color = "#839496", size = .1),
+            panel.grid.minor = element_line(color = "#839496", size = .05),
+            legend.position = "none")
 
-    terk <- list(theme_solarized_2(base_size = 16) +
-                 theme(legend.title = element_text(size = 10),
-                       legend.text = element_text(size = 8),
-                       axis.ticks = element_line(size = .3),
-                       rect = element_rect(fill = "transparent"),
-                       panel.background = element_rect(fill = "transparent"),
-                       panel.grid.major = element_line(color = "#839496", size = .3),
-                       panel.grid.minor = element_line(color = "#839496", size = .1)),
-blue <- scale_color_solarized("blue"))
 
-red <- solarized_pal("red")(1)
+    blue <- scale_color_solarized("blue")
+
+    red <- solarized_pal("red")(1)
+    base1 <- "#93a1a1"
+
+        blue <- scale_color_solarized("blue")
+
+        red <- solarized_pal("red")(1)
+        base1 <- "#93a1a1"
 
 #+end_src
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/ST42874.png :width 1200 :height 300 :res 100 :bg transparent
+#+begin_src R :exports results :results graphics :file figs/ST42874.png  :width 1000 :height 300 :res 100 :bg transparent
 
         d <- rbind(d2017, d2016, d2009, d2005) %>%
           mutate(year = factor(year),
@@ -4216,14 +4360,15 @@ red <- solarized_pal("red")(1)
                  X = X * .3048,
                  Y = Y * .3048)
 
-
-        ggplot(d, aes(x = X, y = height, color = year)) +
+        ggplot(d, aes(x = X - mean(X), y = height, color = year)) +
             geom_point(size = .5) +
-            geom_rug(sides = "l") +
             coord_equal() +
             facet_wrap(~year, ncol = 4) +
           terk +
-          theme(axis.text.x = element_blank())
+            scale_x_continuous("distance from center (m)", breaks = c(-4,0,4)) +
+            scale_y_continuous("height (m)") +
+            scale_color_brewer(palette = "Dark2")
+
 
 #+end_src
 
@@ -4879,7 +5024,7 @@ saveRDS(trs, "/home/erker/hgt_data/canopy_foliar_traits_scaled.rds")
 #+begin_src R
 
 #+end_src
-*** TODO pct impervious etc
+*** pct impervious etc
 **** tile landcover so velox can fit it in memory
 #+begin_src R
   library(raster)
@@ -5607,28 +5752,6 @@ library(pdp)
 #+end_src
 
 #+RESULTS:
-#+begin_example
-randomForest 4.6-14
-Type rfNews() to see new features/changes/bug fixes.
-
-Attaching package: ‘dplyr’
-
-The following object is masked from ‘package:randomForest’:
-
-    combine
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-
-Registered S3 method overwritten by 'GGally':
-  method from   
-  +.gg   ggplot2
-#+end_example
 
 #+begin_src R
 
@@ -5646,27 +5769,48 @@ Registered S3 method overwritten by 'GGally':
 
 #+begin_src R
 
-    mrf <- randomForest(formula = growth.rate ~ st_po +
-                                                Genus + 
-                                                cor_max2005 + 
-                                                tpi_5ft +
-                                                slope_5ft +
-                                                aspect_5ft +
-                                                tpi_200ft +
-                                                slope_200ft +
-                                                aspect_200ft +
-                                                elev +
-                                                mean_height_wn20m +
-                                                pct_imp_20m +
-                                                pct_imp_100m +
-                                                TotPhen +
-                                                N +
-                                                Sugar +
-                                                LMA +
-                                                lignin +
-                                                chl, 
-             data = dc,
-             localImp=T)
+  ## mrf <- randomForest(formula = growth.rate ~ st_po +
+  ##                                             Genus + 
+  ##                                             cor_max2005 + 
+  ##                                             tpi_5ft +
+  ##                                             slope_5ft +
+  ##                                             aspect_5ft +
+  ##                                             tpi_200ft +
+  ##                                             slope_200ft +
+  ##                                             aspect_200ft +
+  ##                                             elev +
+  ##                                             mean_height_wn20m +
+  ##                                             pct_imp_20m +
+  ##                                             pct_imp_100m +
+  ##                                             TotPhen +
+  ##                                             N +
+  ##                                             Sugar +
+  ##                                             LMA +
+  ##                                             lignin +
+  ##                                             chl, 
+  ##          data = dc,
+  ##          localImp=T)
+
+   mrf_noGenus <- randomForest(formula = growth.rate ~ st_po +
+                                              cor_max2005 + 
+                                              tpi_5ft +
+                                              slope_5ft +
+                                              aspect_5ft +
+                                              tpi_200ft +
+                                              slope_200ft +
+                                              aspect_200ft +
+                                              elev +
+                                              mean_height_wn20m +
+                                              pct_imp_20m +
+                                              pct_imp_100m +
+                                              TotPhen +
+                                              N +
+                                              Sugar +
+                                              LMA +
+                                              lignin +
+                                              chl, 
+           data = dc,
+           localImp=T)
 
 #+end_src
 
@@ -5844,7 +5988,8 @@ plot_predict_interaction(mrf, dc, "pct_imp_20m", "pct_imp_100m")
 
 
 #+begin_src R :exports results :results graphics :file figs/pred_int_2.png
-plot_predict_interaction(mrf, dc, "cor_max2005", "N")
+#plot_predict_interaction(mrf, dc, "cor_max2005", "N")
+plot_predict_interaction(mrf_noGenus, dc, "chl", "TotPhen")
 #+end_src
 
 #+RESULTS:
@@ -7987,12 +8132,15 @@ covariates that seem to make sense.
   m7 <- lm(growth.rate ~ st_po * poly(cor_max2005,4)[,1] + poly(cor_max2005,4)[,2:4] + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft, dc)
 
   m_genus_notrait <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, dc)
+  m_nogenus_notrait <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft, dc)
+  m_nogenus_onlytrait <- lm(growth.rate ~ TotPhen + N + Sugar + LMA + lignin + chl, dc)
 #+end_src
 #+RESULTS:
 
 #+begin_src R
 #(AIC(m00,m0,m1, m2, m3, m4, m5, m6, m60, m7, m50,m8))
 AIC(m0,m1, m2, m3, m4, m5, m6, m7)
+
 #+end_src
 
 #+RESULTS:
@@ -8008,6 +8156,37 @@ m5 343 167381.0
 m6 312 167401.3
 m7  27 169504.6
 #+end_example
+
+#+begin_src R
+AIC(m_genus, m_genus_notrait, m_nogenus, m_nogenus_notrait, m_nogenus_onlytrait)
+lapply(list(m_genus, m_genus_notrait, m_nogenus, m_nogenus_notrait, m_nogenus_onlytrait), function(m) summary(m)$adj.r.squared)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                     df      AIC
+m_genus             342 167381.3
+m_genus_notrait     228 167877.1
+m_nogenus            27 169504.6
+m_nogenus_notrait    21 170315.3
+m_nogenus_onlytrait   8 172024.7
+
+[[1]]
+[1] 0.5561608
+
+[[2]]
+[1] 0.5432713
+
+[[3]]
+[1] 0.5022517
+
+[[4]]
+[1] 0.1155195
+
+[[5]]
+[1] 0.04083047
+#+end_example
+
 
 #+begin_src R
   m_genus_fewerInt <- lm(growth.rate ~ mean_height_wn20m + st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + pct_imp_20m * pct_imp_100m + TotPhen + N + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, dc)
@@ -9170,10 +9349,11 @@ what i would need everything at trait map resolution
 * Introduction
 
 With over half the human population living in urban areas, planting
-trees to provide ecosystem services is seen as a way to make the
-environment that most people interact with more pleasant.  These
-ecosystem services include habitat for wildlife, stormwater runoff
-reduction, air quality improvement, and carbon sequestration cite:roy_etal_2012.
+urban trees to provide ecosystem services is seen as a way to make the
+environment that most people interact with more pleasant and
+sustainable.  These ecosystem services include habitat for wildlife,
+stormwater runoff reduction, air quality improvement, and carbon
+sequestration cite:roy_etal_2012.
 
 All these services are a function of growth, either directy such as
 carbon sequestration, or indirectly such as stormwater runoff
@@ -9183,7 +9363,7 @@ and projecting ecosystem services into the future.  The factors that
 contribute to the growth of trees are well understood, thanks to
 hundreds of years of forestry and plant biology.  What we do not
 understand so well is how the complex urban environment alters these
-factors and therefore the growth of trees.
+factors therby altering the growth of trees.
 
 Urban trees grow differently than their more rural counterparts
 because of the challenges they face surviving amongst urban
@@ -9226,6 +9406,7 @@ or not it had overhead utilities. The objectives of our study were to:
   factors common to all trees (e.g. topography) as well as
   environmental factors specific to the urban environment (e.g. impervious
   cover, streets, and utility lines).
+
 ** COMMENT maybe include
 Existing methods for estimating ecosystem services are lacking.
 cite:erker_townsend_2019 address building energy use
@@ -9270,58 +9451,58 @@ better estimate and project
 ** Overview
 In our study city, Madison, WI, we combined several outputs of remote
 sensing technologies and several geographic information system (GIS)
-layers to explore the potential for environmental factors and canopy
-foliar traits to explain urban tree height growth.  Using four years
-of lidar data (2005, 2009, 2016, and 2017) and an new height bias
-correction method, we estimated the height growth of trees over a 12
-year period.  We used two street tree inventories (one from the city
-of Madison and one from the village of Shorewood, which is within the
-city) and two complete inventories of the trees Madison's Atwood and
-Hill Farms neighborhoods to get taxonomic infomation of trees.  In
-June 2015, NASA's Airborne Visible / Infrared Imaging Spectometer -
-Next Generation (AVIRIS-NG) imaged the majority of Madison.  Using
-predictive equations developed following cite:singh_e_2015, we
-predicted canopy foliar traits: Nitrogen (% mass), N; leaf mass per
-area (g/m^2), LMA; lignin (% mass), chlophyll, and total phenolics.  We
-converted these trait predictions to an index because of imagery
-differences between our site and where the model was built.  In
-addition to foliar traits, we calculated other covariates
-such as percent impervious cover at two scales (within 20m and within
-100m), topographic variables, and the mean height of the surroundings
-within 20 m of a tree (see table [[tab:covariates]] for all covariates).
+layers to explore the potential for environmental factors and remotely
+sense canopy foliar traits to explain urban tree height growth.  Using
+four years of lidar data (2005, 2009, 2016, and 2017) and an innovative
+height bias correction method, we estimated the height growth of trees
+over a 12 year period.  We used two street tree inventories (one from
+the city of Madison and one from the village of Shorewood, which is
+within the city) and two complete inventories of the trees Madison's
+Atwood and Hill Farms neighborhoods to get taxonomic infomation of
+trees.  In September 2015, NASA's Airborne Visible / Infrared Imaging
+Spectometer - Next Generation (AVIRIS-NG) imaged the majority of
+Madison.  Using predictive equations developed following
+cite:singh_e_2015, we predicted canopy foliar traits: Nitrogen (%
+mass), N; leaf mass per area (g/m^2), LMA; lignin (% mass), chlophyll,
+and total phenolics.  We converted these trait predictions to an index
+because of imagery differences between our site and where the model
+was built.  In addition to foliar traits, we calculated other
+covariates such as percent impervious cover at two scales (within 20m
+and within 100m), topographic variables, and the mean height of the
+surroundings within 20 m of a tree (see table [[tab:covariates]] for all
+covariates).
 
 #+name: tab:covariates
-| short name                    |                                          | source                          | explanation                                                                                                                    |
-|-------------------------------+------------------------------------------+---------------------------------+--------------------------------------------------------------------------------------------------------------------------------|
-| height 2005                   | Bias corrected height in 2005            | lidar                           |                                                                                                                                |
-| height within 20m             | Mean Height within 20 m                  | lidar                           |                                                                                                                                |
-| Genus                         | Genus                                    | tree inventories                |                                                                                                                                |
-| neighborhood street utilities | neighborhood, street, powerlines         | tree inventories                | indicator variable for whether tree is a neighborhood or street tree and if street trees whether it is under powerlines or not |
-| slope 1.5 m                   | slope 1.5 m (5 ft)                       | Digital Elevation Model (DEM)   |                                                                                                                                |
-| aspect 1.5 m                  | transformed aspect 1.5 m (5 ft)          | DEM                             |                                                                                                                                |
-| TPI 1.5 m                     | topographic position index 1.5m (5 ft)   | DEM                             |                                                                                                                                |
-| slope 61 m                    | slope 61 m (200 ft)                      | DEM                             |                                                                                                                                |
-| aspect 61 m                   | transformed aspect 61 m (200 ft)         | DEM                             |                                                                                                                                |
-| TPI 61 m                      | topographic position index 61 m (200 ft) | DEM                             |                                                                                                                                |
-| elevation                     | elevation                                | DEM                             |                                                                                                                                |
-| Sugar                         | Sugar                                    | AVIRIS-NG                       |                                                                                                                                |
-| lignin                        | lignin                                   | AVIRIS-NG                       |                                                                                                                                |
-| chlorophyll                   | chlorophyll                              | AVIRIS-NG                       |                                                                                                                                |
-| leaf mass per area            | leaf mass per area                       | AVIRIS-NG                       |                                                                                                                                |
-| total phenolics               | total phenolics                          | AVIRIS-NG                       |                                                                                                                                |
-| nitrogen                      | nitrogen                                 | AVIRIS-NG                       |                                                                                                                                |
-| percent impervious 20 m       | percent impervious within 20 m           | landcover map cite:erker_e_2019 |                                                                                                                                |
-| percent impervious 100 m      | percent impervious within 100 m          | landcover map cite:erker_e_2019 |                                                                                                                                |
-
+| Covariate                                                            | Source                           |
+|----------------------------------------------------------------------+----------------------------------|
+| Bias corrected height in 2005 (m)                                    | lidar                            |
+| Mean Height within 20 m (m)                                          | lidar                            |
+| Genus                                                                | tree inventories                 |
+| tree type: neighborhood or street with or without overhead utilities | tree inventories                 |
+| slope  at 1.5 m (5 ft) scale                                         | Digital Elevation Model (DEM)    |
+| transformed aspect at 1.5 m (5 ft) scale                             | DEM                              |
+| topographic position index, TPI at 1.5m (5 ft) scale (m)             | DEM                              |
+| slope at 61 m (200 ft) scale                                         | DEM                              |
+| transformed aspect at 61 m (200 ft) scale                            | DEM                              |
+| topographic position index, TPI at 61 m (200 ft) scale (m)           | DEM                              |
+| elevation (hundredss of meters)                                      | DEM                              |
+| Sugar (standardized index)                                           | AVIRIS-NG                        |
+| lignin (standardized index)                                          | AVIRIS-NG                        |
+| chlorophyll (standardized index)                                     | AVIRIS-NG                        |
+| leaf mass per area (standardized index)                              | AVIRIS-NG                        |
+| total phenolics (standardized index)                                 | AVIRIS-NG                        |
+| nitrogen (standardized index)                                        | AVIRIS-NG                        |
+| percent impervious within 20 m                                       | landcover map citep:erker_e_2019 |
+| percent impervious within 100 m                                      | landcover map citep:erker_e_2019 |
 
 The total number of trees used in the study was approximately 21
 thousand.  We fit several multiple linear regressions with growth rate
 as a response and all covariates as predictors with various
-interactions that made sense given our hypotheses.  We used AIC to
-help with model selection, but did not test very many interactions,
+interactions that were reasonable given our objectives.  We used AIC
+to help with model selection, but did not test very many interactions,
 instead we were primarily guided by our objectives and the goal of
 finding a model that was straightforward to communicate.  Details on
-the selected models are in results
+the selected models are in results.
 
 ** Madison, WI: population and forests
 Madison is a city of about 260,000 persons ([[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][USCensus]]), located in
@@ -9342,8 +9523,9 @@ second is the 2012 inventory of the Atwood neighborhood located on
 Madison's east side and the north side of lake Monona, the third is
 the 2015-2016 inventory of the HillFarms neighborhood on Madison's
 west side, the fourth is the village of shorewood's 2015 street tree
-inventory.  give species breakdowns too.  The street tree inventories
-also provided information on presence of overhead utility lines.  
+inventory.  The street tree inventories also provided information on
+presence of overhead utility lines.
+
 
 **** COMMENT I need a figure showing the neighborhood inventories and the street tree inventories too.
 
@@ -9371,16 +9553,29 @@ How did we remove trees
   buildings,
 - trees were removed or replanted indicated by large decreases in height
 
+*** Airborne laser scanning (lidar)
 
-*** Light detection and ranging (lidar)
+We used four years of airborne laser scanning (lidar) to estimate tree
+heights for height growth rate estimation.  The lidar was acquired in
+springs of 2005, 2009, 2016, and 2017.  The intended use of lidar was
+for digital elevation modeling and so was flown in leaf-off
+conditions.  Over this 12 year period lidar technology greatly
+improved and pulse density increased from an average of 0.20 pulses per meter
+squared to an average of XXXX pulse per meter squared.
 
+We extracted lidar point clouds surrounding the tree points in the
+tree inventories with a 2.4 m buffer.  The buffer width was selected
+to be large enough to provide enough points to estimate height, but
+also to be small enough so that points not a part of the tree were
+excluded.  This worked well for the vast majority of trees since most
+tree points were in the center of the crown.  We dropped trees from
+the analysis that had been removed during the study period or that
+were too close to other trees and could cause possible confusion.  If
+two trees were within 5 m of each other we selected the tree with the
+larger diameter and dropped the other.  We analyzed the lidar data
+using the R package =lidR= citep:roussel_auty_2018.
 
-dropped trees when:
-- lidar point clouds were unreliable, too close to other trees, tall
-  buildings,
-- trees were removed or replanted indicated by large decreases in height
-
-**** look at huan's dissertation.
+**** COMMENT look at huan's dissertation.
 Lidar data
 The county-wide lidar collection was contracted by the Dane County Land Information Office
 to develop a high resolution county-wide digital elevation model (DEM). Ayres Associates
@@ -9454,48 +9649,84 @@ location ( street trees).
 
 *** Hyperspectral imagery
 
-plot of flightlines.
+In September 2015, NASA's Airborne Visible / Infrared Imaging
+Spectometer - Next Generation (AVIRIS-NG) collected imagery over the
+majority of Madison.  AVIRIS-NG collects solar reflectance in 5 nm
+bands from 400 nm to 2500 nm.  The spatial resolution of the imagery
+was 4.6 m.  
 
-*** other
-- street tree inventory, hill farms and atwood inventories
-- lidar
-  - how modified to create heights
-- imaging spectrsopty
-  - modified to create indicies of canopy foliar traits
-  - because of variations across images, we adjusted trait maps to one
-    image and derived indicies of  foliar tratis.
-- dem?
-  - topographic position.
+Using predictive equations developed following cite:singh_e_2015, we
+predicted canopy foliar traits: Nitrogen (% mass), N; leaf mass per
+area (g/m^2), LMA; lignin (% mass), chlophyll, and total phenolics.  We
+converted these trait predictions to an index because of imagery
+differences between our site and where the model was built meant that
+predictions were biased and not quite within biologically reasonable
+ranges.  To create this index we adjusted traits predictions across
+images using overlap pixels to be consistent across images and then
+standardized the traits by dividing by their standard deviation.
 
+We extracted the trait values at every tree.  To ensure that we did
+not include mixed pixels, we used the 2016 canopy height model derived
+from lidar to mask any 4.6 pixels that had a mean height less than 8
+meters.  This removed some of the smaller trees from our dataset, but
+was important because the relatively large spatial resolution of the
+AVIRIS-NG imagery that made distinguishing crown boundaries difficult.
 
-** Height Bias Correction and Estimation of height growth rates
-*** corrections for maximum height and estimating tree growth
+**** COMMENT add plot of flightlines. see uft.org
 
-The estimated maximum height of trees derived from ALS is always lower
+*** Other covariates
+Topographic variables were derived from the 2009 dane county digital
+elevation model (DEM).  Topographic position index, aspect, and slope
+were all calculated using the =terrain= function in the R package
+=raster= cite:raster_Rpackage.  The DEM was originally at
+approximately 1.5 m (5 ft) scale.  We calculated topographic
+covariates at this scale and also at the large aggregated scale of 61
+m (200 ft).   We transformed aspect using sin(angle + 45) + 1 so that
+trees in the cool wet northeast aspect had a value of 2 and trees in
+the warm dry southwest aspect had a value of 0.
+
+We created a canopy height model at 1 m spatial resolution using the
+2016 lidar.  We then found the average height of that canopy height
+model within 20 m of each tree and used this as a variable to
+approximate competition for light.
+
+Using a 1 m landcover map for the city of Madison, we calculated the
+percent impervious cover within 20 m and within 100 m of each tree
+citep:erker_e_2019.
+
+**** COMMENT dem available at:
+ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2010_WVP_Derived_Products/WisconsinView_Rasters/
+
+** Height bias correction and estimation of height growth rates
+*** Corrections for maximum height and estimating tree growth
+
+The estimated maximum height of trees derived from lidar is always lower
 than the true maximum height, that is, it is biased downward.  The
-magnitude of this bias is a function of the ALS and the tree
+magnitude of this bias is a function of the lidar and the tree
 architecture.  Greater density of lidar pulses will have less bias
 since the probability of hitting a branch near the top of the tree
 increases.  Trees with less conical and flatter tops - those with weak
 apical dominance - will have less bias because there are more branches
-close to the highest branch of the tree.  Twig size also plays a
-role. Generally, taxa with thinner twigs have denser branching so
-while a single twig may not reflect enough energy from a lidar pulse
-to trigger a return, there are many more twigs close togther.  Taxa
-with thicker twigs will have stronger returns, but since thicker twigs tend to
-be less dense, the probability of hitting a thick twig is lower.
-Exactly how these negatively correlated traits (twig thickness and
-density) interact to influence the bias in maximum height estimates is
-mediated by the algorithms used to convert full waveform lidar into
-point clouds.  Thus, in our attempt to correct for the bias in maximum
-height estimation and - by extension across multiple years - tree height
-growth, we used a bootstrap resampling technique to estimate bias at
-different pulse densities for each genera in our dataset.  Other
-characteristics of the ALS, such as footprint size are important in
-correcting bias, but we did not have this information for all our
-datasets. https://www.tandfonline.com/doi/abs/10.5589/m06-030
+close to the highest branch of the tree citep:roussel_e_2017.  Twig
+size also plays a role. Generally, taxa with thinner twigs have denser
+branching so while a single twig may not reflect enough energy from a
+lidar pulse to trigger a return, there are many more twigs close
+togther.  Taxa with thicker twigs will have stronger returns, but
+since thicker twigs tend to be less dense, the probability of hitting
+a thick twig is lower.  Exactly how these negatively correlated traits
+(twig thickness and density) interact to influence the bias in maximum
+height estimates is mediated by the algorithms used to convert full
+waveform lidar into point clouds.  Thus, in our attempt to correct for
+the bias in maximum height estimation and - by extension across
+multiple years - tree height growth, we used a bootstrap resampling
+technique to estimate bias at different pulse densities for each
+genera in our dataset.  Other characteristics of the lidar, such as
+footprint size are important in correcting bias, but we did not have
+this information for all our datasets and could not correct for it
+citep:anderson_e_2006. 
 
-Our goal is to estimate tree growth from multiple years of ALS.  The
+
+Our goal is to estimate tree growth from multiple years of lidar.  The
 primary issue with this endeavor is that tree growth and the size of
 the bias are confounded.  In 2005, average pulse density was very low and so
 bias was large.  By 2017, average pulse density had increased and so
@@ -9503,13 +9734,22 @@ bias decreased.  The challenge therefore is to identify how much of
 the observed maximum height difference is due to growth over those 12
 years and how much is due to a decrease in bias.  
 
+#+name: fig:example_tilia
+#+caption: Example Tilia tree showing the confounding between tree growth and pulse density through time.
+[[file:figs/ST42874.png]]
+#+name: fig:example_tenneyoak
+#+caption: Example very large Quercus tree showing increasing pulse density through time.  We assume this tree has stopped height growth and any difference in height between years is due to measurement error primarily driven by pulse density.
+[[file:figs/tenney_oak1.png]]
+
+
+
 To do this, we estimated the bias for trees that were no longer
 growing and then applied the bias correction to all other trees. We
 selected the tallest trees of each genera that had essentially reached
 their maximum height and stopped growing (differences in observed
 maximum height between 2009, 2016, and 2017 were all less than 1
 meter).  We then combined all returns across years for each tree,
-assuming that other than pulse density all else was equal across ALS
+assuming that other than pulse density all else was equal across lidar
 aquisitions.  We then sampled 1000 times with replacement from each
 tree's point cloud samples of size 1 to the original size.  For each
 of the 1000 samples at each sample size, we calculated the maximum
@@ -9616,7 +9856,7 @@ cm/yr or 50 cm/yr) suggest there is considerable measurement error in
 growth rate.
 
 #+name: fig:growthratehist
-#+caption: Histogram of estimated growth rates for nearly 42,000 urban trees.  The sample mean growth rate is 8.7 cm / year.
+#+caption: Histogram of estimated growth rates for nearly 42,000 urban trees.  The sample mean growth rate is 12.8 cm / year.
 [[file:figs/growthrate_histogram_w.png]]
 
 ** Multiple linear regression results
@@ -9681,9 +9921,8 @@ easily explainable.
 | slope (61 m)                                     |    -6.06 |       4.1 |      -1.5 |    0.14 |
 | elev                                             |      1.4 |       0.5 |       2.6 |    0.01 |
 
-
 *** COMMENT make table
-#+begin_src R :exports none
+#+begin_src R :exports none :eval no
         tidy(m_nogenus) %>% 
             data.frame %>% 
             mutate(estimate = round(estimate, 2),
@@ -9822,6 +10061,15 @@ genus is clear.  Traits are scaled indicies and so estimate units are
 difficult to interpret.  Estimates correspond to growth rate change
 with one standard deviation change in the trait index.
 
+Growth rates are significantly related some of the traits, but they have little
+predictive power in our model.  Their contribution to the model also
+greatly depends on whether or not genus is included.  They slightly
+budge the adjusted R^2 from .54 to .56 for the model with genus.  But
+they increase the adjusted R^2 from .12 to .5 for a model without genus
+but with other covariates.  If traits are the only covariates the
+adjusted R^2 is just .04.  Therefore traits alone cannot explain height
+growth, but they can explain much of the variability explained by genus.
+
 #+name: fig:trait_coefs
 #+caption: Estimates of trait coefficients.  Estimates from model without genus are shown in black.  Estimates by genus are shaded.
 [[file:figs/traits_coef_comparison.png]]
@@ -9876,7 +10124,10 @@ association with decreased height growth (except perhaps for Pinus).
 
 
 * Discussion
-** Bias
+** Bias correction and growth rate estimates
+
+
+
 it appears that twig size may be related to the bias curves.
 Something that should be explored further.
 
@@ -9885,7 +10136,7 @@ also how pointy the trees are conical
 This potentially large measurement error contri
 
 
-
+We are missing information on footprint size....
 
 
 cite:marinelli_e_2019 note the challenge of mulitemporal lidar
@@ -9894,8 +10145,7 @@ has increased in time.  Especially true for individual trees.  They
 cite: cite:paris_bruzzone_2015 and cite:zhao_e_2018.  But I don't
 think they performed a correction for tree height.
 
-** growth rate estimates
-
+growth rates:
 We treated it with a 4th order polynomial.  A better treatment would
 consider a more biologicically realistic nonlinear growth function.
 
@@ -9929,17 +10179,16 @@ difference in pulse density.
 Our work is therefore a contribution to the science.
 
 
-
 Estimating canopy height from lidar has a greater bias over smaller
 areas (individual trees) compared to larger areas
 (stands) citep:song_e_2016,roussel_e_2017.
 
 
-** traits
+** Traits
 
-significantly related some of the traits, but they have little
-predictive power in our model.  They slightly budge the adjusted R^2
-from .54 to .56 for the model with genus.
+They matter.  Especially if we don't know Genus, they appear useful.
+
+
 
 ** Terrain effects
 
@@ -9953,8 +10202,13 @@ what does the aspect transformation correspond to?  NE
 - no slope
 - 
 
-* conclusion
+* Conclusion
 
+
+
+* bibliography                                                       :ignore:
+bibliography:~/git/notes/references.bib
+bibliographystyle:apa
 
 * supplementary 
 
@@ -9962,7 +10216,7 @@ what does the aspect transformation correspond to?  NE
 
 The full summary of the model with genus included can be found in [[file:full_model_summary.txt]]
 
-#+begin_src R :file full_model_summary.txt :exports none
+#+begin_src R :file full_model_summary.txt :exports none :eval no
 tidy(m_genus) %>% data.frame %>% toOrg
 #+end_src
 
