@@ -1521,42 +1521,41 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 
 #+end_src
 
+#+begin_src R
+  quantile(v, c(.05, .95), na.rm = T) / (.3048^2)
+  summary(v) / (.3048^2)
+#+end_src
+
+#+RESULTS:
+:      5%     95% 
+: 1.29272 7.28534
+: 
+:     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+:   0.0005   2.6421   2.9355   4.0241   5.6595  11.6598 32.29173
+
 
 **** find pulse density
 
 =grid_density= is also a function I could use
 
 #+begin_src R
-          library(lidR)
+  library(lidR)
+  library(raster)
+
           ctg <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
           opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2009_heights/grid_metrics/{ORIGINALFILENAME}"
         opt_select(ctg) <- ""
         opt_filter(ctg) <- "-keep_first"
           gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
 
-
-      v <- lapply(unlist(gm), function(p) {
-          r <- raster(p)
-          getValues(r)
-      })
+  f <- list.files("/home/erker/hgt_data/madison_lidar_2017_heights/grid_density/", full.names = T)
+  v <- lapply(f, function(p) {
+      r <- raster(p)
+      getValues(r)
+  })
 
   v <- unlist(v)
 #+end_src
-
-#+RESULTS:
-#+begin_example
-Loading required package: raster
-Loading required package: sp
-lidR 2.2.0 using 4 threads. Help on <gis.stackexchange.com>. Bug report on <github.com/Jean-Romain/lidR>.
-
-Be careful, some tiles seem to overlap each other. lidR may return incorrect outputs with edge artifacts when processing this catalog.
-
-Processing [>-------------------------------------------]   1% (1/87) eta:  4mError: filename exists; use overwrite=TRUE
-
-Error in unlist(gm) : object 'gm' not found
-
-Error in unlist(v) : object 'v' not found
-#+end_example
 
 #+begin_src R
   quantile(v, c(.05, .95), na.rm = T)
@@ -1564,11 +1563,11 @@ Error in unlist(v) : object 'v' not found
 #+end_src
 
 #+RESULTS:
-:       5%      95% 
-:   6397.1 111051.9
+:        5%       95% 
+: 0.1200976 0.6768302
 : 
-:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-:      23   13960   24863   44320   74580  216423      14
+:      Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+: 0.0000465 0.2454591 0.2727169 0.3738535 0.5257847 1.0832309         3
 
 
 #+begin_src R
@@ -1576,8 +1575,8 @@ Error in unlist(v) : object 'v' not found
 #+end_src
 
 #+RESULTS:
-:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-:  0.0023  1.3961  2.4863  4.4320  7.4581 21.6423  0.0014
+:      Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+: 4.650e-09 2.455e-05 2.727e-05 3.739e-05 5.258e-05 1.083e-04     3e-04
 
 
 
@@ -9387,7 +9386,7 @@ urban trees to provide ecosystem services is seen as a way to make the
 environment that most people interact with more pleasant and
 sustainable.  These ecosystem services include habitat for wildlife,
 stormwater runoff reduction, air quality improvement, and carbon
-sequestration cite:roy_etal_2012.  
+sequestration citep:roy_etal_2012.  
 
 All these services are a function of growth, either directy such as
 carbon sequestration, or indirectly such as stormwater runoff
@@ -9554,8 +9553,8 @@ tree growth.  We used four tree inventories for genus information.
 The first is the city of Madison's street tree inventory from 2011;
 the second is the 2012 inventory of the Atwood neighborhood located on
 Madison's east side and the north side of lake Monona, the third is
-the 2015-2016 inventory of the HillFarms neighborhood on Madison's
-west side, the fourth is the village of shorewood's 2015 street tree
+the 2015-2016 inventory of the Hill Farms neighborhood on Madison's
+west side, the fourth is the Village of Shorewood's 2015 street tree
 inventory.  The street tree inventories also provided information on
 presence of overhead utility lines.
 
@@ -9593,7 +9592,8 @@ springs of 2005, 2009, 2016, and 2017.  The intended use of lidar was
 for digital elevation modeling and so was flown in leaf-off
 conditions.  Over this 12 year period lidar technology greatly
 improved and pulse density increased from an average of 0.20 pulses per meter
-squared to an average of XXXX pulse per meter squared.
+squared in 2005 to an average of 4 pulses per meter squared in 2017.
+Lidar data is available from the wisconsinview [[ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/][ftp server]].
 
 We extracted lidar point clouds surrounding the tree points in the
 tree inventories with a 2.4 m buffer.  The buffer width was selected
@@ -9700,7 +9700,7 @@ by their standard deviation.
 
 We extracted the trait values at every tree.  To ensure that we did
 not include mixed pixels, we used the 2016 canopy height model derived
-from lidar to mask any 4.6 pixels that had a mean height less than 8
+from lidar to mask any pixels that had a mean height less than 8
 meters.  This removed some of the smaller trees from our dataset, but
 was important because the relatively large spatial resolution of the
 AVIRIS-NG imagery that made distinguishing crown boundaries difficult.
@@ -9711,7 +9711,7 @@ AVIRIS-NG imagery that made distinguishing crown boundaries difficult.
 Topographic variables were derived from the 2009 dane county digital
 elevation model (DEM).  Topographic position index, aspect, and slope
 were all calculated using the =terrain= function in the R package
-=raster= cite:raster_Rpackage.  The DEM was originally at
+=raster= citep:raster_Rpackage.  The DEM was originally at
 approximately 1.5 m (5 ft) scale.  We calculated topographic
 covariates at this scale and also at the large aggregated scale of 61
 m (200 ft).   We transformed aspect using sin(angle + 45) + 1 so that
@@ -9761,11 +9761,12 @@ citep:anderson_e_2006.
 
 Our goal is to estimate tree growth from multiple years of lidar.  The
 primary issue with this endeavor is that tree growth and the size of
-the bias are confounded.  In 2005, average pulse density was very low and so
-bias was large.  By 2017, average pulse density had increased and so
-bias decreased.  The challenge therefore is to identify how much of
-the observed maximum height difference is due to growth over those 12
-years and how much is due to a decrease in bias.  
+the bias are confounded (figure [[fig:example_tilia]]).  In 2005, average
+pulse density was very low and so bias was large.  By 2017, average
+pulse density had increased and so bias decreased.  The challenge
+therefore is to identify how much of the observed maximum height
+difference is due to growth over those 12 years and how much is due to
+a decrease in bias.
 
 #+name: fig:example_tilia
 #+caption: Example Tilia tree showing the confounding between tree growth and pulse density through time.
@@ -9777,20 +9778,21 @@ years and how much is due to a decrease in bias.
 
 
 To do this, we estimated the bias for trees that were no longer
-growing and then applied the bias correction to all other trees. We
-selected the tallest trees of each genera that had essentially reached
-their maximum height and stopped growing (differences in observed
-maximum height between 2009, 2016, and 2017 were all less than 1
-meter).  We then combined all returns across years for each tree,
-assuming that other than pulse density all else was equal across lidar
-aquisitions.  We then sampled 1000 times with replacement from each
-tree's point cloud samples of size 1 to the original size.  For each
-of the 1000 samples at each sample size, we calculated the maximum
-height.  Averaging the maximum heights across the 1000 samples for
-each sample size we estimated how bias changes with sample size /
-pulse density.
+growing (e.g. figure [[fig:example_tenneyoak]]) and then applied the bias
+correction to all other trees. We selected the tallest trees of each
+genera that had essentially reached their maximum height and stopped
+growing (differences in observed maximum height between 2009, 2016,
+and 2017 were all less than 1 meter).  We then combined all returns
+across years for each tree, assuming that other than pulse density all
+else was equal across lidar aquisitions.  We then sampled 1000 times
+with replacement from each tree's point cloud samples of size 1 to the
+original size.  For each of the 1000 samples at each sample size, we
+calculated the maximum height.  Averaging the maximum heights across
+the 1000 samples for each sample size we estimated how bias changes
+with sample size / pulse density (Figure [[fig:pulse_by_bias_by_genus]]).
 
-We then averaged the bias curves for each genera and applied this mean
+We then averaged the bias curves for each genera (Figure
+[[fig:mean_pulse_by_bias_by_genus]]) and applied this mean
 bias correction to each tree according to its genus and number of
 pulses.  We also averaged the standard deviation of the bias estimates
 and assigned them to each tree in order to provide information on the
@@ -9808,9 +9810,7 @@ were similar, suggesting our findings are robust to the method of
 correction.  Recognizing that there is a bias in the observed maximum
 height and that the uncertainty in the bias is a function of sample
 size is what appears to be crucial.
-
-
-pulse density varies within year too (see tree ST55248).
+**** COMMENT pulse density varies within year too (see tree ST55248).
 
 *** Weighted regression for height growth rates
 
@@ -9820,19 +9820,18 @@ the bootstrap resampling procedure.  We then fit a weighted linear
 regression for each tree with height as the response and year as the
 predictor.  Weights were inversely proportional to the variance of
 each bias-corrected height.  The result was an estimate of annual
-growth rate for each tree.  The advantage of the weighted regression
-is that we were able to include data points in the regression even if
-they were highly uncertain rather than removing them completely.  ALS
-from 2005 generally is very sparse in density, but there were some
-trees for which the sample size was sufficiently large to provide some
-information on growth.
+growth rate for each tree (Figure [[fig:year_by_height]]).  The advantage
+of the weighted regression is that we were able to include data points
+in the regression even if they were highly uncertain rather than
+removing them completely.  Lidar from 2005 generally is very sparse in
+density, but there were some trees for which the sample size was
+sufficiently large to provide some information on growth.
 
 Due to the nature of the measurement error and correcting for the mean
 bias, at times a tree's height was over or under corrected.  Over
 correction explains some of the slightly negative growth rates, while
 under correction explains some of the high growth rates.  On average
 we assume these errors cancel out.
-
 
 * Results
 ** Tree Height Bias Correction and Growth Rate Estimation
@@ -9915,8 +9914,8 @@ The first model had 27 parameters shown in table
 parameters and a summary table of coeffiecients is available in
 supplementary materials.  Coeffiencients or model predictions from the
 first model and (when appropriate) the second model are presented in
-figures [[fig:growthrate_byheight_byneighst]], [[fig:impervious_interactions]]  below along with explanation.
-
+figures [[fig:growthrate_byheight_byneighst]], [[fig:impervious_interactions]]
+below along with explanation.
 
 We likely could have found a model that had a lower AIC by fitting
 more interaction terms and performing more model selection, but we
@@ -10327,15 +10326,14 @@ soil locally and may have been receiving increased water from runoff
 or were responding to the elevated temperatures in the broader
 surroundings.
 
-
-
-
-Terrain effects
-
-elevation might correspond to soils
-
-what does the aspect transformation correspond to?  NE
-
+Topographic relationships with growth rate seem to be due to water:
+trees on less steep slopes, cooler and wetter northeast aspects, and
+lower elevation relative to their immediate surroundings all grew more
+than trees in the opposite conditions.  Why trees at higher elevations
+grew more than trees at lower elevations is not clear, but could be
+due to another factor that varies from the relatively lower eastern
+half of the city to the relatively higher western half of the city,
+such as soils.   
 
 ** COMMENT Future work
 
@@ -10347,27 +10345,24 @@ Spatial structure to the errors.
 There are three major contributions of our work. First, we
 demonstrated a method to correct for maximum height bias that results
 from low lidar pulse density and more accurately estimate tree height
-growth with multiple years of lidar.  Second, we show that, as for all
-trees, urban tree height growth is significantly related to their
+growth with multiple years of lidar.  Second, we show that for urban
+trees, as for all trees, height growth is significantly related to
 height and genus.  Important for broader applications, we show that if
 genus information is not available foliar canopy traits derived from
 imaging spectroscopy can explain much of the variation in height
 growth rates that would otherwise be explained by genus.  Third, we
 show that the urban environment, namely the height of a tree's
 surroundings, the percent impervious, and the topography all are
-associated with changes in tree height growth rates.  
+associated with changes in tree height growth rates.
 
 Urban trees alter the urban environment, potentially providing city
-dwellers with both services and disservices.  Our work has shown that
-the growth of trees - and the growth related (dis)services -  may in turn
-be affected by the urban environment designed by humans, particularly
-impervious cover.  Trees are dynamic parts of the urban ecosystem and
-their function can vary considerably, meaning managers cannot simply
-plant a tree and expect it to provide a certain benefit without
-considering the tree's context.  
-
-
-
+dwellers with both services.  Our work has shown that the growth of
+trees - and the growth related services - may in turn be affected by
+the urban environment designed by humans, particularly impervious
+cover.  Trees are dynamic parts of the urban ecosystem and their
+function can vary considerably, meaning managers cannot simply plant a
+tree and expect it to provide a certain benefit without considering
+the tree's context.  
 
 * bibliography                                                       :ignore:
 bibliography:~/git/notes/references.bib
