@@ -63,7 +63,7 @@ check my paper in stat consulting office to make sure I got it all
 - Trees growing near other trees and buildings grow higher faster than
   open grown trees, possibly in response to competition for light.
 - Percent impervious cover interacts at multiple scales to affect tree
-  height growth: trees with low imperivious cover within 20m and high
+  height growth: trees with low impervious cover within 20m and high
   impervious cover within 100m have highest growth rates, all else
   being equal.
 - Four foliar canopy traits predicted from imaging spectroscopy:
@@ -76,6 +76,12 @@ check my paper in stat consulting office to make sure I got it all
   effects are small.
 
 * COMMENT work
+
+** TODO THE 2009 LIDAR PULSE DENSITY IS DRIVING GROWTH RATES.  I need to fix that!
+
+This may be pretty involved.  it might be overcorrecting the bias?
+footprint size?
+
 ** creating normalized lidar and also trying to create point clouds with just trees
 *** 2005 lidar
 **** create lax
@@ -5281,18 +5287,6 @@ dc <- filter(d, complete.cases(d))
 #+end_src
 
 #+RESULTS:
-#+begin_example
-
-Attaching package: ‘dplyr’
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-#+end_example
 
 ** plot data
 *** define theme
@@ -8280,6 +8274,84 @@ m7  27 -26187.47
 : m5 347 -28307.93
 : m6 312 -28290.80
 : m7  45 -27617.36
+
+
+Test trait by height interactions
+#+begin_src R
+  m_nogenus_NHeightint <- lm(growth.rate ~ st_po * cor_max2005 * N + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft, dc)
+
+summary(m_nogenus_NHeightint)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ st_po * cor_max2005 * N + height2005_2 + 
+    height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * 
+    pct_imp_100m + TotPhen + Sugar + LMA + lignin + chl + tpi_5ft + 
+    aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + 
+    slope_5ft + slope_200ft, data = dc)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-74.050  -8.327  -1.574   6.325  95.780 
+
+Coefficients:
+                                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                    7.470e+01  6.221e+00  12.007  < 2e-16 ***
+st_post no util               -9.829e+00  1.338e+00  -7.344 2.14e-13 ***
+st_post w util                -9.449e+00  1.720e+00  -5.494 3.98e-08 ***
+cor_max2005                   -1.188e+01  1.433e+00  -8.292  < 2e-16 ***
+N                             -7.143e+00  1.441e+00  -4.957 7.22e-07 ***
+height2005_2                   8.073e-01  1.274e-01   6.337 2.39e-10 ***
+height2005_3                  -2.715e-02  4.833e-03  -5.617 1.96e-08 ***
+height2005_4                   3.327e-04  6.589e-05   5.050 4.46e-07 ***
+mean_height_wn20m              8.531e-01  6.238e-02  13.675  < 2e-16 ***
+pct_imp_20m                    1.735e+00  1.375e+00   1.262 0.206963    
+pct_imp_100m                   2.145e+00  1.400e+00   1.532 0.125500    
+TotPhen                       -2.979e+00  1.764e-01 -16.893  < 2e-16 ***
+Sugar                         -1.638e-01  1.954e-01  -0.838 0.401910    
+LMA                           -6.856e-02  1.307e-01  -0.525 0.599929    
+lignin                        -3.084e+00  2.110e-01 -14.618  < 2e-16 ***
+chl                            2.488e+00  1.958e-01  12.706  < 2e-16 ***
+tpi_5ft                       -1.730e+00  3.976e-01  -4.352 1.36e-05 ***
+aspect_trans_5ft               4.637e-01  1.317e-01   3.521 0.000430 ***
+tpi_200ft                     -1.796e-01  3.118e-02  -5.759 8.58e-09 ***
+aspect_trans_200ft            -1.079e-01  1.291e-01  -0.836 0.402985    
+elev                           1.368e+00  5.281e-01   2.590 0.009612 ** 
+slope_5ft                     -4.871e+00  1.713e+00  -2.844 0.004462 ** 
+slope_200ft                   -6.066e+00  4.106e+00  -1.477 0.139652    
+st_post no util:cor_max2005    3.137e-01  8.213e-02   3.819 0.000134 ***
+st_post w util:cor_max2005     2.533e-01  1.048e-01   2.416 0.015690 *  
+st_post no util:N              5.042e+00  1.509e+00   3.341 0.000835 ***
+st_post w util:N               6.008e+00  1.790e+00   3.355 0.000794 ***
+cor_max2005:N                  1.880e-01  8.987e-02   2.092 0.036415 *  
+pct_imp_20m:pct_imp_100m      -1.281e+01  2.520e+00  -5.083 3.75e-07 ***
+st_post no util:cor_max2005:N -2.357e-01  9.604e-02  -2.455 0.014115 *  
+st_post w util:cor_max2005:N  -2.941e-01  1.127e-01  -2.608 0.009105 ** 
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 13.05 on 21216 degrees of freedom
+Multiple R-squared:  0.151,	Adjusted R-squared:  0.1498 
+F-statistic: 125.8 on 30 and 21216 DF,  p-value: < 2.2e-16
+#+end_example
+
+#+begin_src R
+library(sjPlot)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/N_height_int.png
+plot_model(m_nogenus_NHeightint, type = "int", terms = c("cor_max2005", "N"))
+#+end_src
+
+#+RESULTS:
+[[file:figs/N_height_int.png]]
+
 *** Fit the two models
 **** fit models
 #+begin_src R
@@ -9266,6 +9338,7 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 #+RESULTS:
 [[file:figs/traits_coef_comparison_nogenus.png]]
 
+
 *** TODO I need to look at semivariogram...
 
 
@@ -9273,20 +9346,23 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
     library(sp)
     library(gstat)
 
+
     dc$resid <- resid(m_genus)
 
     coordinates(dc) = ~ x + y
 
-  vg.gr <-   variogram(growth.rate ~ 1, dc, cutoff = 2000, width = 20)
+  vg.gr <-   variogram(growth.rate ~ 1, dplyr::filter(dc, st_po != "neighborhood"), cutoff = 2000, width = 20)
   vg.rd <-   variogram(resid ~ 1, dc, cutoff = 2000, width = 20)
 
 #+end_src
 
 #+RESULTS:
 : 
-: Registered S3 method overwritten by 'xts':
-:   method     from
-:   as.zoo.xts zoo
+: Error in `coordinates<-`(`*tmp*`, value = ~x + y) : 
+:   setting coordinates cannot be done on Spatial objects, where they have already been set
+: 
+: Error in UseMethod("filter_") : 
+:   no applicable method for 'filter_' applied to an object of class "c('SpatialPointsDataFrame', 'SpatialPoints', 'Spatial', 'SpatialVector')"
 
 #+begin_src R :exports results :results graphics :file figs/growthrate_variogram.png
 plot(vg.gr)
@@ -9303,7 +9379,7 @@ plot(vg.rd)
 [[file:figs/residual_variogram.png]]
 #+begin_src R
 
-  vg <- variogram(growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl,
+  vg <- variogram(growth.rate ~ st_po + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl,
                   dc,
                   cutoff = 1000,
                   width = 20)
@@ -9311,8 +9387,124 @@ plot(vg.rd)
   plot(vg)
 
 
-  vge <- fit.variogram(vg, model = vgm("Mat"))
+  vge <- fit.variogram(vg, model = vgm("Exp"))
 #+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/where_resid.png :height 1000 :width 1000
+ggplot(dc, aes(x = x, y = y, color = resid)) + geom_point() + coord_equal()
+#+end_src
+
+#+RESULTS:
+[[file:figs/where_resid.png]]
+
+**** see if spatial dependence is due to sampling density in 2009  ugh
+
+variation in pulse density is not random.  As a result the bias
+corrections are not random.  I may be overcorrecting?
+
+#+begin_src R
+  library(dplyr)
+  library(ggplot2)
+  library(mgcv)
+
+  d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
+  dc <- filter(d, complete.cases(d))
+      coordinates(dc) = ~ x + y
+
+
+
+      m_genus2009 <- gam(growth.rate ~ st_po:cor_max2009 + Genus + Genus : (st_po + cor_max2009 + height2009_2 + height2009_3 + height2009_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1 + 
+                       s(n2009),
+                       data = dc@data)
+
+  dc$resid2009 <- as.vector(predict(m_genus2009))
+
+  shapefile(dc, "test.shp", overwrite = T)
+
+
+
+
+
+
+      m_nogenus2009 <- gam(growth.rate ~ st_po:cor_max2009 + st_po + cor_max2009 + height2009_2 + height2009_3 + height2009_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1 + 
+                       s(n2009),
+                       data = dc@data)
+#+end_src
+
+#+RESULTS:
+: 
+: Warning message:
+: In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
+:   Field names abbreviated for ESRI Shapefile driver
+
+#+begin_src R :exports results :results graphics :file figs/gr_v_pulsedensity2005.png
+
+ggplot(dc@data, aes(x = n2005, y = resid)) + geom_point() +
+geom_smooth()
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/gr_v_pulsedensity2005.png]]
+#+begin_src R :exports results :results graphics :file figs/gr_v_pulsedensity2009.png
+
+ggplot(dc@data, aes(x = n2009, y = resid)) + geom_point() + geom_smooth()
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/gr_v_pulsedensity2009.png]]
+
+#+begin_src R :exports results :results graphics :file figs/gr_v_pulsedensity2016.png
+
+ggplot(dc@data, aes(x = n2016, y = resid)) + geom_point() + geom_smooth()
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/gr_v_pulsedensity2016.png]]
+
+#+begin_src R :exports results :results graphics :file figs/gr_v_pulsedensity2017.png
+
+ggplot(dc@data, aes(x = n2017, y = resid)) + geom_point() + geom_smooth()
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/gr_v_pulsedensity2017.png]]
+
+
+Fit a model excluding the places with a small n2009.
+#+begin_src R
+  d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
+  dc <- filter(d, complete.cases(d))
+
+  f <- filter(dc, n2009 > 12, n2009 < 26)
+
+  #    m_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, dc)
+      mf <- lm(growth.rate ~ st_po:cor_max2009 + Genus + Genus : (st_po + cor_max2009 + height2009_2 + height2009_3 + height2009_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                    f)
+
+
+        f$resid <- resid(m_genus)
+
+        coordinates(f) = ~ x + y
+
+
+      vg.rd <-   variogram(resid ~ 1, f, cutoff = 2000, width = 5)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/vario_filterhighn2009.png
+plot(vg.rd)
+#+end_src
+
+#+RESULTS:
+[[file:figs/vario_filterhighn2009.png]]
 
 *** with spatial errors?
 #+begin_src R
@@ -9352,6 +9544,554 @@ Error in corMatern(form = ~x + y | dummy) :
   could not find function "corMatern"
 #+end_example
 
+*** fit models dropping points that are close to one another
+#+begin_src R
+  library(rgeos)
+  library(dplyr)
+library(ggplot2)
+
+  d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
+  dc <- filter(d, complete.cases(d))
+
+#  dc <- sample_n(dc, 10000)
+
+  coordinates(dc) = ~ x + y
+
+
+
+  points_matrix <- gWithinDistance(dc, dist = 200, byid = TRUE)
+  points_matrix[lower.tri(points_matrix, diag=TRUE)] <- NA
+  points_matrix
+#+end_src
+
+#+begin_src R
+v <- colSums(points_matrix, na.rm=TRUE) == 0
+dcs <- dc[v, ]
+#+end_src
+
+#+begin_src R
+saveRDS(dcs, "/home/erker/hgt_data/merged_data_200mApart.rds")
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+    ms_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                    dcs)
+      ms_genus <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                     dcs)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+library(gstat)
+library(raster)
+
+    dcs$resid <- resid(ms_genus)
+
+shapefile(dcs, "test_200msubset.shp")
+
+  vg.rd <-   variogram(resid ~ 1, dcs, cutoff = 2000, width = 40)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Attaching package: ‘raster’
+
+The following object is masked from ‘package:tidyr’:
+
+    extract
+
+The following object is masked from ‘package:dplyr’:
+
+    select
+
+Warning message:
+In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
+  Field names abbreviated for ESRI Shapefile driver
+#+end_example
+
+#+begin_src R :exports results :results graphics :file figs/growthrate_variogram_spatialsubset200m.png
+plot(vg.rd)
+#+end_src
+
+#+RESULTS:
+[[file:figs/growthrate_variogram_spatialsubset200m.png]]
+**** Plots of two models with spatial subsample
+***** make dcd data.frame
+#+begin_src R
+dcd <- dcs@data 
+#+end_src
+
+#+RESULTS:
+
+***** height by neighborhood/street/utilities
+#+begin_src R
+
+        nd <- dcd %>%
+            select(mean_height_wn20m , pct_imp_20m, pct_imp_100m , TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+    eg <- expand.grid(cor_max2005 = seq(8,24, 1), Genus = "Fraxinus", st_po = c("neighborhood", "st no util", "st w util")) %>%
+        mutate(height2005_2 = cor_max2005^2,
+               height2005_3 = cor_max2005^3,
+               height2005_4 = cor_max2005^4)
+
+
+    nd <- cbind(nd, eg)
+
+  p <- predict(ms_nogenus, newdata = nd, interval = "confidence")
+
+  nd <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/first_model_predict_height_by_stpo_int_200mSubsample.png :width 1000 :height 400 :bg transparent :res 120
+
+  ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
+      geom_line(aes(color = st_po)) + geom_ribbon(alpha = .1) +
+      scale_color_brewer("tree type", labels = c("neighborhood tree","street tree with no overhead utilites", "street tree with overhead utilites"), palette = "Dark2") +
+      scale_y_continuous("growth rate (cm / yr)") +
+      scale_x_continuous("bias corrected height in 2005 (m)") +
+      theme_tufte(base_size = 16) +
+      theme(legend.title = element_blank(),
+            legend.text = element_text(size = 13),
+            legend.position = c(.75, .75),
+            axis.ticks = element_line(size = .3), 
+            panel.grid.major = element_line(color = "#839496", size = .1),
+            panel.grid.minor = element_line(color = "#839496", size = .05))
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/first_model_predict_height_by_stpo_int_200mSubsample.png]]
+#+begin_src R
+        nd <- dcd %>%
+            select(mean_height_wn20m , pct_imp_20m, pct_imp_100m , TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+    eg <- expand.grid(cor_max2005 = seq(8,28, 1), Genus = "Fraxinus", st_po = c("neighborhood", "st no util", "st w util")) %>%
+        mutate(height2005_2 = cor_max2005^2,
+               height2005_3 = cor_max2005^3,
+               height2005_4 = cor_max2005^4)
+           
+
+    nd <- cbind(nd, eg)
+
+  p <- predict(ms_nogenus, newdata = nd, interval = "confidence")
+
+  nd <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+filter(nd, fit < 1, fit > -1)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+  mean_height_wn20m pct_imp_20m pct_imp_100m     TotPhen           N
+1          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+2          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+3          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+4          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+5          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+6          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+7          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
+        Sugar         LMA     lignin           chl    tpi_5ft aspect_trans_5ft
+1 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+2 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+3 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+4 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+5 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+6 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+7 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
+  tpi_200ft aspect_trans_200ft     elev  slope_5ft slope_200ft cor_max2005
+1 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          25
+2 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          26
+3 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          25
+4 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          26
+5 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          27
+6 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          23
+7 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          24
+     Genus        st_po height2005_2 height2005_3 height2005_4         fit
+1 Fraxinus neighborhood          625        15625       390625  0.29818262
+2 Fraxinus neighborhood          676        17576       456976 -0.85664342
+3 Fraxinus   st no util          625        15625       390625  0.83025594
+4 Fraxinus   st no util          676        17576       456976  0.09579786
+5 Fraxinus   st no util          729        19683       531441 -0.60989020
+6 Fraxinus    st w util          529        12167       279841  0.58909436
+7 Fraxinus    st w util          576        13824       331776 -0.44667113
+        lwr      upr
+1 -4.298915 4.895281
+2 -5.957004 4.243717
+3 -2.940022 4.600534
+4 -4.366361 4.557957
+5 -5.857332 4.637552
+6 -2.898837 4.077026
+7 -4.503183 3.609841
+#+end_example
+
+
+
+***** impervious cover interaction
+#+begin_src R
+  nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+      mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+             pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+      unique()
+
+        ndm <- dcd %>%
+            select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+  ndm$st_po <- "neighborhood"
+  ndm$st_po <- "st no util"
+
+  nd <- cbind(nd, ndm)
+
+      
+  p <- predict(ms_nogenus, nd, interval = "confidence")
+
+p <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_200mspatialSubset.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("growth rate (cm / yr)") +
+          scale_x_continuous("percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_200mspatialSubset.png]]
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon.png :width 1000 :res 120
+          ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+            geom_ribbon(alpha = .1) +
+            geom_line(aes(color = pct_imp_20m * 100), size = .8) +
+            scale_color_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_fill_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_y_continuous("growth rate (cm / yr)") +
+            scale_x_continuous("percent impervious within 100 m") +
+          theme_tufte(base_size = 16) +
+            theme(legend.title = element_text(size = 15, ),
+                  legend.text = element_text(size = 13),
+                  legend.position = c(.18, .45),
+                  legend.direction = "horizontal",
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05)) +
+              guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2),
+                     fill = F)
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_ribbon.png]]
+
+
+
+****** topography
+#+begin_src R
+      library(stringr)
+library(broom)
+        topo <- c("aspect_trans_200ft", "aspect_trans_5ft", "elev", "tpi_5ft", "tpi_200ft", "slope_5ft", "slope_200ft")
+
+          mt <-   tidy(ms_nogenus) %>%
+                filter(term %in% topo) 
+
+    mt$term[mt$term == "elev"] <- "elev_5ft"
+
+
+
+    mt <- mt %>%
+              mutate(scale = str_extract(term, "5ft|200ft"),
+                     scale = plyr::mapvalues(scale, c("5ft", "200ft"), c("1.5 m", "61 m")),
+                     topo_term = str_extract(term, "tpi|slope|aspect_trans|elev"),
+                     topo_term = case_when(topo_term == "tpi" ~ "topographic position index",
+                                           topo_term == "slope" ~ "slope",
+                                           topo_term == "aspect_trans" ~ "transformed aspect",
+                                           topo_term == "elev" ~ "elevation (100s m)"))
+                                         
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/first_model_topo_coef_plots_200mSpatialSubsample.png :width 1150 :height 300 :res 120 :bg transparent
+red <- solarized_pal("red")(1)
+
+        ggplot(mt, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = scale)) + geom_pointrange(position = position_dodge(width = .3)) +
+          coord_flip() +
+          geom_hline(aes(yintercept = 0), color = red) +
+          facet_wrap(~topo_term, ncol = 4, scales = "free_x") +
+            theme_tufte(base_size = 16) +
+            theme(legend.title = element_text(size = 10),
+                legend.text = element_text(size = 8),
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05),
+                panel.background = element_rect(size = .2)) +
+          scale_color_brewer(type = "qual", palette = "Dark2") 
+#+end_src
+
+#+RESULTS:
+[[file:figs/first_model_topo_coef_plots_200mSpatialSubsample.png]]
+
+***** height by genus 
+
+#+begin_src R
+            nd <- dcd %>%
+                select(mean_height_wn20m , pct_imp_20m, pct_imp_100m , TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+                summarize_all(median)
+
+        eg <- expand.grid(cor_max2005 = seq(8,22, 1), 
+                          Genus = c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Picea", "Populus"), 
+                          st_po = c("neighborhood", "st no util", "st w util")) %>%
+            mutate(height2005_2 = cor_max2005^2,
+                   height2005_3 = cor_max2005^3,
+                   height2005_4 = cor_max2005^4)
+           
+
+        nd <- cbind(nd, eg)
+
+      p <- predict(ms_genus, newdata = nd, interval = "confidence")
+
+      nd <- cbind(nd, p)
+
+nd <- nd %>% mutate(st_po = plyr::mapvalues(st_po, c("neighborhood", "st no util", "st w util"), c("neighborhood tree","street tree with no overhead utilites", "street tree with overhead utilites")))
+
+#+end_src
+
+#+RESULTS:
+: 
+: Warning message:
+: In predict.lm(ms_genus, newdata = nd, interval = "confidence") :
+:   prediction from a rank-deficient fit may be misleading
+
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpoNeighborhood_200mSpatialSubsample.png :width 1300 :height 800 :res 120 
+library(RColorBrewer)
+tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+
+  ggplot(filter(nd, st_po == "neighborhood tree"), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = Genus)) +
+    geom_ribbon(aes(fill = Genus), alpha = .1) +
+    geom_line(aes(color = Genus)) +
+    facet_wrap(~Genus) +
+    scale_color_manual(values = tpal) +
+    scale_fill_manual(values = tpal) +
+    scale_y_continuous("predicted growth rate (cm / yr)") +
+    scale_x_continuous("height in 2005 (m)") +
+    terk
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/height_genus_int_stpoNeighborhood_200mSpatialSubsample.png]]
+
+The negative impact of being a street tree appears to be greater for
+Acer than for Fraxinus and Gleditsia.
+
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub1_SpatialSubset200m.png :width 1300 :res 120
+    ggplot(filter(nd, Genus %in% c("Acer", "Fraxinus", "Gleditsia")), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = Genus)) +
+      geom_ribbon(aes(fill = Genus), alpha = .1) +
+      geom_line(aes(color = Genus)) +
+      facet_wrap(~st_po, ncol = 3) +
+  terk +
+    scale_color_brewer(palette = "Dark2") +
+    scale_y_continuous("predicted growth rate (cm / yr)") +
+    scale_x_continuous("height in 2005 (m)") +
+    scale_fill_brewer(palette = "Dark2") 
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/height_genus_int_stpo_genussub1_SpatialSubset200m.png]]
+
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub2_spatialSUbset200m.png :width 1300 :res 120
+    ggplot(filter(nd, Genus %in% c("Acer", "Fraxinus", "Gleditsia")), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
+      geom_ribbon(aes(fill = st_po), alpha = .1) +
+      geom_line(aes(color = st_po)) +
+      facet_wrap(~Genus, ncol = 4) +
+  terk +
+    scale_color_solarized("red") +
+    scale_fill_solarized("red")
+#+end_src
+
+#+RESULTS:
+[[file:figs/height_genus_int_stpo_genussub2_spatialSUbset200m.png]]
+
+
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_SPatialSUbset200m.png :width 1300 :height 800 :res 120 
+tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+  ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
+    geom_ribbon(aes(fill = st_po), alpha = .1) +
+    geom_line(aes(color = st_po)) +
+    facet_wrap(~Genus) +
+    scale_color_manual(values = tpal) +
+    scale_fill_manual(values = tpal) +
+    scale_y_continuous("predicted growth rate (cm / yr)") +
+    scale_x_continuous("height in 2005 (m)") +
+    terk
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/height_genus_int_stpolines_SPatialSUbset200m.png]]
+
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_scalesfree_spatialsubset200m.png :width 1300 :height 800 :res 120 
+tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+  ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
+    geom_ribbon(aes(fill = st_po), alpha = .1) +
+    geom_line(aes(color = st_po)) +
+    facet_wrap(~Genus, scales = "free") +
+    scale_color_manual(values = tpal) +
+    scale_fill_manual(values = tpal) +
+    scale_y_continuous("predicted growth rate (cm / yr)") +
+    scale_x_continuous("height in 2005 (m)") +
+    terk
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/height_genus_int_stpolines_scalesfree_spatialsubset200m.png]]
+
+***** mean height within 20 m
+#+begin_src R
+      mtng <- tidy(ms_nogenus) %>% data.frame %>%
+        filter(grepl("mean_height", term)) %>%
+        mutate(Genus = "overall")
+
+      mtg <- tidy(ms_genus) %>% data.frame %>%
+        filter(grepl("mean_height", term)) %>%
+        mutate(Genus = str_match(term, "Genus([A-Z][a-z]+)")[,2])
+
+
+  mt <- bind_rows(mtg, mtng) %>%
+    mutate(Genus = factor(Genus, levels = c("overall", c(mtg$Genus))))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/mean_height_20m_coefs_spatialSubset200m.png :width 800 :height 475 :bg transparent :res 120
+    mtp <- filter(mt, Genus != "Platanus")
+
+              ggplot(mtp, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = Genus)) + 
+                  geom_pointrange(position = position_dodge(width = .3)) +
+                coord_flip() +
+                geom_hline(aes(yintercept = 0), color = red) +
+                  theme_tufte(base_size = 16) +
+                  theme(legend.title = element_text(size = 10),
+                      legend.text = element_text(size = 8),
+                      axis.ticks = element_line(size = .3), 
+                      panel.grid.major = element_line(color = "#839496", size = .1),
+                      panel.grid.minor = element_line(color = "#839496", size = .05),
+                      panel.background = element_rect(size = .2),
+                      plot.subtitle = element_text(hjust = 0.5)) +
+                labs(subtitle = "coefficients for mean height within 20 m")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/mean_height_20m_coefs_spatialSubset200m.png]]
+
+
+***** traits
+#+begin_src R
+      mtng <- tidy(ms_nogenus) %>% data.frame %>%
+          filter(grepl("N|TotPhen|chl|Sugar|LMA|lignin", term)) %>%
+        mutate(Genus = "overall",
+               trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2])
+
+      mtg <- tidy(ms_genus) %>% data.frame %>%
+        filter(grepl("N|TotPhen|chl|Sugar|LMA|lignin", term)) %>%
+          mutate(Genus = str_match(term, "Genus([A-Z][a-z]+)")[,2],
+                 trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2])
+
+
+  mt <- bind_rows(mtg, mtng) %>%
+    mutate(Genus = factor(Genus, levels = c("overall", unique(c(mtg$Genus)))))
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_SpatialSubset200m.png :width 1000 :height 800 :bg transparent :res 120
+  tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+
+  mtg <- mtg %>% filter(Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Robinia", "Populus"))
+
+    ggplot(data = mtng, aes(x = trait, y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error)) + 
+        geom_pointrange(data = mtg, aes(color = Genus), position = position_dodge2(width = .6, reverse = TRUE)) +
+        geom_pointrange() +
+        coord_flip() +
+      terk +
+      scale_color_manual(values = tpal) +
+      scale_y_continuous(limits = c(-12, 12)) +
+       geom_hline(yintercept = 0, size = .2)
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/traits_coef_comparison_SpatialSubset200m.png]]
+
+#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_nogenus_spatialsubset200m.png :width 1000 :height 600 :bg transparent :res 120
+    tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+
+    mtg <- mtg %>% filter(Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Robinia", "Populus"))
+
+      ggplot(data = mtng, aes(x = trait, y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error)) + 
+  #        geom_pointrange(data = mtg, aes(color = Genus), position = position_dodge2(width = .6, reverse = TRUE)) +
+          geom_pointrange() +
+          coord_flip() +
+        terk +
+        scale_color_manual(values = tpal) +
+        scale_y_continuous(limits = c(-12, 12)) +
+       geom_hline(yintercept = 0, size = .2)
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/traits_coef_comparison_nogenus_spatialsubset200m.png]]
+
+
+
+
 ** TODO map predicted growth rate
 - plotting
 - plot residual in space
@@ -9388,22 +10128,22 @@ sustainable.  These ecosystem services include habitat for wildlife,
 stormwater runoff reduction, air quality improvement, and carbon
 sequestration citep:roy_etal_2012.  
 
-All these services are a function of growth, either directy such as
+All these services are a function of growth, either directly such as
 carbon sequestration, or indirectly such as stormwater runoff
 reduction which is a function of the result of growth: tree size.
 Therefore, understanding urban tree growth is essential to estimating
 and projecting ecosystem services into the future.  The factors that
 contribute to the growth of trees are well understood.  What we do not
 understand so well is how the complex urban environment alters these
-factors therby altering the growth of trees.
+factors thereby altering the growth of trees.
 
 Urban trees grow differently than their more rural counterparts
-because of the challenges they face surviving amongst urban
+because of the challenges they face surviving among urban
 infrastructure and because they are largely cultivated by humans (but
 not for their wood).  For example, street trees are subject to damage
 from vehicles, pedestrians, and poor soil conditions; urban trees tend
 to be more open grown than rural trees; urban trees are pruned to
-accomodate powerlines or for aesthetics, many urban trees are
+accommodate powerlines or for aesthetics, many urban trees are
 irrigated and fertilized; the species composition in a city is often
 different than its rural surrounding.  Urban conditions are not only
 unique, but they are also more heterogeneous, which creates
@@ -9415,11 +10155,11 @@ such as canopy foliar traits to explain the growth.  Sufficient sample
 size is required to detect effect sizes that may be small relative to
 the changes induced by the urban environment.  Here we use two
 technologies that have only recently become more available, repeat
-lidar and imaging spectroscopy.  Lidar uses the reflection of lazer
+lidar and imaging spectroscopy.  Lidar uses the reflection of laser
 pulses to create 3 dimensional point clouds of objects.  Using
-multiple years of lidar data, in conjuction with an innovative height
+multiple years of lidar data, in conjunction with an innovative height
 bias correction, we estimated the heights of trees and their growth
-rates.  NASA's Airborne Visible / Infrared Imaging Spectometer - Next
+rates.  NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
 Generation (AVIRIS-NG) measures the reflectance of light in hundreds
 of narrow wavebands from 400 to 2500 nm.  The spectra from the imagery
 can be used to predict canopy foliar traits which then in turn we used
@@ -9430,7 +10170,7 @@ topography, landcover, tree height, mean height of a tree's
 surroundings and whether or not the tree was a street tree and whether
 or not it had overhead utilities. The objectives of our study were to:
 
-- Evaluate the effectiveness of terrain optimaized leaf-off lidar with
+- Evaluate the effectiveness of terrain optimized leaf-off lidar with
   variable pulse densities to estimate urban tree height growth
 - Evaluate whether canopy foliar traits estimated from remotely sensed
   imaging spectroscopy can explain tree height growth.
@@ -9491,12 +10231,12 @@ growth of trees over a 12 year period.  We used two street tree
 inventories (one from the city of Madison and one from the village of
 Shorewood, which is within the city) and two complete inventories of
 the trees in Madison's Atwood and Hill Farms neighborhoods to get
-taxonomic infomation of trees.  In September 2015, NASA's Airborne
-Visible / Infrared Imaging Spectometer - Next Generation (AVIRIS-NG)
+taxonomic information of trees.  In September 2015, NASA's Airborne
+Visible / Infrared Imaging Spectrometer - Next Generation (AVIRIS-NG)
 imaged the majority of Madison.  Using predictive equations developed
 following cite:singh_e_2015, we predicted canopy foliar traits:
 Nitrogen (% mass), N; leaf mass per area (g/m^2), LMA (g / m^2); lignin
-(% mass), chlophyll (mmol / m^2), and total phenolics (% mass).  We
+(% mass), chlorophyll (mmol / m^2), and total phenolics (% mass).  We
 converted these trait predictions to an index because of imagery
 differences between our site and where the model was built.  In
 addition to foliar traits, we calculated other covariates such as
@@ -9517,7 +10257,7 @@ topographic variables, and the mean height of the surroundings within
 | slope at 61 m (200 ft) scale                                         | DEM                              |
 | transformed aspect at 61 m (200 ft) scale                            | DEM                              |
 | topographic position index, TPI at 61 m (200 ft) scale (m)           | DEM                              |
-| elevation (hundredss of meters)                                      | DEM                              |
+| elevation (hundreds of meters)                                      | DEM                              |
 | Sugar (standardized index)                                           | AVIRIS-NG                        |
 | lignin (standardized index)                                          | AVIRIS-NG                        |
 | chlorophyll (standardized index)                                     | AVIRIS-NG                        |
@@ -9539,7 +10279,7 @@ the selected models are in results.
 ** Madison, WI: population and forests
 Madison is a city of about 260,000 persons ([[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][USCensus]]), located in
 south central Wisconsin.  The dominant forest type is broadleaf
-deciduous.  Pre-european settlement forests were dominated by oaks
+deciduous.  Pre-European settlement forests were dominated by oaks
 (Quercus), maples (Acer), and basswood (Tilia).  Now the most common
 street tree genera are Fraxinus, Acer, Gleditsia, and Tilia, making up
 over 70% of all street trees.  Other common genera in neighborhoods
@@ -9640,7 +10380,7 @@ Table .. shows the
 
 
 #+name: tab:lidar_sum_stats
-#+caption: summary statistics for the number of points per tree for each year of ALS data.  Pulse density increased greatly through time, but there is also considerable intraannual variation from tree to tree.
+#+caption: summary statistics for the number of points per tree for each year of ALS data.  Pulse density increased greatly through time, but there is also considerable intra-annual variation from tree to tree.
 |                   | 2005 | 2009 | 2016 | 2017 |
 |-------------------+------+------+------+------|
 | n min             |      |      |      |      |
@@ -9653,7 +10393,7 @@ Table .. shows the
 
 |                                     | 2005 |        2009 | 2016 | 2017 |
 |-------------------------------------+------+-------------+------+------|
-| Intrument                           |      | Leica ALS70 |      |      |
+| Instrument                           |      | Leica ALS70 |      |      |
 | wavelength (nm)                     |      |        1064 |      |      |
 | altitude (m)                        |      |        1750 |      |      |
 | scan rate (Hz)                      |      |       69.00 |      |      |
@@ -9664,7 +10404,7 @@ Table .. shows the
 
 
 **** COMMENT comments on lidar
-2009 lidar is not well documented.  I think it appers as 2010 lidar on
+2009 lidar is not well documented.  I think it appears as 2010 lidar on
 the wisconsinview website.
 
 i need to get the average point density across all the tiles because
@@ -9676,20 +10416,20 @@ it varies.
 finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 
 2005 lidar might not be good enough for a general tree canopy layer,
-but it should still be reliable for treee heights if I know the trees
+but it should still be reliable for tree heights if I know the trees
 location ( street trees).
 
-*** Hyperspectral imagery
+*** Imaging Spectroscopy
 
 In September 2015, NASA's Airborne Visible / Infrared Imaging
-Spectometer - Next Generation (AVIRIS-NG) collected imagery over the
+Spectrometer - Next Generation (AVIRIS-NG) collected imagery over the
 majority of Madison.  AVIRIS-NG collects solar reflectance in 5 nm
 bands from 400 nm to 2500 nm.  The spatial resolution of the imagery
 was 4.6 m.  
 
 Using predictive equations developed following cite:singh_e_2015, we
 predicted canopy foliar traits: Nitrogen (% mass), N; leaf mass per
-area (g/m^2), LMA (g / m^2); lignin (% mass), chlophyll (mmol / m^2), and
+area (g/m^2), LMA (g / m^2); lignin (% mass), chlorophyll (mmol / m^2), and
 total phenolics (% mass).  We converted these trait predictions to an
 index because of imagery differences between our site and where the
 model was built meant that predictions were biased and not quite
@@ -9708,7 +10448,7 @@ AVIRIS-NG imagery that made distinguishing crown boundaries difficult.
 **** COMMENT add plot of flightlines. see uft.org
 
 *** Other covariates
-Topographic variables were derived from the 2009 dane county digital
+Topographic variables were derived from the 2009 Dane county digital
 elevation model (DEM).  Topographic position index, aspect, and slope
 were all calculated using the =terrain= function in the R package
 =raster= citep:raster_Rpackage.  The DEM was originally at
@@ -9744,7 +10484,7 @@ close to the highest branch of the tree citep:roussel_e_2017.  Twig
 size also plays a role. Generally, taxa with thinner twigs have denser
 branching so while a single twig may not reflect enough energy from a
 lidar pulse to trigger a return, there are many more twigs close
-togther.  Taxa with thicker twigs will have stronger returns, but
+together.  Taxa with thicker twigs will have stronger returns, but
 since thicker twigs tend to be less dense, the probability of hitting
 a thick twig is lower.  Exactly how these negatively correlated traits
 (twig thickness and density) interact to influence the bias in maximum
@@ -9784,7 +10524,7 @@ genera that had essentially reached their maximum height and stopped
 growing (differences in observed maximum height between 2009, 2016,
 and 2017 were all less than 1 meter).  We then combined all returns
 across years for each tree, assuming that other than pulse density all
-else was equal across lidar aquisitions.  We then sampled 1000 times
+else was equal across lidar acquisitions.  We then sampled 1000 times
 with replacement from each tree's point cloud samples of size 1 to the
 original size.  For each of the 1000 samples at each sample size, we
 calculated the maximum height.  Averaging the maximum heights across
@@ -9837,7 +10577,7 @@ we assume these errors cancel out.
 ** Tree Height Bias Correction and Growth Rate Estimation
 The results of our bias correction technique are demonstrated in
 figures [[fig:pulse_by_bias_by_genus]], [[fig:mean_pulse_by_bias_by_genus]],
-and [[fig:year_by_height]].  Figure [[fig:pulse_by_bias_by_genus]] demontrates
+and [[fig:year_by_height]].  Figure [[fig:pulse_by_bias_by_genus]] demonstrates
 how height bias increases in magnitude as pulse density decreases.
 Each curve in the figure is an individual tree that has had its points
 resampled at many densities each 1000 times.  Bias curves were created
@@ -9860,11 +10600,11 @@ density is evident in most trees by the large drop in height compared
 to the trend from the other three years ("ST89566" is a particularly
 stark example).  The red bias corrected lines appear to be more
 realistic growth rates than the gray uncorrected lines.  However,
-there are times when the bias is overcorrected (see "ST03542" and
+there are times when the bias is over-corrected (see "ST03542" and
 "ST20636"). Weighting years in the regression by their bias correction
-uncertainty can diminish the overcorrection issues, but some years
-will be overcorrected (likely "ST05216") and some will be
-undercorrected). See supplementary materials for a similar plot of a
+uncertainty can diminish the over-correction issues, but some years
+will be over-corrected (likely "ST05216") and some will be
+under-corrected). See supplementary materials for a similar plot of a
 random sample of 80 trees.
 
 #+name: fig:year_by_height
@@ -9877,7 +10617,7 @@ The mean height growth rate of the 21 thousand trees in our sample was
 12.8 cm per year. Performing an unweighted regression for each tree
 with no bias correction, the growth rate was 22.8 cm per year.
 Without the weighted regression but with the bias correction the mean
-growth rate was 8.7 cm per year.  We only analysed in depth the bias
+growth rate was 8.7 cm per year.  We only analyzed in depth the bias
 corrected weighted regression growth rate estimates, but the direction
 and significance of most model coefficient estimates were the same
 regardless of which growth rates were used.
@@ -9888,7 +10628,7 @@ cm/yr or 50 cm/yr) suggest there is considerable measurement error in
 growth rate.
 
 #+name: fig:growthratehist
-#+caption: Histogram of estimated growth rates for nearly 42,000 urban trees.  The sample mean growth rate is 12.8 cm / year.
+#+caption: Histogram of estimated growth rates for over 21 thousand urban trees.  The sample mean growth rate is 12.8 cm / year.
 [[file:figs/growthrate_histogram_w.png]]
 
 ** Multiple linear regression results
@@ -9912,7 +10652,7 @@ are clearly differences between genera in covariate coefficients.
 The first model had 27 parameters shown in table
 [[tab:m_nogenusInteractions_summary_coef]].  The second model had 342
 parameters and a summary table of coeffiecients is available in
-supplementary materials.  Coeffiencients or model predictions from the
+supplementary materials.  Coefficients or model predictions from the
 first model and (when appropriate) the second model are presented in
 figures [[fig:growthrate_byheight_byneighst]], [[fig:impervious_interactions]]
 below along with explanation.
@@ -10008,7 +10748,7 @@ rates when averaging across all genera.  At a height of 8m,
 neighborhood trees were growing at an estimated 32 cm / year and
 street trees at an estimated 25 cm / year.  Depending on the type of
 tree, asympotitc heights are different.  For street trees with
-utilities overhead it occured at heights around 24 m; for street trees
+utilities overhead it occurred at heights around 24 m; for street trees
 without utilities: 25 m; for neighborhood trees: 26 m.
 
 #+name: fig:growthrate_byheight_byneighst
@@ -10069,9 +10809,9 @@ Too much competition for light would lead to a decrease in growth
 rates, but we did not see this in our data.  We tested if the
 quadratic term for mean height within 20m was significant and it was
 not.  This is likely because our sample did not include any trees that
-were supressed or overtopped.  
+were suppressed or over-topped.  
 
-Figure [[fig:mean_height_20m_coefs]] shows coeffiecient estimates with 95%
+Figure [[fig:mean_height_20m_coefs]] shows coefficient estimates with 95%
 confidence intervals for the first model ("overall") and for second
 model which includes estimates by genus.  There is no clear difference
 in the effect of the mean height within 20 m by Genus.
@@ -10159,7 +10899,7 @@ association with decreased height growth (except perhaps for Pinus).
 ** Bias correction and growth rate estimates
 
 The negative bias in height estimates from lidar is well known and
-creates challenges in using multitemporal lidar to estimate forest
+creates challenges in using multi-temporal lidar to estimate forest
 parameters citep:marinelli_e_2019.  This is especially true for
 individual trees compared to larger forest stands
 citep:paris_bruzzone_2015,roussel_e_2017.  However, the bias is not
@@ -10185,7 +10925,7 @@ resolution point cloud.  But a high resolution point cloud is usually
 not available. They proposed using an area of high pulse density as a
 reference and then applying the bias correction relationship to areas
 of low pulse density.  They pointed out that not only is there bias in
-height for multitemporal lidar, but also within single date lidar
+height for multi-temporal lidar, but also within single date lidar
 because of the variation in pulse density across space.  They mostly
 described the nature of the bias, but leave application of correction
 to others.
@@ -10224,7 +10964,7 @@ The relatively high pulse density across all
 their years likely means that the bias in height estimation is small,
 but very real when used to estimate height growth.  
 
-They found that lidar estimattes of growth were much greater than
+They found that lidar estimates of growth were much greater than
 field estimates, but they didn't consider that it could be due to the
 difference in pulse density.
 
@@ -10244,7 +10984,7 @@ think they performed a correction for tree height.
 
 growth rates:
 We treated it with a 4th order polynomial.  A better treatment would
-consider a more biologicically realistic nonlinear growth function.
+consider a more biologically realistic nonlinear growth function.
 
 If the focus of
 our study were to develop growth equations a more biologically
@@ -10267,7 +11007,7 @@ however taxonomic information is often missing for trees, especially
 in neighborhoods on private property.  The foliar canopy traits show
 promise in improving canopy height predictions when genus is not know.
 
-Most of the coefficicients of foliar canopy traits were in expected
+Most of the coefficients of foliar canopy traits were in expected
 directions.  Chlorophyll, the key light harvesting molecule for
 photosynthesis, was positively associated with growth.  Lignin and
 total phenolics, compounds generally associated with plant structure
@@ -10281,17 +11021,17 @@ Rubisco, the enzyme responsible for carbon fixation.  Plants with
 higher nitrogen generally grow faster (up to a point).  Second,
 nitrogen had a strong positive correlation to chlorophyll, which had a
 positive coefficient.  But dropping chlorophyll or other traits from
-the model does not affect the direction of the nitrogen coefficeint,
+the model does not affect the direction of the nitrogen coefficient,
 suggesting that multicollinearity is not a problem.   
 
 Why increasing foliar nitrogen could be associated with a decrease in
 growth is not immediately clear.  An easy first explanation could be
 that the predictive models for the imaging spectroscopy are faulty.  A
-second biological explantion could be that nitrogen deposition is
+second biological explanation could be that nitrogen deposition is
 increasing foliar nitrogen in the urban environment, but that nitrogen
 is not limiting growth.  The deposition of nitrogen could be
 associated with other pollutants that negatively impact growth.  The
-negative assocation of nitrogen with growth does not appear to be a
+negative association of nitrogen with growth does not appear to be a
 statistical anomaly, but the driver behind the relationship is not
 clear and should be further investigated.
 
@@ -10304,7 +11044,7 @@ significant effects, though the effect of topography was small.
 
 We found that the average height of the objects in the surrounding 20
 meters (mostly buildings and other trees) had a strong positive
-association with growth rates.  Overtopped and suppressed trees were
+association with growth rates.  Over-topped and suppressed trees were
 not in our sample and so we did not find that being surrounded by too
 many tall objects reduced growth rates.  This is the expected response
 to trees in competition for light citep:king_1990.  Indeed, across the
@@ -10337,7 +11077,16 @@ such as soils.
 
 ** COMMENT Future work
 
+
 Spatial structure to the errors.
+
+Map 
+looking at residuals of the models shows significant remaining spatial structure:
+
+- the west side of madison has elevated growth rates beyond expected
+  by the model
+- blocks of trees are often all positive or all negative and their residuals.
+the we
 
 
 * Conclusion
