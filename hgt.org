@@ -49,12 +49,24 @@ check my paper in stat consulting office to make sure I got it all
 [[file:figs/traits_coef_comparison_nogenus.png]]
 [[file:figs/traits_coef_comparison.png]]
 
-
 * COMMENT list of figures still to do for the paper
 - City of Madison overview figure
 - map of street tree inventories with details for the neighborhoods
 - AVIRIS flightlines.
 - predicted height growth map.
+* Phil's comments on the pdf on the first few pages of pdf, then on the google doc.
+- add a supplementary table for each genera's bias correction at 0.25,
+  .5, .75, 1,  pulses per m^2
+- study area map
+- Madison
+  - aviris flight lines.
+- tree inventories
+- map of 4 panels, maybe blowup of hill farms
+  - tree height at each of the 4 dates
+- map of growth rates
+  - observed, predicted and residual.
+  - make continous for the paper.
+  - 
 * Key points
 - Genus and height are the strongest predictors of urban tree height
   growth, but if genus is excluded from the model remotely sensed
@@ -63,9 +75,10 @@ check my paper in stat consulting office to make sure I got it all
 - Trees growing near other trees and buildings grow higher faster than
   open grown trees, possibly in response to competition for light.
 - Percent impervious cover interacts at multiple scales to affect tree
-  height growth: trees with low impervious cover within 20m and high
-  impervious cover within 100m have highest growth rates, all else
-  being equal.
+  height growth: While impervious cover is generally associated with
+  decreased growth, trees with low impervious cover within 20 m can
+  maintain relatively high growth rates even if impervious cover is
+  high in the surrounding 100 m.
 - Four foliar canopy traits predicted from imaging spectroscopy:
   nitrogen, lignin, total phenolics, and chlorophyll were
   significantly related to growth.  Nitrogen, lignin, and total
@@ -4057,6 +4070,175 @@ hn <- hn[complete.cases(hn),]
 
 #+end_src
 
+**** bias correction table
+#+begin_src R
+        library(dplyr)
+      library(orgutils)
+        bias <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/no_growth_bias.rds")
+        bias %>% group_by(Genus) %>%
+          mutate(pulse_density = round(pulse_density, 2)) %>%
+          filter(pulse_density %in% c(0.11, 0.22, 0.48, 0.80, 1.02, 1.50, 2.03, 3.00)) %>%
+          mutate(pulse_density = round(pulse_density, 1),
+                 bias = round(bias, 2),
+                 sd_bias = round(sd_bias, 2)) %>%
+          data.frame() %>% 
+          toOrg()
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+| Genus       | sample_size | pulse_density |  bias | sd_bias |
+|-------------+-------------+---------------+-------+---------|
+| Abies       |           2 |           0.1 | -2.23 |    1.85 |
+| Abies       |           9 |           0.5 |  -0.7 |    0.53 |
+| Abies       |          15 |           0.8 | -0.48 |    0.38 |
+| Abies       |          19 |             1 | -0.41 |    0.31 |
+| Abies       |          28 |           1.5 |  -0.3 |    0.25 |
+| Abies       |          38 |             2 | -0.24 |    0.21 |
+| Abies       |          56 |             3 | -0.19 |    0.18 |
+| Acer        |           2 |           0.1 | -3.13 |    3.02 |
+| Acer        |           9 |           0.5 | -0.83 |    0.73 |
+| Acer        |          15 |           0.8 | -0.54 |    0.47 |
+| Acer        |          19 |             1 | -0.44 |    0.39 |
+| Acer        |          28 |           1.5 | -0.32 |    0.29 |
+| Acer        |          38 |             2 | -0.24 |    0.24 |
+| Acer        |          56 |             3 | -0.16 |    0.18 |
+| Betula      |           2 |           0.1 | -2.39 |    2.01 |
+| Betula      |           9 |           0.5 | -0.73 |    0.61 |
+| Betula      |          15 |           0.8 | -0.49 |    0.41 |
+| Betula      |          19 |             1 |  -0.4 |    0.35 |
+| Betula      |          28 |           1.5 |  -0.3 |    0.27 |
+| Betula      |          38 |             2 | -0.23 |    0.22 |
+| Betula      |          56 |             3 | -0.16 |    0.18 |
+| Carya       |           2 |           0.1 | -2.97 |    2.54 |
+| Carya       |           9 |           0.5 | -0.88 |    0.72 |
+| Carya       |          15 |           0.8 | -0.58 |    0.48 |
+| Carya       |          19 |             1 | -0.49 |    0.41 |
+| Carya       |          28 |           1.5 | -0.35 |    0.33 |
+| Carya       |          38 |             2 | -0.28 |    0.28 |
+| Carya       |          56 |             3 | -0.19 |    0.21 |
+| Catalpa     |           2 |           0.1 | -2.29 |    1.93 |
+| Catalpa     |           9 |           0.5 | -0.78 |    0.54 |
+| Catalpa     |          15 |           0.8 | -0.56 |    0.41 |
+| Catalpa     |          19 |             1 | -0.47 |    0.37 |
+| Catalpa     |          28 |           1.5 | -0.37 |    0.32 |
+| Catalpa     |          38 |             2 | -0.27 |    0.24 |
+| Catalpa     |          56 |             3 | -0.19 |     0.2 |
+| Celtis      |           2 |           0.1 | -2.55 |    2.34 |
+| Celtis      |           9 |           0.5 | -0.74 |    0.58 |
+| Celtis      |          15 |           0.8 | -0.52 |    0.39 |
+| Celtis      |          19 |             1 | -0.44 |    0.34 |
+| Celtis      |          28 |           1.5 | -0.33 |    0.28 |
+| Celtis      |          38 |             2 | -0.26 |    0.23 |
+| Celtis      |          56 |             3 | -0.19 |    0.19 |
+| Fraxinus    |           2 |           0.1 | -2.65 |    2.35 |
+| Fraxinus    |           9 |           0.5 | -0.79 |    0.61 |
+| Fraxinus    |          15 |           0.8 | -0.54 |    0.42 |
+| Fraxinus    |          19 |             1 | -0.45 |    0.36 |
+| Fraxinus    |          28 |           1.5 | -0.34 |    0.29 |
+| Fraxinus    |          38 |             2 | -0.27 |    0.24 |
+| Fraxinus    |          56 |             3 | -0.19 |    0.19 |
+| Ginkgo      |           2 |           0.1 | -2.89 |    1.73 |
+| Ginkgo      |           9 |           0.5 | -1.12 |    0.85 |
+| Ginkgo      |          15 |           0.8 | -0.76 |    0.64 |
+| Ginkgo      |          19 |             1 | -0.63 |    0.56 |
+| Ginkgo      |          28 |           1.5 | -0.45 |    0.43 |
+| Ginkgo      |          38 |             2 | -0.34 |    0.35 |
+| Ginkgo      |          56 |             3 | -0.22 |    0.26 |
+| Gleditsia   |           2 |           0.1 |  -2.6 |    2.38 |
+| Gleditsia   |           9 |           0.5 | -0.81 |     0.6 |
+| Gleditsia   |          15 |           0.8 | -0.56 |    0.43 |
+| Gleditsia   |          19 |             1 | -0.46 |    0.38 |
+| Gleditsia   |          28 |           1.5 | -0.35 |     0.3 |
+| Gleditsia   |          38 |             2 | -0.27 |    0.25 |
+| Gleditsia   |          56 |             3 | -0.19 |     0.2 |
+| Gymnocladus |           2 |           0.1 | -2.16 |    1.72 |
+| Gymnocladus |           9 |           0.5 | -0.78 |    0.51 |
+| Gymnocladus |          15 |           0.8 | -0.55 |    0.39 |
+| Gymnocladus |          19 |             1 | -0.47 |    0.35 |
+| Gymnocladus |          28 |           1.5 | -0.36 |     0.3 |
+| Gymnocladus |          38 |             2 | -0.28 |    0.26 |
+| Gymnocladus |          56 |             3 | -0.19 |    0.21 |
+| Juglans     |           2 |           0.1 | -3.73 |    2.95 |
+| Juglans     |           9 |           0.5 | -1.14 |    0.93 |
+| Juglans     |          15 |           0.8 | -0.76 |    0.65 |
+| Juglans     |          19 |             1 | -0.63 |    0.54 |
+| Juglans     |          28 |           1.5 | -0.45 |    0.43 |
+| Juglans     |          38 |             2 | -0.34 |    0.35 |
+| Juglans     |          56 |             3 | -0.23 |    0.27 |
+| Picea       |           2 |           0.1 | -3.19 |    2.55 |
+| Picea       |           9 |           0.5 | -1.01 |    0.82 |
+| Picea       |          15 |           0.8 | -0.69 |     0.6 |
+| Picea       |          19 |             1 | -0.56 |     0.5 |
+| Picea       |          28 |           1.5 | -0.41 |    0.39 |
+| Picea       |          38 |             2 | -0.31 |    0.31 |
+| Picea       |          56 |             3 | -0.22 |    0.23 |
+| Pinus       |           2 |           0.1 | -2.65 |    1.93 |
+| Pinus       |           9 |           0.5 | -0.91 |    0.68 |
+| Pinus       |          15 |           0.8 | -0.63 |    0.48 |
+| Pinus       |          19 |             1 | -0.53 |    0.41 |
+| Pinus       |          28 |           1.5 |  -0.4 |    0.34 |
+| Pinus       |          38 |             2 | -0.32 |    0.28 |
+| Pinus       |          56 |             3 | -0.24 |    0.23 |
+| Platanus    |           2 |           0.1 | -3.63 |    2.74 |
+| Platanus    |           9 |           0.5 | -1.18 |    0.91 |
+| Platanus    |          15 |           0.8 | -0.81 |    0.65 |
+| Platanus    |          19 |             1 | -0.67 |    0.55 |
+| Platanus    |          28 |           1.5 | -0.49 |    0.43 |
+| Platanus    |          38 |             2 | -0.38 |    0.34 |
+| Platanus    |          56 |             3 | -0.27 |    0.26 |
+| Populus     |           2 |           0.1 | -3.49 |    3.17 |
+| Populus     |           9 |           0.5 | -1.01 |    0.79 |
+| Populus     |          15 |           0.8 | -0.69 |    0.54 |
+| Populus     |          19 |             1 | -0.58 |    0.46 |
+| Populus     |          28 |           1.5 | -0.43 |    0.37 |
+| Populus     |          38 |             2 | -0.34 |    0.31 |
+| Populus     |          56 |             3 | -0.23 |    0.25 |
+| Quercus     |           2 |           0.1 | -2.98 |    2.78 |
+| Quercus     |           9 |           0.5 | -0.79 |    0.69 |
+| Quercus     |          15 |           0.8 | -0.52 |    0.44 |
+| Quercus     |          19 |             1 | -0.43 |    0.36 |
+| Quercus     |          28 |           1.5 | -0.31 |    0.28 |
+| Quercus     |          38 |             2 | -0.23 |    0.23 |
+| Quercus     |          56 |             3 | -0.17 |    0.18 |
+| Robinia     |           2 |           0.1 | -2.62 |    2.44 |
+| Robinia     |           9 |           0.5 | -0.79 |    0.59 |
+| Robinia     |          15 |           0.8 | -0.54 |    0.42 |
+| Robinia     |          19 |             1 | -0.46 |    0.36 |
+| Robinia     |          28 |           1.5 | -0.34 |    0.28 |
+| Robinia     |          38 |             2 | -0.27 |    0.24 |
+| Robinia     |          56 |             3 | -0.19 |    0.19 |
+| Salix       |           2 |           0.1 | -2.39 |    2.43 |
+| Salix       |           9 |           0.5 | -0.75 |    0.56 |
+| Salix       |          15 |           0.8 | -0.51 |    0.44 |
+| Salix       |          19 |             1 |  -0.4 |    0.38 |
+| Salix       |          28 |           1.5 | -0.29 |    0.29 |
+| Salix       |          38 |             2 |  -0.3 |    0.29 |
+| Salix       |          56 |             3 | -0.21 |    0.21 |
+| Thuja       |           2 |           0.1 | -2.85 |    2.33 |
+| Thuja       |           9 |           0.5 | -0.91 |    0.71 |
+| Thuja       |          15 |           0.8 | -0.63 |    0.49 |
+| Thuja       |          19 |             1 | -0.52 |    0.43 |
+| Thuja       |          28 |           1.5 | -0.38 |    0.34 |
+| Thuja       |          38 |             2 | -0.29 |    0.28 |
+| Thuja       |          56 |             3 |  -0.2 |    0.22 |
+| Tilia       |           2 |           0.1 | -2.54 |    2.19 |
+| Tilia       |           9 |           0.5 | -0.77 |    0.59 |
+| Tilia       |          15 |           0.8 | -0.53 |    0.41 |
+| Tilia       |          19 |             1 | -0.44 |    0.35 |
+| Tilia       |          28 |           1.5 | -0.33 |    0.28 |
+| Tilia       |          38 |             2 | -0.25 |    0.23 |
+| Tilia       |          56 |             3 | -0.18 |    0.19 |
+| Ulmus       |           2 |           0.1 | -2.37 |    2.26 |
+| Ulmus       |           9 |           0.5 | -0.68 |    0.55 |
+| Ulmus       |          15 |           0.8 | -0.46 |    0.38 |
+| Ulmus       |          19 |             1 | -0.37 |    0.31 |
+| Ulmus       |          28 |           1.5 | -0.28 |    0.25 |
+| Ulmus       |          38 |             2 | -0.22 |    0.21 |
+| Ulmus       |          56 |             3 | -0.15 |    0.16 |
+#+end_example
+
 ** example trees for visualization
 *** crop lidar to the tenney oak for visualization of bias situation.
 
@@ -5287,6 +5469,22 @@ dc <- filter(d, complete.cases(d))
 #+end_src
 
 #+RESULTS:
+#+begin_example
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:nlme’:
+
+    collapse
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+#+end_example
 
 ** plot data
 *** define theme
@@ -8378,6 +8576,9 @@ plot_model(m_nogenus_NHeightint, type = "int", terms = c("cor_max2005", "N"))
                                       data = filter(dc, ! Genus %in% c("Salix", "Gymnocladus", "Platanus", "Abies")))
 
   em <- emmeans(m_genus_sub, pairwise ~ Genus)
+
+
+
 #+end_src
 
 #+RESULTS:
@@ -9481,7 +9682,7 @@ Fit a model excluding the places with a small n2009.
   d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
   dc <- filter(d, complete.cases(d))
 
-  f <- filter(dc, n2009 > 12, n2009 < 26)
+  f <- dplyr::filter(dc, n2009 > 12, n2009 < 26)
 
   #    m_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, dc)
       mf <- lm(growth.rate ~ st_po:cor_max2009 + Genus + Genus : (st_po + cor_max2009 + height2009_2 + height2009_3 + height2009_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
@@ -9498,6 +9699,11 @@ Fit a model excluding the places with a small n2009.
 #+end_src
 
 #+RESULTS:
+: 
+: Error in resid(m_genus) : object 'm_genus' not found
+: 
+: Error in model.frame.default(terms(formula), as(data, "data.frame"), na.action = na.fail) : 
+:   object is not a matrix
 
 #+begin_src R :exports results :results graphics :file figs/vario_filterhighn2009.png
 plot(vg.rd)
@@ -9505,6 +9711,18 @@ plot(vg.rd)
 
 #+RESULTS:
 [[file:figs/vario_filterhighn2009.png]]
+#+begin_src R
+library(gstat)
+  vge <- fit.variogram(vg.rd, model = vgm("Exp"))
+#+end_src
+
+#+RESULTS:
+: Registered S3 method overwritten by 'xts':
+:   method     from
+:   as.zoo.xts zoo
+: 
+: Error in fit.variogram(vg.rd, model = vgm("Exp")) : 
+:   object 'vg.rd' not found
 
 *** with spatial errors?
 #+begin_src R
@@ -9513,36 +9731,36 @@ plot(vg.rd)
 
 
 R crashes for lack of memory
-#+begin_src R :eval no
-      library(nlme)
-library(spaMM)
-    dc$dummy <- 1 # necessary for lme to work
+#+begin_src R :eval yes
+        library(nlme)
+  library(spaMM)
+  dcs <- readRDS("/home/erker/hgt_data/merged_data_200mApart.rds")
+  dcd <- dcs@data
+  dcd$dummy <- 1 # necessary for lme to work
+  dcd$x <- dcs@coords[,1]
+  dcd$y <- dcs@coords[,2]
 
-      sm <- lme(fixed = growth.rate ~ street + Genus + poly(cor_max2005,4) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl,
-                data = dc,
-                random = ~ 1 | dummy,
-                correlation = corMatern(form = ~ x+y  | dummy), 
-                method = "ML")
+dcd <- dplyr::filter(dcd, Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Picea", "Populus"))
+
+#growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+        sm <- lme(fixed = growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                  data = dcd,
+                  random = ~ 1 | dummy,
+                  correlation = corMatern(form = ~ x+y  | dummy), 
+                  method = "REML")
 
 
 #+end_src
 
+#+begin_src R
+summary(sm)
+#+end_src
+
+#+begin_src R
+saveRDS(sm, "/home/erker/hgt_data/sm.rds")
+#+end_src
+
 #+RESULTS:
-#+begin_example
-
-Attaching package: ‘nlme’
-
-The following object is masked from ‘package:dplyr’:
-
-    collapse
-
-The following object is masked from ‘package:raster’:
-
-    getData
-
-Error in corMatern(form = ~x + y | dummy) : 
-  could not find function "corMatern"
-#+end_example
 
 *** fit models dropping points that are close to one another
 #+begin_src R
@@ -9561,10 +9779,7 @@ library(ggplot2)
 
   points_matrix <- gWithinDistance(dc, dist = 200, byid = TRUE)
   points_matrix[lower.tri(points_matrix, diag=TRUE)] <- NA
-  points_matrix
-#+end_src
 
-#+begin_src R
 v <- colSums(points_matrix, na.rm=TRUE) == 0
 dcs <- dc[v, ]
 #+end_src
@@ -9576,6 +9791,35 @@ saveRDS(dcs, "/home/erker/hgt_data/merged_data_200mApart.rds")
 #+RESULTS:
 
 #+begin_src R
+
+        library(rgeos)
+        library(dplyr)
+      library(ggplot2)
+
+        d <-   readRDS("/home/erker/hgt_data/merged_data.rds")
+        dc <- filter(d, complete.cases(d))
+
+      #  dc <- sample_n(dc, 10000)
+
+        coordinates(dc) = ~ x + y
+
+      dcsplits <- split(dc, dc$Genus)
+
+      dcsplits200m <- lapply(dcsplits, function(dcsplit) {
+        points_matrix <- gWithinDistance(dcsplit, dist = 200, byid = TRUE)
+        points_matrix[lower.tri(points_matrix, diag=TRUE)] <- NA
+        v <- colSums(points_matrix, na.rm=TRUE) == 0
+        dcs <- dcsplit[v, ]
+          dcs
+          })
+
+    dcs <- do.call("rbind", dcsplits200m)
+
+  saveRDS(dcs, "/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
+#+end_src
+
+#+begin_src R
+dcs <-   readRDS("/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
     ms_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
                     dcs)
       ms_genus <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
@@ -9590,29 +9834,17 @@ library(raster)
 
     dcs$resid <- resid(ms_genus)
 
-shapefile(dcs, "test_200msubset.shp")
+shapefile(dcs, "test_byGenus_200msubset.shp", overwrite = T)
 
-  vg.rd <-   variogram(resid ~ 1, dcs, cutoff = 2000, width = 40)
+  vg.rd <-   variogram(resid ~ 1, dcs, cutoff = 2000, width = 100)
 
 #+end_src
 
 #+RESULTS:
-#+begin_example
-
-Attaching package: ‘raster’
-
-The following object is masked from ‘package:tidyr’:
-
-    extract
-
-The following object is masked from ‘package:dplyr’:
-
-    select
-
-Warning message:
-In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
-  Field names abbreviated for ESRI Shapefile driver
-#+end_example
+: 
+: Warning message:
+: In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
+:   Field names abbreviated for ESRI Shapefile driver
 
 #+begin_src R :exports results :results graphics :file figs/growthrate_variogram_spatialsubset200m.png
 plot(vg.rd)
@@ -9620,16 +9852,64 @@ plot(vg.rd)
 
 #+RESULTS:
 [[file:figs/growthrate_variogram_spatialsubset200m.png]]
+#+begin_src R
+  vge <- fit.variogram(vg.rd, model = vgm("Exp"))
+vge
+#+end_src
+
+#+RESULTS:
+: 
+:   model     psill    range
+: 1   Nug 150.28983    0.000
+: 2   Exp  37.16652 1134.327
+
 **** Plots of two models with spatial subsample
 ***** make dcd data.frame
 #+begin_src R
 dcd <- dcs@data 
+
+  library(ggplot2)
+  library(ggthemes)
+  library(tidyr)
+                                          #  terk <- list(theme_solarized_2(base_size = 16) +
+  terk <- theme_tufte(base_size = 16) +
+    theme(legend.title = element_text(size = 15),
+          legend.text = element_text(size = 13),
+          axis.ticks = element_line(size = .3), 
+          panel.grid.major = element_line(color = "#839496", size = .1),
+          panel.grid.minor = element_line(color = "#839496", size = .05))
+
+
+  blue <- scale_color_solarized("blue")
+
+  red <- solarized_pal("red")(1)
+  base1 <- "#93a1a1"
+
+
 #+end_src
 
 #+RESULTS:
+: 
+: Attaching package: ‘tidyr’
+: 
+: The following object is masked from ‘package:raster’:
+: 
+:     extract
+***** plot growth rates
+#+begin_src R :exports results :results graphics :file figs/growthrate_histogram_w_200mSubsample.png :width 1200 :res 150 :bg transparent
+  ggplot(dcd, aes(x = growth.rate)) + geom_histogram(binwidth = 2) +
+    terk +
+    scale_x_continuous("Growth rate (cm/year)", lim = c(-50,100), breaks = c(-100,-50,0, round(mean(dcd$growth.rate),1), 50, 100)) +
+    scale_y_continuous("Count") +
+    geom_vline(data = dcd, aes(xintercept = mean(growth.rate)), color = red)
+#+end_src
+
+#+RESULTS:
+[[file:figs/growthrate_histogram_w_200mSubsample.png]]
 
 ***** height by neighborhood/street/utilities
 #+begin_src R
+library(dplyr)
 
         nd <- dcd %>%
             select(mean_height_wn20m , pct_imp_20m, pct_imp_100m , TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
@@ -9652,12 +9932,13 @@ dcd <- dcs@data
 #+RESULTS:
 
 #+begin_src R :exports results :results graphics :file figs/first_model_predict_height_by_stpo_int_200mSubsample.png :width 1000 :height 400 :bg transparent :res 120
-
+library(ggplot2)
+library(ggthemes)
   ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
       geom_line(aes(color = st_po)) + geom_ribbon(alpha = .1) +
-      scale_color_brewer("tree type", labels = c("neighborhood tree","street tree with no overhead utilites", "street tree with overhead utilites"), palette = "Dark2") +
-      scale_y_continuous("growth rate (cm / yr)") +
-      scale_x_continuous("bias corrected height in 2005 (m)") +
+      scale_color_brewer("tree type", labels = c("Neighborhood tree","Street tree with no overhead utilites", "Street tree with overhead utilites"), palette = "Dark2") +
+      scale_y_continuous("Growth rate (cm / yr)") +
+      scale_x_continuous("Bias corrected height in 2005 (m)") +
       theme_tufte(base_size = 16) +
       theme(legend.title = element_blank(),
             legend.text = element_text(size = 13),
@@ -9698,46 +9979,41 @@ filter(nd, fit < 1, fit > -1)
 
 #+RESULTS:
 #+begin_example
-  mean_height_wn20m pct_imp_20m pct_imp_100m     TotPhen           N
-1          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-2          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-3          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-4          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-5          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-6          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-7          10.42619   0.3577505    0.3472802 -0.01581242 -0.09374776
-        Sugar         LMA     lignin           chl    tpi_5ft aspect_trans_5ft
-1 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-2 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-3 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-4 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-5 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-6 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-7 -0.02153237 -0.03392554 0.01424437 -0.0006980236 0.09813309        0.9729721
-  tpi_200ft aspect_trans_200ft     elev  slope_5ft slope_200ft cor_max2005
-1 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          25
-2 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          26
-3 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          25
-4 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          26
-5 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          27
-6 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          23
-7 -0.273056          0.9640593 2.778736 0.06726497  0.02564897          24
-     Genus        st_po height2005_2 height2005_3 height2005_4         fit
-1 Fraxinus neighborhood          625        15625       390625  0.29818262
-2 Fraxinus neighborhood          676        17576       456976 -0.85664342
-3 Fraxinus   st no util          625        15625       390625  0.83025594
-4 Fraxinus   st no util          676        17576       456976  0.09579786
-5 Fraxinus   st no util          729        19683       531441 -0.60989020
-6 Fraxinus    st w util          529        12167       279841  0.58909436
-7 Fraxinus    st w util          576        13824       331776 -0.44667113
-        lwr      upr
-1 -4.298915 4.895281
-2 -5.957004 4.243717
-3 -2.940022 4.600534
-4 -4.366361 4.557957
-5 -5.857332 4.637552
-6 -2.898837 4.077026
-7 -4.503183 3.609841
+  mean_height_wn20m pct_imp_20m pct_imp_100m   TotPhen          N      Sugar
+1          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+2          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+3          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+4          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+5          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+6          10.93938   0.3174089    0.3267513 0.0333919 -0.2127089 0.08995761
+         LMA      lignin         chl    tpi_5ft aspect_trans_5ft  tpi_200ft
+1 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+2 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+3 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+4 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+5 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+6 0.04772468 -0.07868198 -0.04681744 0.07610321        0.9726163 -0.2585449
+  aspect_trans_200ft     elev  slope_5ft slope_200ft cor_max2005    Genus
+1          0.9691232 2.770704 0.06817501  0.02741324          27 Fraxinus
+2          0.9691232 2.770704 0.06817501  0.02741324          28 Fraxinus
+3          0.9691232 2.770704 0.06817501  0.02741324          25 Fraxinus
+4          0.9691232 2.770704 0.06817501  0.02741324          26 Fraxinus
+5          0.9691232 2.770704 0.06817501  0.02741324          24 Fraxinus
+6          0.9691232 2.770704 0.06817501  0.02741324          25 Fraxinus
+         st_po height2005_2 height2005_3 height2005_4        fit       lwr
+1 neighborhood          729        19683       531441  0.2329592 -3.022662
+2 neighborhood          784        21952       614656 -0.9716286 -4.867102
+3   st no util          625        15625       390625  0.5781872 -1.563470
+4   st no util          676        17576       456976 -0.5124076 -3.069978
+5    st w util          576        13824       331776  0.8497968 -1.615059
+6    st w util          625        15625       390625 -0.3251921 -3.165281
+       upr
+1 3.488581
+2 2.923844
+3 2.719845
+4 2.045163
+5 3.314653
+6 2.514897
 #+end_example
 
 
@@ -9767,13 +10043,13 @@ p <- cbind(nd, p)
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_200mspatialSubset.png :width 1000 :res 120
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood__200mSubsample.png :width 1000 :res 120
         ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
           geom_line(aes(color = pct_imp_20m * 100)) +
 #          geom_ribbon(alpha = .1) +
-          scale_color_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
-          scale_y_continuous("growth rate (cm / yr)") +
-          scale_x_continuous("percent impervious within 100 m") +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm / yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
         theme_tufte(base_size = 16) +
           theme(legend.title = element_text(size = 15, ),
                 legend.text = element_text(size = 13),
@@ -9790,15 +10066,15 @@ p <- cbind(nd, p)
 #+end_src
 
 #+RESULTS:
-[[file:figs/impervious_street_neighborhood_200mspatialSubset.png]]
-#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon.png :width 1000 :res 120
+[[file:figs/impervious_street_neighborhood__200mSubsample.png]]
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample.png :width 1000 :res 120
           ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
             geom_ribbon(alpha = .1) +
             geom_line(aes(color = pct_imp_20m * 100), size = .8) +
-            scale_color_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
-            scale_fill_distiller("percent impervious\nwithin 20 m", palette = "RdYlGn") +
-            scale_y_continuous("growth rate (cm / yr)") +
-            scale_x_continuous("percent impervious within 100 m") +
+            scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_y_continuous("Growth rate (cm / yr)") +
+            scale_x_continuous("Percent impervious within 100 m") +
           theme_tufte(base_size = 16) +
             theme(legend.title = element_text(size = 15, ),
                   legend.text = element_text(size = 13),
@@ -9816,7 +10092,7 @@ p <- cbind(nd, p)
 #+end_src
 
 #+RESULTS:
-[[file:figs/impervious_street_neighborhood_ribbon.png]]
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample.png]]
 
 
 
@@ -9837,10 +10113,10 @@ library(broom)
               mutate(scale = str_extract(term, "5ft|200ft"),
                      scale = plyr::mapvalues(scale, c("5ft", "200ft"), c("1.5 m", "61 m")),
                      topo_term = str_extract(term, "tpi|slope|aspect_trans|elev"),
-                     topo_term = case_when(topo_term == "tpi" ~ "topographic position index",
-                                           topo_term == "slope" ~ "slope",
-                                           topo_term == "aspect_trans" ~ "transformed aspect",
-                                           topo_term == "elev" ~ "elevation (100s m)"))
+                     topo_term = case_when(topo_term == "tpi" ~ "Topographic position index",
+                                           topo_term == "slope" ~ "Slope",
+                                           topo_term == "aspect_trans" ~ "Transformed aspect",
+                                           topo_term == "elev" ~ "Elevation (100s m)"))
                                          
 
 
@@ -9848,25 +10124,27 @@ library(broom)
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/first_model_topo_coef_plots_200mSpatialSubsample.png :width 1150 :height 300 :res 120 :bg transparent
-red <- solarized_pal("red")(1)
+#+begin_src R :exports results :results graphics :file figs/first_model_topo_coef_plots_200mSubsample.png :width 1150 :height 300 :res 120 :bg transparent
+  red <- solarized_pal("red")(1)
 
-        ggplot(mt, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = scale)) + geom_pointrange(position = position_dodge(width = .3)) +
-          coord_flip() +
-          geom_hline(aes(yintercept = 0), color = red) +
-          facet_wrap(~topo_term, ncol = 4, scales = "free_x") +
-            theme_tufte(base_size = 16) +
-            theme(legend.title = element_text(size = 10),
-                legend.text = element_text(size = 8),
-                axis.ticks = element_line(size = .3), 
-                panel.grid.major = element_line(color = "#839496", size = .1),
-                panel.grid.minor = element_line(color = "#839496", size = .05),
-                panel.background = element_rect(size = .2)) +
-          scale_color_brewer(type = "qual", palette = "Dark2") 
+          ggplot(mt, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = scale)) + geom_pointrange(position = position_dodge(width = .3)) +
+            coord_flip() +
+            geom_hline(aes(yintercept = 0), color = red) +
+            facet_wrap(~topo_term, ncol = 4, scales = "free_x") +
+              theme_tufte(base_size = 16) +
+              theme(legend.title = element_text(size = 10),
+                  legend.text = element_text(size = 8),
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05),
+                  panel.background = element_rect(size = .2)) +
+            scale_color_brewer(type = "qual", palette = "Dark2") +
+           scale_y_continuous("Estimate") +
+            scale_x_discrete("Scale")
 #+end_src
 
 #+RESULTS:
-[[file:figs/first_model_topo_coef_plots_200mSpatialSubsample.png]]
+[[file:figs/first_model_topo_coef_plots_200mSubsample.png]]
 
 ***** height by genus 
 
@@ -9889,7 +10167,7 @@ red <- solarized_pal("red")(1)
 
       nd <- cbind(nd, p)
 
-nd <- nd %>% mutate(st_po = plyr::mapvalues(st_po, c("neighborhood", "st no util", "st w util"), c("neighborhood tree","street tree with no overhead utilites", "street tree with overhead utilites")))
+nd <- nd %>% mutate(st_po = plyr::mapvalues(st_po, c("neighborhood", "st no util", "st w util"), c("Neighborhood tree","Street tree with no overhead utilites", "Street tree with overhead utilites")))
 
 #+end_src
 
@@ -9899,46 +10177,46 @@ nd <- nd %>% mutate(st_po = plyr::mapvalues(st_po, c("neighborhood", "st no util
 : In predict.lm(ms_genus, newdata = nd, interval = "confidence") :
 :   prediction from a rank-deficient fit may be misleading
 
-#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpoNeighborhood_200mSpatialSubsample.png :width 1300 :height 800 :res 120 
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpoNeighborhood_200mSubsample.png :width 1300 :height 800 :res 120 
 library(RColorBrewer)
 tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
 
-  ggplot(filter(nd, st_po == "neighborhood tree"), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = Genus)) +
+  ggplot(filter(nd, st_po == "Neighborhood tree"), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = Genus)) +
     geom_ribbon(aes(fill = Genus), alpha = .1) +
     geom_line(aes(color = Genus)) +
     facet_wrap(~Genus) +
     scale_color_manual(values = tpal) +
     scale_fill_manual(values = tpal) +
-    scale_y_continuous("predicted growth rate (cm / yr)") +
-    scale_x_continuous("height in 2005 (m)") +
+    scale_y_continuous("Predicted growth rate (cm / yr)") +
+    scale_x_continuous("Height in 2005 (m)") +
     terk
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/height_genus_int_stpoNeighborhood_200mSpatialSubsample.png]]
+[[file:figs/height_genus_int_stpoNeighborhood_200mSubsample.png]]
 
 The negative impact of being a street tree appears to be greater for
 Acer than for Fraxinus and Gleditsia.
 
-#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub1_SpatialSubset200m.png :width 1300 :res 120
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub1_200mSubsample.png :width 1300 :res 120
     ggplot(filter(nd, Genus %in% c("Acer", "Fraxinus", "Gleditsia")), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = Genus)) +
       geom_ribbon(aes(fill = Genus), alpha = .1) +
       geom_line(aes(color = Genus)) +
       facet_wrap(~st_po, ncol = 3) +
   terk +
     scale_color_brewer(palette = "Dark2") +
-    scale_y_continuous("predicted growth rate (cm / yr)") +
-    scale_x_continuous("height in 2005 (m)") +
+    scale_y_continuous("Predicted growth rate (cm / yr)") +
+    scale_x_continuous("Height in 2005 (m)") +
     scale_fill_brewer(palette = "Dark2") 
 
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/height_genus_int_stpo_genussub1_SpatialSubset200m.png]]
+[[file:figs/height_genus_int_stpo_genussub1_200mSubsample.png]]
 
-#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub2_spatialSUbset200m.png :width 1300 :res 120
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpo_genussub2_200mSubsample.png :width 1300 :res 120
     ggplot(filter(nd, Genus %in% c("Acer", "Fraxinus", "Gleditsia")), aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
       geom_ribbon(aes(fill = st_po), alpha = .1) +
       geom_line(aes(color = st_po)) +
@@ -9949,10 +10227,10 @@ Acer than for Fraxinus and Gleditsia.
 #+end_src
 
 #+RESULTS:
-[[file:figs/height_genus_int_stpo_genussub2_spatialSUbset200m.png]]
+[[file:figs/height_genus_int_stpo_genussub2_200mSubsample.png]]
 
 
-#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_SPatialSUbset200m.png :width 1300 :height 800 :res 120 
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_200mSubsample.png :width 1300 :height 800 :res 120 
 tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
   ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
     geom_ribbon(aes(fill = st_po), alpha = .1) +
@@ -9967,9 +10245,9 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 #+end_src
 
 #+RESULTS:
-[[file:figs/height_genus_int_stpolines_SPatialSUbset200m.png]]
+[[file:figs/height_genus_int_stpolines_200mSubsample.png]]
 
-#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_scalesfree_spatialsubset200m.png :width 1300 :height 800 :res 120 
+#+begin_src R :exports results :results graphics :file figs/height_genus_int_stpolines_scalesfree_200mSubsample.png :width 1300 :height 800 :res 120 
 tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
   ggplot(nd, aes(x = cor_max2005, y = fit, ymax = upr, ymin = lwr, group = st_po)) +
     geom_ribbon(aes(fill = st_po), alpha = .1) +
@@ -9984,7 +10262,7 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 #+end_src
 
 #+RESULTS:
-[[file:figs/height_genus_int_stpolines_scalesfree_spatialsubset200m.png]]
+[[file:figs/height_genus_int_stpolines_scalesfree_200mSubsample.png]]
 
 ***** mean height within 20 m
 #+begin_src R
@@ -10007,7 +10285,7 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 
 #+RESULTS:
 
-#+begin_src R :exports results :results graphics :file figs/mean_height_20m_coefs_spatialSubset200m.png :width 800 :height 475 :bg transparent :res 120
+#+begin_src R :exports results :results graphics :file figs/mean_height_20m_coefs_200mSubsample.png :width 800 :height 475 :bg transparent :res 120
     mtp <- filter(mt, Genus != "Platanus")
 
               ggplot(mtp, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = Genus)) + 
@@ -10022,36 +10300,44 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
                       panel.grid.minor = element_line(color = "#839496", size = .05),
                       panel.background = element_rect(size = .2),
                       plot.subtitle = element_text(hjust = 0.5)) +
-                labs(subtitle = "coefficients for mean height within 20 m")
+                labs(subtitle = "Coefficients for mean height within 20 m",
+                     y = "Estimate")
+
+
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/mean_height_20m_coefs_spatialSubset200m.png]]
+[[file:figs/mean_height_20m_coefs_200mSubsample.png]]
 
 
-***** traits
+***** TODO traits  JUST SHOW THE KEY GENERA
 #+begin_src R
       mtng <- tidy(ms_nogenus) %>% data.frame %>%
           filter(grepl("N|TotPhen|chl|Sugar|LMA|lignin", term)) %>%
         mutate(Genus = "overall",
-               trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2])
+               trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2],
+               trait = plyr::mapvalues(trait, from = c("TotPhen", "Sugar", "N", "LMA", "lignin", "chl"), to = c("Total Phenolics", "Sugar", "Nitrogen", "Leaf Mass per Area", "Lignin", "Chlorophyll")))
 
       mtg <- tidy(ms_genus) %>% data.frame %>%
         filter(grepl("N|TotPhen|chl|Sugar|LMA|lignin", term)) %>%
           mutate(Genus = str_match(term, "Genus([A-Z][a-z]+)")[,2],
-                 trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2])
+                 trait = str_match(term, "(N|TotPhen|chl|Sugar|LMA|lignin)")[,2],
+                 trait = plyr::mapvalues(trait, from = c("TotPhen", "Sugar", "N", "LMA", "lignin", "chl"), to = c("Total Phenolics", "Sugar", "Nitrogen", "Leaf Mass per Area", "Lignin", "Chlorophyll")))
 
 
   mt <- bind_rows(mtg, mtng) %>%
-    mutate(Genus = factor(Genus, levels = c("overall", unique(c(mtg$Genus)))))
+    mutate(Genus = factor(Genus, levels = c("overall", unique(c(mtg$Genus)))),
+           trait = plyr::mapvalues(trait, from = c("TotPhen", "Sugar", "N", "LMA", "lignin", "chl"), to = c("Total Phenolics", "Sugar", "Nitrogen", "Leaf Mass per Area", "Lignin", "Chlorophyll")))
 
 
 #+end_src
 
 #+RESULTS:
+: 
+: The following `from` values were not present in `x`: TotPhen, N, LMA, lignin, chl
 
-#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_SpatialSubset200m.png :width 1000 :height 800 :bg transparent :res 120
+#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_200mSubsample.png :width 1000 :height 800 :bg transparent :res 120
   tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
 
   mtg <- mtg %>% filter(Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Robinia", "Populus"))
@@ -10063,14 +10349,16 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
       terk +
       scale_color_manual(values = tpal) +
       scale_y_continuous(limits = c(-12, 12)) +
-       geom_hline(yintercept = 0, size = .2)
+       geom_hline(yintercept = 0, size = .2) +
+      scale_y_continuous("Estimate") +
+      scale_x_discrete("Trait")
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/traits_coef_comparison_SpatialSubset200m.png]]
+[[file:figs/traits_coef_comparison_200mSubsample.png]]
 
-#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_nogenus_spatialsubset200m.png :width 1000 :height 600 :bg transparent :res 120
+#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_nogenus_200mSubsample.png :width 1000 :height 600 :bg transparent :res 120
     tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
 
     mtg <- mtg %>% filter(Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus", "Celtis",  "Picea", "Ulmus", "Pinus", "Juglans", "Robinia", "Populus"))
@@ -10081,16 +10369,65 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
           coord_flip() +
         terk +
         scale_color_manual(values = tpal) +
-        scale_y_continuous(limits = c(-12, 12)) +
-       geom_hline(yintercept = 0, size = .2)
+       geom_hline(yintercept = 0, size = .2) +
+      scale_y_continuous("Estimate", limits = c(-12, 12))  +
+      scale_x_discrete("Trait")
 
 #+end_src
 
 #+RESULTS:
-[[file:figs/traits_coef_comparison_nogenus_spatialsubset200m.png]]
+[[file:figs/traits_coef_comparison_nogenus_200mSubsample.png]]
+#+begin_src R :exports results :results graphics :file figs/traits_coef_comparison_KEYgenus_200mSubsample.png :width 1000 :height 600 :bg transparent :res 120
+    tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[c(1,6, 7, 5)])
+
+    mtg <- mtg %>% filter(Genus %in% c("Acer", "Fraxinus", "Gleditsia", "Tilia", "Quercus",  "Picea", "Ulmus"))
+
+      ggplot(data = mtng, aes(x = trait, y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error)) + 
+          geom_pointrange(data = mtg, aes(color = Genus), position = position_dodge2(width = .6, reverse = TRUE)) +
+          geom_pointrange() +
+          coord_flip() +
+        terk +
+        scale_color_manual(values = tpal) +
+        scale_y_continuous(limits = c(-12, 12)) +
+       geom_hline(yintercept = 0, size = .2) +
+      scale_y_continuous("Estimate", limits = c(-12, 12))  +
+      scale_x_discrete("Trait")
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/traits_coef_comparison_KEYgenus_200mSubsample.png]]
 
 
 
+***** model with interactions
+#+begin_src R
+  library(emmeans)
+
+  ms_genus_sub <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus: (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1,
+                                      data = filter(dcd, ! Genus %in% c("Salix", "Gymnocladus", "Platanus", "Abies")))
+
+  em <- emmeans(ms_genus_sub, pairwise ~ Genus)
+
+
+
+#+end_src
+
+#+RESULTS:
+: 
+: NOTE: Results may be misleading due to involvement in interactions
+
+
+
+
+#+begin_src R :exports results :results graphics :file figs/genus_comparisons_full model_200mSubsample.png :width 800 :height 500 :res 120
+    plot(em, comparison = T) +
+        terk +
+        scale_x_continuous("Estimated Marginal Mean Growth Rate (cm / yr)")
+#+end_src
+
+#+RESULTS:
+[[file:figs/genus_comparisons_full model_200mSubsample.png]]
 
 ** TODO map predicted growth rate
 - plotting
@@ -10130,12 +10467,13 @@ sequestration citep:roy_etal_2012.
 
 All these services are a function of growth, either directly such as
 carbon sequestration, or indirectly such as stormwater runoff
-reduction which is a function of the result of growth: tree size.
-Therefore, understanding urban tree growth is essential to estimating
-and projecting ecosystem services into the future.  The factors that
-contribute to the growth of trees are well understood.  What we do not
-understand so well is how the complex urban environment alters these
-factors thereby altering the growth of trees.
+reduction which is a function of the result of growth: tree size
+cite:nowak14_tree_fores_effec_air_qualit,nowak_e_2013. Therefore,
+understanding urban tree growth is essential to estimating and
+projecting ecosystem services into the future.  The factors that
+contribute to the growth of trees in general are well understood.
+What we do not understand as well is how the complex urban environment
+alters these factors thereby altering the growth of trees.
 
 Urban trees grow differently than their more rural counterparts
 because of the challenges they face surviving among urban
@@ -10145,9 +10483,10 @@ from vehicles, pedestrians, and poor soil conditions; urban trees tend
 to be more open grown than rural trees; urban trees are pruned to
 accommodate powerlines or for aesthetics, many urban trees are
 irrigated and fertilized; the species composition in a city is often
-different than its rural surrounding.  Urban conditions are not only
-unique, but they are also more heterogeneous, which creates
-variability in the growth of the urban forest at small spatial scales.
+different than its rural surrounding cite:zipperer_guntenspergen_2009.
+Urban conditions are not only unique, but they are also more
+heterogeneous, which creates variability in the growth of the urban
+forest at small spatial scales.
 
 Remote sensing technology provides an efficient way to estimate tree
 height growth for tens of thousands of trees and derive covariates
@@ -10162,8 +10501,8 @@ bias correction, we estimated the heights of trees and their growth
 rates.  NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
 Generation (AVIRIS-NG) measures the reflectance of light in hundreds
 of narrow wavebands from 400 to 2500 nm.  The spectra from the imagery
-can be used to predict canopy foliar traits which then in turn we used
-to explain height growth.  
+can be used to create indicies of canopy foliar traits which then in
+turn we used to explain height growth.
 
 In addition to canopy foliar traits, we also included as variables:
 topography, landcover, tree height, mean height of a tree's
@@ -10186,13 +10525,6 @@ effects. cite:boukili_e_2017 address C sequestration from growth and
 find itree and UTD both over estimate.  
 
 ** COMMENT comments
-
-
-
-
-
-
-
 Understanding how trees grow in urban environments can help cities
 better estimate and project 
 
@@ -10245,36 +10577,40 @@ topographic variables, and the mean height of the surroundings within
 20 m of a tree (see table [[tab:covariates]] for all covariates).
 
 #+name: tab:covariates
-| Covariate                                                            | Source                           |
-|----------------------------------------------------------------------+----------------------------------|
-| Bias corrected height in 2005 (m)                                    | lidar                            |
-| Mean Height within 20 m (m)                                          | lidar                            |
-| Genus                                                                | tree inventories                 |
-| tree type: neighborhood or street with or without overhead utilities | tree inventories                 |
-| slope  at 1.5 m (5 ft) scale                                         | Digital Elevation Model (DEM)    |
-| transformed aspect at 1.5 m (5 ft) scale                             | DEM                              |
-| topographic position index, TPI at 1.5m (5 ft) scale (m)             | DEM                              |
-| slope at 61 m (200 ft) scale                                         | DEM                              |
-| transformed aspect at 61 m (200 ft) scale                            | DEM                              |
-| topographic position index, TPI at 61 m (200 ft) scale (m)           | DEM                              |
-| elevation (hundreds of meters)                                      | DEM                              |
-| Sugar (standardized index)                                           | AVIRIS-NG                        |
-| lignin (standardized index)                                          | AVIRIS-NG                        |
-| chlorophyll (standardized index)                                     | AVIRIS-NG                        |
-| leaf mass per area (standardized index)                              | AVIRIS-NG                        |
-| total phenolics (standardized index)                                 | AVIRIS-NG                        |
-| nitrogen (standardized index)                                        | AVIRIS-NG                        |
-| percent impervious within 20 m                                       | landcover map citep:erker_e_2019 |
-| percent impervious within 100 m                                      | landcover map citep:erker_e_2019 |
+| Covariate                                                      | Source                           |
+|----------------------------------------------------------------+----------------------------------|
+| Bias corrected height in 2005 (m)                              | lidar                            |
+| Mean Height within 20 m (m)                                    | lidar                            |
+| Genus                                                          | tree inventories                 |
+| neighborhood or street tree with or without overhead utilities | tree inventories                 |
+| slope  at 1.5 m (5 ft) scale                                   | Digital Elevation Model (DEM)    |
+| transformed aspect at 1.5 m (5 ft) scale                       | DEM                              |
+| topographic position index, TPI at 1.5m (5 ft) scale (m)       | DEM                              |
+| slope at 61 m (200 ft) scale                                   | DEM                              |
+| transformed aspect at 61 m (200 ft) scale                      | DEM                              |
+| topographic position index, TPI at 61 m (200 ft) scale (m)     | DEM                              |
+| elevation (hundreds of meters)                                 | DEM                              |
+| Sugar (standardized index)                                     | AVIRIS-NG                        |
+| lignin (standardized index)                                    | AVIRIS-NG                        |
+| chlorophyll (standardized index)                               | AVIRIS-NG                        |
+| leaf mass per area (standardized index)                        | AVIRIS-NG                        |
+| total phenolics (standardized index)                           | AVIRIS-NG                        |
+| nitrogen (standardized index)                                  | AVIRIS-NG                        |
+| percent impervious within 20 m                                 | landcover map citep:erker_e_2019 |
+| percent impervious within 100 m                                | landcover map citep:erker_e_2019 |
 
-The total number of trees used in the study was approximately 21
-thousand.  We fit several multiple linear regressions with growth rate
-as a response and all covariates as predictors with various
-interactions that were reasonable given our objectives.  We used AIC
-to help with model selection, but did not test very many interactions,
-instead we were primarily guided by our objectives and the goal of
-finding a model that was straightforward to communicate.  Details on
-the selected models are in results.
+For the purposes of estimating coefficients more reliably, we subset
+our data so that no two trees of the same genus were closer than 200 m
+to one another.  This reduced our sample size from about 21 thousand
+to 7 thousand, but also reduced spatial dependence that could
+potentially bias coefficient estimates or inflate confidence that
+coeffient estimates are different from zero.  We fit several multiple
+linear regressions with growth rate as a response and all covariates
+as predictors with various interactions that were reasonable given our
+objectives.  We used AIC to help with model selection, but did not
+test very many interactions, instead we were primarily guided by our
+objectives and the goal of finding a model that was straightforward to
+communicate.  Details on the selected models are in results.
 
 ** Madison, WI: population and forests
 Madison is a city of about 260,000 persons ([[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][USCensus]]), located in
@@ -10573,7 +10909,8 @@ correction explains some of the slightly negative growth rates, while
 under correction explains some of the high growth rates.  On average
 we assume these errors cancel out.
 
-* Results
+
+* Results 
 ** Tree Height Bias Correction and Growth Rate Estimation
 The results of our bias correction technique are demonstrated in
 figures [[fig:pulse_by_bias_by_genus]], [[fig:mean_pulse_by_bias_by_genus]],
@@ -10583,7 +10920,7 @@ Each curve in the figure is an individual tree that has had its points
 resampled at many densities each 1000 times.  Bias curves were created
 for 17 genera.  All Genera showed the same general trend, but there
 was significant variability in the mean bias curves across genera as
-seen in figure [[fig:mean_pulse_by_bias_by_genus]].
+seen in figure [[fig:mean_pulse_by_bias_by_genus]].  
 
 #+name: fig:pulse_by_bias_by_genus
 #+caption: Empirical height bias by pulse density curves for individual trees of eight example genera.
@@ -10613,7 +10950,7 @@ random sample of 80 trees.
 
 ** Growth Rates
 
-The mean height growth rate of the 21 thousand trees in our sample was
+The mean height growth rate of the 7 thousand trees in our sample was
 12.8 cm per year. Performing an unweighted regression for each tree
 with no bias correction, the growth rate was 22.8 cm per year.
 Without the weighted regression but with the bias correction the mean
@@ -10624,12 +10961,12 @@ regardless of which growth rates were used.
 
 Figure [[fig:growthratehist]] shows the distribution of growth rates.
 The large variability and biologically unlikely estimates (e.g. -10
-cm/yr or 50 cm/yr) suggest there is considerable measurement error in
+cm/yr) suggest there is considerable measurement error in
 growth rate.
 
 #+name: fig:growthratehist
 #+caption: Histogram of estimated growth rates for over 21 thousand urban trees.  The sample mean growth rate is 12.8 cm / year.
-[[file:figs/growthrate_histogram_w.png]]
+[[file:figs/growthrate_histogram_w_200mSubsample.png]]
 
 ** Multiple linear regression results
 
@@ -10646,7 +10983,7 @@ growth rates for all trees in our sample.  For the second model we
 interacted the genus covariate with the intercept and all the
 covariates except the topographic ones.  The second model that
 included genus had a much improved AIC (2123 less with 315 more
-parameters) and a higher adjusted R^2 (.556 compared to .50).  There
+parameters) and a higher adjusted R^2 (.569 compared to .506).  There
 are clearly differences between genera in covariate coefficients.
 
 The first model had 27 parameters shown in table
@@ -10664,38 +11001,39 @@ easily explainable.
 
 #+name: tab:m_nogenusInteractions_summary_coef
 #+caption: Summary of first model coefficients excluding genera.
-| term                                             | estimate | std.error | statistic | p.value |
-|--------------------------------------------------+----------+-----------+-----------+---------|
-| neighborhood tree                                |    77.51 |       6.1 |      12.6 |  <0.001 |
-| street tree, no utilities overhead               |     66.5 |       6.1 |        11 |  <0.001 |
-| street tree, with utilities overhead             |    66.82 |       6.1 |      10.9 |  <0.001 |
-| height 2005                                      |   -12.21 |       1.4 |      -8.6 |  <0.001 |
-| height 2005^2                                     |     0.82 |       0.1 |       6.5 |  <0.001 |
-| height 2005^3                                     |  -2.8e-2 |         0 |      -5.7 |  <0.001 |
-| height 2005^4                                     |   3.4e-4 |         0 |       5.1 |  <0.001 |
-| street tree, no utilities overhead:height 2005   |     0.37 |       0.1 |         5 |  <0.001 |
-| street tree, with utilities overhead:height 2005 |     0.31 |       0.1 |       3.2 |  <0.001 |
-| mean height within 20 m                          |     0.85 |       0.1 |      13.6 |  <0.001 |
-| percent impervious within 20 m                   |     1.41 |       1.4 |         1 |    0.31 |
-| percent impervious within 100 m                  |     2.16 |       1.4 |       1.5 |    0.12 |
-| % impervious 20m : % impervious 100m             |   -12.37 |       2.5 |      -4.9 |  <0.001 |
-| total phenolics                                  |    -2.96 |       0.2 |     -16.8 |  <0.001 |
-| nitrogen                                         |    -2.92 |       0.2 |     -16.9 |  <0.001 |
-| sugar                                            |    -0.17 |       0.2 |      -0.8 |     0.4 |
-| leaf mass per area                               |    -0.08 |       0.1 |      -0.6 |    0.52 |
-| lignin                                           |    -3.07 |       0.2 |     -14.6 |  <0.001 |
-| chlorophyll                                      |     2.54 |       0.2 |        13 |  <0.001 |
-| topographic position index (1.5 m)               |    -1.72 |       0.4 |      -4.3 |  <0.001 |
-| transformed aspect (1.5 m)                       |     0.45 |       0.1 |       3.4 |  <0.001 |
-| slope (1.5 m)                                    |    -4.95 |       1.7 |      -2.9 |   0.004 |
-| topographic position index (61 m)                |    -0.18 |         0 |      -5.7 |  <0.001 |
-| transformed aspect (61 m)                        |    -0.11 |       0.1 |      -0.9 |    0.38 |
-| slope (61 m)                                     |    -6.06 |       4.1 |      -1.5 |    0.14 |
-| elev                                             |      1.4 |       0.5 |       2.6 |    0.01 |
+| term                                             | estimate | std.error | statistic | p.value | p.value |
+|--------------------------------------------------+----------+-----------+-----------+---------+---------|
+| neighborhood tree                                |    89.13 |      10.9 |       8.2 |  <0.001 |  <0.001 |
+| street tree, no utilities overhead               |    79.74 |      10.7 |       7.4 |  <0.001 |  <0.001 |
+| street tree, with utilities overhead             |    80.15 |        11 |       7.3 |  <0.001 |  <0.001 |
+| height 2005                                      |    -14.1 |       2.6 |      -5.5 |  <0.001 |  <0.001 |
+| height 2005^2                                     |     0.91 |       0.2 |       3.9 |  <0.001 |  <0.001 |
+| height 2005^3                                     |  -2.8e-2 |    9.2e-3 |      -3.1 |  <0.001 |   0.002 |
+| height 2005^4                                     |   3.3e-9 |    1.3e-4 |       2.6 |  <0.001 |   0.011 |
+| street tree, no utilities overhead:height 2005   |     0.28 |       0.1 |       2.4 |  <0.001 |   0.018 |
+| street tree, with utilities overhead:height 2005 |     0.23 |       0.2 |       1.4 |  <0.001 |    0.16 |
+| mean height within 20 m                          |      0.9 |       0.1 |       8.3 |  <0.001 |  <0.001 |
+| percent impervious within 20 m                   |     0.68 |       2.4 |       0.3 |    0.31 |    0.78 |
+| percent impervious within 100 m                  |    -2.07 |       2.5 |      -0.8 |    0.12 |   0.407 |
+| % impervious 20m : % impervious 100m             |    -9.29 |       4.2 |      -2.2 |  <0.001 |   0.027 |
+| total phenolics                                  |    -2.33 |       0.3 |      -6.9 |  <0.001 |  <0.001 |
+| nitrogen                                         |    -2.76 |       0.3 |        -9 |  <0.001 |  <0.001 |
+| sugar                                            |     0.04 |       0.4 |       0.1 |     0.4 |   0.911 |
+| leaf mass per area                               |    -0.03 |       0.2 |      -0.1 |    0.52 |     0.9 |
+| lignin                                           |    -2.56 |       0.4 |      -6.7 |  <0.001 |  <0.001 |
+| chlorophyll                                      |     2.92 |       0.4 |       8.1 |  <0.001 |  <0.001 |
+| topographic position index (1.5 m)               |    -2.52 |       0.8 |      -3.3 |  <0.001 |   0.001 |
+| transformed aspect (1.5 m)                       |     0.71 |       0.2 |       2.9 |  <0.001 |   0.004 |
+| slope (1.5 m)                                    |    -6.36 |       2.8 |      -2.2 |   0.004 |   0.025 |
+| topographic position index (61 m)                |    -0.28 |       0.1 |      -4.9 |  <0.001 |  <0.001 |
+| transformed aspect (61 m)                        |    -0.62 |       0.2 |      -2.5 |    0.38 |   0.011 |
+| slope (61 m)                                     |    -9.83 |       7.3 |      -1.3 |    0.14 |   0.177 |
+| elev                                             |     2.27 |         1 |       2.3 |    0.01 |   0.024 |
+
 
 *** COMMENT make table
-#+begin_src R :exports none :eval no
-        tidy(m_nogenus) %>% 
+#+begin_src R :exports none :eval yes
+        tidy(ms_nogenus) %>% 
             data.frame %>% 
             mutate(estimate = round(estimate, 2),
                  std.error = round(std.error, 1),
@@ -10704,9 +11042,39 @@ easily explainable.
   toOrg
 #+end_src
 
-#+RESULTS:
-#+begin_example
+| term                      | estimate | std.error | statistic | p.value |
+|---------------------------+----------+-----------+-----------+---------|
+| st_poneighborhood          |    89.13 |      10.9 |       8.2 |       0 |
+| st_post no util            |    79.74 |      10.7 |       7.4 |       0 |
+| st_post w util             |    80.15 |        11 |       7.3 |       0 |
+| cor_max2005                |    -14.1 |       2.6 |      -5.5 |       0 |
+| height2005_2               |     0.91 |       0.2 |       3.9 |       0 |
+| height2005_3               |    -0.03 |         0 |      -3.1 |   0.002 |
+| height2005_4               |        0 |         0 |       2.6 |   0.011 |
+| st_post no util:cor_max2005 |     0.28 |       0.1 |       2.4 |   0.018 |
+| st_post w util:cor_max2005  |     0.23 |       0.2 |       1.4 |    0.16 |
+| mean_height_wn20m           |      0.9 |       0.1 |       8.3 |       0 |
+| pct_imp_20m                 |     0.68 |       2.4 |       0.3 |    0.78 |
+| pct_imp_100m                |    -2.07 |       2.5 |      -0.8 |   0.407 |
+| pct_imp_20m:pct_imp_100m      |    -9.29 |       4.2 |      -2.2 |   0.027 |
+| TotPhen                   |    -2.33 |       0.3 |      -6.9 |       0 |
+| N                         |    -2.76 |       0.3 |        -9 |       0 |
+| Sugar                     |     0.04 |       0.4 |       0.1 |   0.911 |
+| LMA                       |    -0.03 |       0.2 |      -0.1 |     0.9 |
+| lignin                    |    -2.56 |       0.4 |      -6.7 |       0 |
+| chl                       |     2.92 |       0.4 |       8.1 |       0 |
+| tpi_5ft                    |    -2.52 |       0.8 |      -3.3 |   0.001 |
+| aspect_trans_5ft            |     0.71 |       0.2 |       2.9 |   0.004 |
+| slope_5ft                  |    -6.36 |       2.8 |      -2.2 |   0.025 |
+| tpi_200ft                  |    -0.28 |       0.1 |      -4.9 |       0 |
+| aspect_trans_200ft          |    -0.62 |       0.2 |      -2.5 |   0.011 |
+| slope_200ft                |    -9.83 |       7.3 |      -1.3 |   0.177 |
+| elev                      |     2.27 |         1 |       2.3 |   0.024 |
+#+end_example
 
+
+
+#+begin_example
 | term                        | estimate | std.error | statistic | p.value |
 |-----------------------------+----------+-----------+-----------+---------|
 | st_poneighborhood           |    77.51 |       6.1 |      12.6 |       0 |
@@ -10745,35 +11113,33 @@ Neighborhood trees grew significantly faster than street trees (about
 3 - 8 cm more per year across the range of tree heights observed).
 Overhead utility lines did not have a significant effect on growth
 rates when averaging across all genera.  At a height of 8m,
-neighborhood trees were growing at an estimated 32 cm / year and
-street trees at an estimated 25 cm / year.  Depending on the type of
-tree, asympotitc heights are different.  For street trees with
-utilities overhead it occurred at heights around 24 m; for street trees
-without utilities: 25 m; for neighborhood trees: 26 m.
+neighborhood trees were growing at an estimated 35 cm / year and
+street trees at an estimated 28 cm / year.  Depending on the type of
+tree, asympotitc heights are different.  For street trees it occurred
+at heights around 25 m; for neighborhood trees: 27 m.
 
 #+name: fig:growthrate_byheight_byneighst
 #+caption: Estimated growth rate by 2005 bias corrected height for neighborhood trees and street trees with and without utility lines overhead.  All other covariates are set at median values.
-[[file:figs/first_model_predict_height_by_stpo_int.png]]
+[[file:figs/first_model_predict_height_by_stpo_int_200mSubsample.png]]
+
 ** Impervious surfaces
 
 There was a significant interaction between the percent of impervious
 cover within 20 m and within 100 m of a tree.  Trees with little
-impervious cover at either scales had growth rates of around 12 cm /
+impervious cover at either scales had growth rates of around 13 cm /
 year.  Trees with very high impervious cover at both scales had low
-growth rates, as low as 2.5 cm / year.  But the combination of
-impervious cover at the two scales which lead to the highest growth
-rates (around 13 - 14 cm / year) was low impervious cover within 20m
-and high impervious cover within 100m.  This situation might occur for
-trees in small parks or yards surrounded by built up surfaces.  
-
-Growth rates of trees with little impervious cover within 100 m are
-similar regardless of the impervious cover within the nearest 20 m.
-But the growth rates of trees with much impervious cover within 100 m
-are very strongly influenced by the local impervious cover within 20 m.
+growth rates, as low as 2.5 cm / year.  But trees with low impervious
+cover locally were able to maintain high growth rates despite having
+over 50% impervious cover within 100m.  This situation might occur for
+trees in small parks or yards surrounded by built up surfaces. Growth
+rates of trees with little impervious cover within 100 m are similar
+regardless of the impervious cover within the nearest 20 m.  But the
+growth rates of trees with much impervious cover within 100 m are very
+strongly influenced by the local impervious cover within 20 m.
 
 #+name: fig:impervious_interactions
 #+caption: Estimated height growth rates for trees with varying percent impervious land cover within 20 m and within 100m.  All other covariates are at their median values.
-[[file:figs/impervious_street_neighborhood_ribbon.png]]
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample.png]]
 ** Topography
 
 Topographic variables had statistically clear, but small effects on
@@ -10781,19 +11147,21 @@ growth rates.  Figure [[fig:topography_coef]] shows the coefficient
 estimates for the variables at the two scales.  Elevation in Madison
 had a significant relationship with growth.  Elevation in the city
 ranges from around 250 m to 350 m.  Our model estimated that trees
-growing in the highest parts of the city grew about 1.4 cm / year more
+growing in the highest parts of the city grew about 2.2 cm / year more
 than trees growing in the lowest parts of the city.  While trees at
 higher elevations grew faster than trees at lower elevations,
 topographic position index was associated with less growth.  At the
 scale of 1.5 m, for every 1m that trees are higher than their
-surroundings they grew an estimated 1.75 cm less per year.  Aspect and
-slope was not significant at the 61 m scale, but at the 1.5 m scale
-trees on steeper slopes grew more slowly than trees in flatter
-regions and trees in the northeast aspect grew faster than trees in
-the southwest aspect by almost 1 cm / year.
+surroundings they grew an estimated 2.5 cm less per year.  Slope was
+not significant at the 61 m scale, but at the 1.5 m scale trees on
+steeper slopes grew more slowly than trees in flatter regions.
+Surprisingly, aspect had opposite effects depending on the scale: at
+the 1.5 m scale trees in the northeast aspect grew faster than trees
+in the southwest aspect by almost .75 cm / year, while at the 61 m
+scale the effect was nearly opposite.
 
 #+name: fig:topography_coef
-[[file:figs/first_model_topo_coef_plots.png]]
+[[file:figs/first_model_topo_coef_plots_200mSubsample.png]]
 
 ** Mean height within 20m
 
@@ -10818,9 +11186,8 @@ in the effect of the mean height within 20 m by Genus.
 
 #+name: fig:mean_height_20m_coefs
 #+caption: Coefficients for mean height within 20 m by genus and overall.
-[[file:figs/mean_height_20m_coefs.png]]
+[[file:figs/mean_height_20m_coefs_200mSubsample.png]]
 ** Foliar canopy traits
-
 Four of the six foliar canopy traits were significantly related to
 tree height growth. Total phenolics, lignin and nitrogen had a negative
 association with growth; chlorophyll had a positive association, sugar
@@ -10837,14 +11204,14 @@ Growth rates are significantly related some of the traits, but they have little
 predictive power in our model.  Their contribution to the model also
 greatly depends on whether or not genus is included.  They slightly
 budge the adjusted R^2 from .54 to .56 for the model with genus.  But
-they increase the adjusted R^2 from .12 to .5 for a model without genus
+they increase the adjusted R^2 from .12 to .50 for a model without genus
 but with other covariates.  If traits are the only covariates the
 adjusted R^2 is just .04.  Therefore traits alone cannot explain height
 growth, but they can explain much of the variability explained by genus.
 
 #+name: fig:trait_coefs
 #+caption: Estimates of trait coefficients.  Estimates from model without genus are shown in black.  Estimates by genus are shaded.
-[[file:figs/traits_coef_comparison.png]]
+[[file:figs/traits_coef_comparison_200mSubsample.png]]
 
 ** Marginal Means by Genus
 Much of the differences in height growth rates can be explained by the
@@ -10855,13 +11222,13 @@ that accounts for multiple comparisons.  The three gymnosperms in the
 dataset, Pinus, Picea and Ginkgo, have some of the highest estimated
 growth rates (all over 20 cm / year, though Ginkgo has high
 uncertainty).  Other fast growing genera are Ulmus, Tilia, Populus,
-and Carya (estimated marginal growth rates over 17.5 cm / year).
+Catalpa and Carya (estimated marginal growth rates over 17.5 cm / year).
 Quercus, Juglans, Celtis and Acer had slow growth (estimated marginal
 growth rates less than 12 cm / year.
 
 #+name: fig:marginal_growthrate_genus
 #+caption:  Estimated marginal mean growth rates by genus.  Shaded bars are 95% confidence intervals and red arrows provide a guideline for pairwise comparisons that accounts for multiple comparisons.
-[[file:figs/genus_comparisons_full model.png]]
+[[file:figs/genus_comparisons_full model_200mSubsample.png]]
 ** Genus by Height predicted growth rates
 
 Marginal mean growth rates by genera are illustrated of overall
@@ -10887,15 +11254,11 @@ association with decreased height growth (except perhaps for Pinus).
 
 #+name: fig:growthrate_height_byGenus
 #+caption: Growth rate by bias corrected height in 2005 for 12 Genera.
-[[file:figs/height_genus_int_stpoNeighborhood.png]]
+[[file:figs/height_genus_int_stpoNeighborhood_200mSubsample.png]]
 #+name: fig:growthrate_height_3genera_stpo
 #+caption: Growth rates are associated with a three way interaction between height in 2005, genus, and type of tree.  
-[[file:figs/height_genus_int_stpo_genussub1.png]]
-
-
-
-
-* Discussion
+[[file:figs/height_genus_int_stpo_genussub1_200mSubsample.png]]
+* Discussion 
 ** Bias correction and growth rate estimates
 
 The negative bias in height estimates from lidar is well known and
@@ -10915,7 +11278,7 @@ mean growth was 37 +/- 14 m m^{-2} yr^{-1}.  So when pulse density was
 constant they found almost no growth, but when pulse density increased
 growth was over a third of a meter per year.  Unfortunately the
 authors did not investigate the potential effect of pulse density
-change on growth rate, and instead explained the pattern by other
+change on growth rate and instead explained the pattern by other
 means.
 
 cite:roussel_e_2017 described a method to correct for maximum height
@@ -10949,12 +11312,14 @@ gymnosperms, had greater bias cite:roussel_e_2017.  It also appeared
 that twig size may be related to the amount of bias.  Gleditsia and
 Ulmus have generally thinner twigs and had smaller bias than most
 other genera.  Populus and Quercus have generally thicker twigs and
-had greater bias.
+had greater bias.  This relationship warrants more rigorous assessement.
 
-While pulse density is a key factor in height bias, here are other
+While pulse density is a key factor in height bias, there are other
 important sources of bias that our method ignores, namely lidar pulse
 footprint size.  We did not have footprint size information for the
 2005 lidar and future work should include it in bias corrections.
+Some of the residual spatial structure in the data could be explained
+by these differences.
 
 *** COMMENT other stuff
 This has got to be due to the
@@ -11004,8 +11369,8 @@ significantly related to tree height growth, and they appeared to
 encode much of the information included in a tree's genus.  Models
 that contained genus as a term had the greatest explanatory power,
 however taxonomic information is often missing for trees, especially
-in neighborhoods on private property.  The foliar canopy traits show
-promise in improving canopy height predictions when genus is not know.
+for trees on private property.  The foliar canopy traits show promise
+in improving canopy height predictions when genus is not known.
 
 Most of the coefficients of foliar canopy traits were in expected
 directions.  Chlorophyll, the key light harvesting molecule for
@@ -11035,12 +11400,13 @@ negative association of nitrogen with growth does not appear to be a
 statistical anomaly, but the driver behind the relationship is not
 clear and should be further investigated.
 
+
 ** Environmental effects on tree height growth.
 
 We tested the relationship between three groups of variables on tree
 height growth: mean height of a tree's surroundings, nearby impervious
 landcover percentage, and topography.  All three had statistically
-significant effects, though the effect of topography was small.
+significant effects, though the effect of topography was relatively small.
 
 We found that the average height of the objects in the surrounding 20
 meters (mostly buildings and other trees) had a strong positive
@@ -11061,33 +11427,45 @@ growth.  Broadly impervious cover decreased height growth, probably
 because it is associated with a number of stressors like poor or
 insufficient soil.  However, we found that trees that had little
 impervious cover within 20 m and much impervious cover within 100 m
-grew fastest.  This could possibly be because trees had sufficient
-soil locally and may have been receiving increased water from runoff
-or were responding to the elevated temperatures in the broader
-surroundings.
+could maintain relatively fast growth.  This could possibly be because
+trees had sufficient soil locally and may have been receiving
+increased water from runoff or were responding to the elevated
+temperatures in the broader surroundings.
 
 Topographic relationships with growth rate seem to be due to water:
-trees on less steep slopes, cooler and wetter northeast aspects, and
-lower elevation relative to their immediate surroundings all grew more
-than trees in the opposite conditions.  Why trees at higher elevations
-grew more than trees at lower elevations is not clear, but could be
-due to another factor that varies from the relatively lower eastern
-half of the city to the relatively higher western half of the city,
-such as soils.   
+trees on less steep slopes, and lower elevation relative to their
+immediate surroundings all grew more than trees in the opposite
+conditions.  Why trees at higher elevations grew more than trees at
+lower elevations is not clear, but could be due to another factor that
+varies from the relatively lower eastern half of the city to the
+relatively higher western half of the city, such as soils.  Aspect had
+opposite effects depending on the scale.  Trees in general tend to
+grow better in the cooler and wetter northeastern aspects.  Madison,
+however, does not have much topography and it is also a city.  It
+could be that the expected aspect growth relationship is disrupted in
+a city without a large variation in topography.
 
-** COMMENT Future work
+** Future work
 
+Our work has shown that urban tree height growth rates can be
+explained relatively well by variables derived from remote sensing,
+but there are several areas for improvement and future work.  First,
+while better than doing nothing, our height bias correction method
+could be improved by considering more characteristics of the lidar
+that lead to bias.  Second, we only consider tree height growth,
+rather than some more ecologically relevant like biomass growth.
+Height growth is much easier to estimate from lidar, but provides an
+incomplete picture, especially for taller trees or more open grown,
+which may still be growing but not allocating resources to height.
 
-Spatial structure to the errors.
-
-Map 
-looking at residuals of the models shows significant remaining spatial structure:
-
-- the west side of madison has elevated growth rates beyond expected
-  by the model
-- blocks of trees are often all positive or all negative and their residuals.
-the we
-
+Third, our subsampling of the data to remove trees of the same genus
+that were closer than 200m to each other was a coarse technique to
+reduce spatial dependence in our data.  Properly modeling the
+covariance structure of our observations could better control for this
+dependence.  When we fit the model with all 21 thousand available
+observations, we found residuals of the model had strong spatial
+structure.  There clearly remain important factors in the urban
+environment that we are missing in our model (e.g. soils).
 
 * Conclusion
 
@@ -11097,7 +11475,7 @@ from low lidar pulse density and more accurately estimate tree height
 growth with multiple years of lidar.  Second, we show that for urban
 trees, as for all trees, height growth is significantly related to
 height and genus.  Important for broader applications, we show that if
-genus information is not available foliar canopy traits derived from
+genus information is not available, foliar canopy traits derived from
 imaging spectroscopy can explain much of the variation in height
 growth rates that would otherwise be explained by genus.  Third, we
 show that the urban environment, namely the height of a tree's
@@ -11105,19 +11483,175 @@ surroundings, the percent impervious, and the topography all are
 associated with changes in tree height growth rates.
 
 Urban trees alter the urban environment, potentially providing city
-dwellers with both services.  Our work has shown that the growth of
-trees - and the growth related services - may in turn be affected by
-the urban environment designed by humans, particularly impervious
+dwellers with ecosystem services.  Our work has shown that the growth
+of trees - and the growth related services - may in turn be affected
+by the urban environment designed by humans, particularly impervious
 cover.  Trees are dynamic parts of the urban ecosystem and their
 function can vary considerably, meaning managers cannot simply plant a
 tree and expect it to provide a certain benefit without considering
-the tree's context.  
+the tree's context.
 
 * bibliography                                                       :ignore:
 bibliography:~/git/notes/references.bib
 bibliographystyle:apa
 
 * supplementary 
+
+** bias correction
+
+All the bias correction values used to adjust heights based on pulse
+density are available in the R binary file: =no_growth_bias.rds= in
+the paper's github repository.
+| Genus       | number of pulses | pulse density (m^-2) | mean bias (m) | mean standard deviation of bootstrap bias (m) |
+|-------------+------------------+---------------------+---------------+-----------------------------------------------|
+| Abies       |                2 |                 0.1 |         -2.23 |                                          1.85 |
+| Abies       |                9 |                 0.5 |          -0.7 |                                          0.53 |
+| Abies       |               15 |                 0.8 |         -0.48 |                                          0.38 |
+| Abies       |               19 |                   1 |         -0.41 |                                          0.31 |
+| Abies       |               28 |                 1.5 |          -0.3 |                                          0.25 |
+| Abies       |               38 |                   2 |         -0.24 |                                          0.21 |
+| Abies       |               56 |                   3 |         -0.19 |                                          0.18 |
+| Acer        |                2 |                 0.1 |         -3.13 |                                          3.02 |
+| Acer        |                9 |                 0.5 |         -0.83 |                                          0.73 |
+| Acer        |               15 |                 0.8 |         -0.54 |                                          0.47 |
+| Acer        |               19 |                   1 |         -0.44 |                                          0.39 |
+| Acer        |               28 |                 1.5 |         -0.32 |                                          0.29 |
+| Acer        |               38 |                   2 |         -0.24 |                                          0.24 |
+| Acer        |               56 |                   3 |         -0.16 |                                          0.18 |
+| Betula      |                2 |                 0.1 |         -2.39 |                                          2.01 |
+| Betula      |                9 |                 0.5 |         -0.73 |                                          0.61 |
+| Betula      |               15 |                 0.8 |         -0.49 |                                          0.41 |
+| Betula      |               19 |                   1 |          -0.4 |                                          0.35 |
+| Betula      |               28 |                 1.5 |          -0.3 |                                          0.27 |
+| Betula      |               38 |                   2 |         -0.23 |                                          0.22 |
+| Betula      |               56 |                   3 |         -0.16 |                                          0.18 |
+| Carya       |                2 |                 0.1 |         -2.97 |                                          2.54 |
+| Carya       |                9 |                 0.5 |         -0.88 |                                          0.72 |
+| Carya       |               15 |                 0.8 |         -0.58 |                                          0.48 |
+| Carya       |               19 |                   1 |         -0.49 |                                          0.41 |
+| Carya       |               28 |                 1.5 |         -0.35 |                                          0.33 |
+| Carya       |               38 |                   2 |         -0.28 |                                          0.28 |
+| Carya       |               56 |                   3 |         -0.19 |                                          0.21 |
+| Catalpa     |                2 |                 0.1 |         -2.29 |                                          1.93 |
+| Catalpa     |                9 |                 0.5 |         -0.78 |                                          0.54 |
+| Catalpa     |               15 |                 0.8 |         -0.56 |                                          0.41 |
+| Catalpa     |               19 |                   1 |         -0.47 |                                          0.37 |
+| Catalpa     |               28 |                 1.5 |         -0.37 |                                          0.32 |
+| Catalpa     |               38 |                   2 |         -0.27 |                                          0.24 |
+| Catalpa     |               56 |                   3 |         -0.19 |                                           0.2 |
+| Celtis      |                2 |                 0.1 |         -2.55 |                                          2.34 |
+| Celtis      |                9 |                 0.5 |         -0.74 |                                          0.58 |
+| Celtis      |               15 |                 0.8 |         -0.52 |                                          0.39 |
+| Celtis      |               19 |                   1 |         -0.44 |                                          0.34 |
+| Celtis      |               28 |                 1.5 |         -0.33 |                                          0.28 |
+| Celtis      |               38 |                   2 |         -0.26 |                                          0.23 |
+| Celtis      |               56 |                   3 |         -0.19 |                                          0.19 |
+| Fraxinus    |                2 |                 0.1 |         -2.65 |                                          2.35 |
+| Fraxinus    |                9 |                 0.5 |         -0.79 |                                          0.61 |
+| Fraxinus    |               15 |                 0.8 |         -0.54 |                                          0.42 |
+| Fraxinus    |               19 |                   1 |         -0.45 |                                          0.36 |
+| Fraxinus    |               28 |                 1.5 |         -0.34 |                                          0.29 |
+| Fraxinus    |               38 |                   2 |         -0.27 |                                          0.24 |
+| Fraxinus    |               56 |                   3 |         -0.19 |                                          0.19 |
+| Ginkgo      |                2 |                 0.1 |         -2.89 |                                          1.73 |
+| Ginkgo      |                9 |                 0.5 |         -1.12 |                                          0.85 |
+| Ginkgo      |               15 |                 0.8 |         -0.76 |                                          0.64 |
+| Ginkgo      |               19 |                   1 |         -0.63 |                                          0.56 |
+| Ginkgo      |               28 |                 1.5 |         -0.45 |                                          0.43 |
+| Ginkgo      |               38 |                   2 |         -0.34 |                                          0.35 |
+| Ginkgo      |               56 |                   3 |         -0.22 |                                          0.26 |
+| Gleditsia   |                2 |                 0.1 |          -2.6 |                                          2.38 |
+| Gleditsia   |                9 |                 0.5 |         -0.81 |                                           0.6 |
+| Gleditsia   |               15 |                 0.8 |         -0.56 |                                          0.43 |
+| Gleditsia   |               19 |                   1 |         -0.46 |                                          0.38 |
+| Gleditsia   |               28 |                 1.5 |         -0.35 |                                           0.3 |
+| Gleditsia   |               38 |                   2 |         -0.27 |                                          0.25 |
+| Gleditsia   |               56 |                   3 |         -0.19 |                                           0.2 |
+| Gymnocladus |                2 |                 0.1 |         -2.16 |                                          1.72 |
+| Gymnocladus |                9 |                 0.5 |         -0.78 |                                          0.51 |
+| Gymnocladus |               15 |                 0.8 |         -0.55 |                                          0.39 |
+| Gymnocladus |               19 |                   1 |         -0.47 |                                          0.35 |
+| Gymnocladus |               28 |                 1.5 |         -0.36 |                                           0.3 |
+| Gymnocladus |               38 |                   2 |         -0.28 |                                          0.26 |
+| Gymnocladus |               56 |                   3 |         -0.19 |                                          0.21 |
+| Juglans     |                2 |                 0.1 |         -3.73 |                                          2.95 |
+| Juglans     |                9 |                 0.5 |         -1.14 |                                          0.93 |
+| Juglans     |               15 |                 0.8 |         -0.76 |                                          0.65 |
+| Juglans     |               19 |                   1 |         -0.63 |                                          0.54 |
+| Juglans     |               28 |                 1.5 |         -0.45 |                                          0.43 |
+| Juglans     |               38 |                   2 |         -0.34 |                                          0.35 |
+| Juglans     |               56 |                   3 |         -0.23 |                                          0.27 |
+| Picea       |                2 |                 0.1 |         -3.19 |                                          2.55 |
+| Picea       |                9 |                 0.5 |         -1.01 |                                          0.82 |
+| Picea       |               15 |                 0.8 |         -0.69 |                                           0.6 |
+| Picea       |               19 |                   1 |         -0.56 |                                           0.5 |
+| Picea       |               28 |                 1.5 |         -0.41 |                                          0.39 |
+| Picea       |               38 |                   2 |         -0.31 |                                          0.31 |
+| Picea       |               56 |                   3 |         -0.22 |                                          0.23 |
+| Pinus       |                2 |                 0.1 |         -2.65 |                                          1.93 |
+| Pinus       |                9 |                 0.5 |         -0.91 |                                          0.68 |
+| Pinus       |               15 |                 0.8 |         -0.63 |                                          0.48 |
+| Pinus       |               19 |                   1 |         -0.53 |                                          0.41 |
+| Pinus       |               28 |                 1.5 |          -0.4 |                                          0.34 |
+| Pinus       |               38 |                   2 |         -0.32 |                                          0.28 |
+| Pinus       |               56 |                   3 |         -0.24 |                                          0.23 |
+| Platanus    |                2 |                 0.1 |         -3.63 |                                          2.74 |
+| Platanus    |                9 |                 0.5 |         -1.18 |                                          0.91 |
+| Platanus    |               15 |                 0.8 |         -0.81 |                                          0.65 |
+| Platanus    |               19 |                   1 |         -0.67 |                                          0.55 |
+| Platanus    |               28 |                 1.5 |         -0.49 |                                          0.43 |
+| Platanus    |               38 |                   2 |         -0.38 |                                          0.34 |
+| Platanus    |               56 |                   3 |         -0.27 |                                          0.26 |
+| Populus     |                2 |                 0.1 |         -3.49 |                                          3.17 |
+| Populus     |                9 |                 0.5 |         -1.01 |                                          0.79 |
+| Populus     |               15 |                 0.8 |         -0.69 |                                          0.54 |
+| Populus     |               19 |                   1 |         -0.58 |                                          0.46 |
+| Populus     |               28 |                 1.5 |         -0.43 |                                          0.37 |
+| Populus     |               38 |                   2 |         -0.34 |                                          0.31 |
+| Populus     |               56 |                   3 |         -0.23 |                                          0.25 |
+| Quercus     |                2 |                 0.1 |         -2.98 |                                          2.78 |
+| Quercus     |                9 |                 0.5 |         -0.79 |                                          0.69 |
+| Quercus     |               15 |                 0.8 |         -0.52 |                                          0.44 |
+| Quercus     |               19 |                   1 |         -0.43 |                                          0.36 |
+| Quercus     |               28 |                 1.5 |         -0.31 |                                          0.28 |
+| Quercus     |               38 |                   2 |         -0.23 |                                          0.23 |
+| Quercus     |               56 |                   3 |         -0.17 |                                          0.18 |
+| Robinia     |                2 |                 0.1 |         -2.62 |                                          2.44 |
+| Robinia     |                9 |                 0.5 |         -0.79 |                                          0.59 |
+| Robinia     |               15 |                 0.8 |         -0.54 |                                          0.42 |
+| Robinia     |               19 |                   1 |         -0.46 |                                          0.36 |
+| Robinia     |               28 |                 1.5 |         -0.34 |                                          0.28 |
+| Robinia     |               38 |                   2 |         -0.27 |                                          0.24 |
+| Robinia     |               56 |                   3 |         -0.19 |                                          0.19 |
+| Salix       |                2 |                 0.1 |         -2.39 |                                          2.43 |
+| Salix       |                9 |                 0.5 |         -0.75 |                                          0.56 |
+| Salix       |               15 |                 0.8 |         -0.51 |                                          0.44 |
+| Salix       |               19 |                   1 |          -0.4 |                                          0.38 |
+| Salix       |               28 |                 1.5 |         -0.29 |                                          0.29 |
+| Salix       |               38 |                   2 |          -0.3 |                                          0.29 |
+| Salix       |               56 |                   3 |         -0.21 |                                          0.21 |
+| Thuja       |                2 |                 0.1 |         -2.85 |                                          2.33 |
+| Thuja       |                9 |                 0.5 |         -0.91 |                                          0.71 |
+| Thuja       |               15 |                 0.8 |         -0.63 |                                          0.49 |
+| Thuja       |               19 |                   1 |         -0.52 |                                          0.43 |
+| Thuja       |               28 |                 1.5 |         -0.38 |                                          0.34 |
+| Thuja       |               38 |                   2 |         -0.29 |                                          0.28 |
+| Thuja       |               56 |                   3 |          -0.2 |                                          0.22 |
+| Tilia       |                2 |                 0.1 |         -2.54 |                                          2.19 |
+| Tilia       |                9 |                 0.5 |         -0.77 |                                          0.59 |
+| Tilia       |               15 |                 0.8 |         -0.53 |                                          0.41 |
+| Tilia       |               19 |                   1 |         -0.44 |                                          0.35 |
+| Tilia       |               28 |                 1.5 |         -0.33 |                                          0.28 |
+| Tilia       |               38 |                   2 |         -0.25 |                                          0.23 |
+| Tilia       |               56 |                   3 |         -0.18 |                                          0.19 |
+| Ulmus       |                2 |                 0.1 |         -2.37 |                                          2.26 |
+| Ulmus       |                9 |                 0.5 |         -0.68 |                                          0.55 |
+| Ulmus       |               15 |                 0.8 |         -0.46 |                                          0.38 |
+| Ulmus       |               19 |                   1 |         -0.37 |                                          0.31 |
+| Ulmus       |               28 |                 1.5 |         -0.28 |                                          0.25 |
+| Ulmus       |               38 |                   2 |         -0.22 |                                          0.21 |
+| Ulmus       |               56 |                   3 |         -0.15 |                                          0.16 |
+
 
 ** full model
 
@@ -11136,6 +11670,7 @@ tidy(m_genus) %>% data.frame %>% toOrg
 #+name: fig:80randomtreescorrected
 #+caption: As in figure [[fig:year_by_height]] but with a random sample of 80 trees.
 [[file:figs/correction_nogrowth_80_m_smooth_lm.png]]
+
 * COMMENT papers
 https://link.springer.com/article/10.1186/s40663-018-0146-y
 
