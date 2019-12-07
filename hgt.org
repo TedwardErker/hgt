@@ -79,7 +79,7 @@ check my paper in stat consulting office to make sure I got it all
   decreased growth, trees with low impervious cover within 20 m can
   maintain relatively high growth rates even if impervious cover is
   high in the surrounding 100 m.
-- Four foliar canopy traits predicted from imaging spectroscopy:
+- Four foliar canopy traits predicted from imaging spectroscopy -
   nitrogen, lignin, total phenolics, and chlorophyll were
   significantly related to growth.  Nitrogen, lignin, and total
   phenolics had negative coefficients and chlorophyll had positive
@@ -4077,7 +4077,8 @@ hn <- hn[complete.cases(hn),]
         bias <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/no_growth_bias.rds")
         bias %>% group_by(Genus) %>%
           mutate(pulse_density = round(pulse_density, 2)) %>%
-          filter(pulse_density %in% c(0.11, 0.22, 0.48, 0.80, 1.02, 1.50, 2.03, 3.00)) %>%
+#          filter(pulse_density %in% c(0.11, 0.22, 0.48, 0.80, 1.02, 1.50, 2.03, 3.00)) %>%
+          filter(pulse_density %in% c(0.48, 1.02, 1.50, 3.00)) %>%
           mutate(pulse_density = round(pulse_density, 1),
                  bias = round(bias, 2),
                  sd_bias = round(sd_bias, 2)) %>%
@@ -4090,152 +4091,89 @@ hn <- hn[complete.cases(hn),]
 
 | Genus       | sample_size | pulse_density |  bias | sd_bias |
 |-------------+-------------+---------------+-------+---------|
-| Abies       |           2 |           0.1 | -2.23 |    1.85 |
 | Abies       |           9 |           0.5 |  -0.7 |    0.53 |
-| Abies       |          15 |           0.8 | -0.48 |    0.38 |
 | Abies       |          19 |             1 | -0.41 |    0.31 |
 | Abies       |          28 |           1.5 |  -0.3 |    0.25 |
-| Abies       |          38 |             2 | -0.24 |    0.21 |
 | Abies       |          56 |             3 | -0.19 |    0.18 |
-| Acer        |           2 |           0.1 | -3.13 |    3.02 |
 | Acer        |           9 |           0.5 | -0.83 |    0.73 |
-| Acer        |          15 |           0.8 | -0.54 |    0.47 |
 | Acer        |          19 |             1 | -0.44 |    0.39 |
 | Acer        |          28 |           1.5 | -0.32 |    0.29 |
-| Acer        |          38 |             2 | -0.24 |    0.24 |
 | Acer        |          56 |             3 | -0.16 |    0.18 |
-| Betula      |           2 |           0.1 | -2.39 |    2.01 |
 | Betula      |           9 |           0.5 | -0.73 |    0.61 |
-| Betula      |          15 |           0.8 | -0.49 |    0.41 |
 | Betula      |          19 |             1 |  -0.4 |    0.35 |
 | Betula      |          28 |           1.5 |  -0.3 |    0.27 |
-| Betula      |          38 |             2 | -0.23 |    0.22 |
 | Betula      |          56 |             3 | -0.16 |    0.18 |
-| Carya       |           2 |           0.1 | -2.97 |    2.54 |
 | Carya       |           9 |           0.5 | -0.88 |    0.72 |
-| Carya       |          15 |           0.8 | -0.58 |    0.48 |
 | Carya       |          19 |             1 | -0.49 |    0.41 |
 | Carya       |          28 |           1.5 | -0.35 |    0.33 |
-| Carya       |          38 |             2 | -0.28 |    0.28 |
 | Carya       |          56 |             3 | -0.19 |    0.21 |
-| Catalpa     |           2 |           0.1 | -2.29 |    1.93 |
 | Catalpa     |           9 |           0.5 | -0.78 |    0.54 |
-| Catalpa     |          15 |           0.8 | -0.56 |    0.41 |
 | Catalpa     |          19 |             1 | -0.47 |    0.37 |
 | Catalpa     |          28 |           1.5 | -0.37 |    0.32 |
-| Catalpa     |          38 |             2 | -0.27 |    0.24 |
 | Catalpa     |          56 |             3 | -0.19 |     0.2 |
-| Celtis      |           2 |           0.1 | -2.55 |    2.34 |
 | Celtis      |           9 |           0.5 | -0.74 |    0.58 |
-| Celtis      |          15 |           0.8 | -0.52 |    0.39 |
 | Celtis      |          19 |             1 | -0.44 |    0.34 |
 | Celtis      |          28 |           1.5 | -0.33 |    0.28 |
-| Celtis      |          38 |             2 | -0.26 |    0.23 |
 | Celtis      |          56 |             3 | -0.19 |    0.19 |
-| Fraxinus    |           2 |           0.1 | -2.65 |    2.35 |
 | Fraxinus    |           9 |           0.5 | -0.79 |    0.61 |
-| Fraxinus    |          15 |           0.8 | -0.54 |    0.42 |
 | Fraxinus    |          19 |             1 | -0.45 |    0.36 |
 | Fraxinus    |          28 |           1.5 | -0.34 |    0.29 |
-| Fraxinus    |          38 |             2 | -0.27 |    0.24 |
 | Fraxinus    |          56 |             3 | -0.19 |    0.19 |
-| Ginkgo      |           2 |           0.1 | -2.89 |    1.73 |
 | Ginkgo      |           9 |           0.5 | -1.12 |    0.85 |
-| Ginkgo      |          15 |           0.8 | -0.76 |    0.64 |
 | Ginkgo      |          19 |             1 | -0.63 |    0.56 |
 | Ginkgo      |          28 |           1.5 | -0.45 |    0.43 |
-| Ginkgo      |          38 |             2 | -0.34 |    0.35 |
 | Ginkgo      |          56 |             3 | -0.22 |    0.26 |
-| Gleditsia   |           2 |           0.1 |  -2.6 |    2.38 |
 | Gleditsia   |           9 |           0.5 | -0.81 |     0.6 |
-| Gleditsia   |          15 |           0.8 | -0.56 |    0.43 |
 | Gleditsia   |          19 |             1 | -0.46 |    0.38 |
 | Gleditsia   |          28 |           1.5 | -0.35 |     0.3 |
-| Gleditsia   |          38 |             2 | -0.27 |    0.25 |
 | Gleditsia   |          56 |             3 | -0.19 |     0.2 |
-| Gymnocladus |           2 |           0.1 | -2.16 |    1.72 |
 | Gymnocladus |           9 |           0.5 | -0.78 |    0.51 |
-| Gymnocladus |          15 |           0.8 | -0.55 |    0.39 |
 | Gymnocladus |          19 |             1 | -0.47 |    0.35 |
 | Gymnocladus |          28 |           1.5 | -0.36 |     0.3 |
-| Gymnocladus |          38 |             2 | -0.28 |    0.26 |
 | Gymnocladus |          56 |             3 | -0.19 |    0.21 |
-| Juglans     |           2 |           0.1 | -3.73 |    2.95 |
 | Juglans     |           9 |           0.5 | -1.14 |    0.93 |
-| Juglans     |          15 |           0.8 | -0.76 |    0.65 |
 | Juglans     |          19 |             1 | -0.63 |    0.54 |
 | Juglans     |          28 |           1.5 | -0.45 |    0.43 |
-| Juglans     |          38 |             2 | -0.34 |    0.35 |
 | Juglans     |          56 |             3 | -0.23 |    0.27 |
-| Picea       |           2 |           0.1 | -3.19 |    2.55 |
 | Picea       |           9 |           0.5 | -1.01 |    0.82 |
-| Picea       |          15 |           0.8 | -0.69 |     0.6 |
 | Picea       |          19 |             1 | -0.56 |     0.5 |
 | Picea       |          28 |           1.5 | -0.41 |    0.39 |
-| Picea       |          38 |             2 | -0.31 |    0.31 |
 | Picea       |          56 |             3 | -0.22 |    0.23 |
-| Pinus       |           2 |           0.1 | -2.65 |    1.93 |
 | Pinus       |           9 |           0.5 | -0.91 |    0.68 |
-| Pinus       |          15 |           0.8 | -0.63 |    0.48 |
 | Pinus       |          19 |             1 | -0.53 |    0.41 |
 | Pinus       |          28 |           1.5 |  -0.4 |    0.34 |
-| Pinus       |          38 |             2 | -0.32 |    0.28 |
 | Pinus       |          56 |             3 | -0.24 |    0.23 |
-| Platanus    |           2 |           0.1 | -3.63 |    2.74 |
 | Platanus    |           9 |           0.5 | -1.18 |    0.91 |
-| Platanus    |          15 |           0.8 | -0.81 |    0.65 |
 | Platanus    |          19 |             1 | -0.67 |    0.55 |
 | Platanus    |          28 |           1.5 | -0.49 |    0.43 |
-| Platanus    |          38 |             2 | -0.38 |    0.34 |
 | Platanus    |          56 |             3 | -0.27 |    0.26 |
-| Populus     |           2 |           0.1 | -3.49 |    3.17 |
 | Populus     |           9 |           0.5 | -1.01 |    0.79 |
-| Populus     |          15 |           0.8 | -0.69 |    0.54 |
 | Populus     |          19 |             1 | -0.58 |    0.46 |
 | Populus     |          28 |           1.5 | -0.43 |    0.37 |
-| Populus     |          38 |             2 | -0.34 |    0.31 |
 | Populus     |          56 |             3 | -0.23 |    0.25 |
-| Quercus     |           2 |           0.1 | -2.98 |    2.78 |
 | Quercus     |           9 |           0.5 | -0.79 |    0.69 |
-| Quercus     |          15 |           0.8 | -0.52 |    0.44 |
 | Quercus     |          19 |             1 | -0.43 |    0.36 |
 | Quercus     |          28 |           1.5 | -0.31 |    0.28 |
-| Quercus     |          38 |             2 | -0.23 |    0.23 |
 | Quercus     |          56 |             3 | -0.17 |    0.18 |
-| Robinia     |           2 |           0.1 | -2.62 |    2.44 |
 | Robinia     |           9 |           0.5 | -0.79 |    0.59 |
-| Robinia     |          15 |           0.8 | -0.54 |    0.42 |
 | Robinia     |          19 |             1 | -0.46 |    0.36 |
 | Robinia     |          28 |           1.5 | -0.34 |    0.28 |
-| Robinia     |          38 |             2 | -0.27 |    0.24 |
 | Robinia     |          56 |             3 | -0.19 |    0.19 |
-| Salix       |           2 |           0.1 | -2.39 |    2.43 |
 | Salix       |           9 |           0.5 | -0.75 |    0.56 |
-| Salix       |          15 |           0.8 | -0.51 |    0.44 |
 | Salix       |          19 |             1 |  -0.4 |    0.38 |
 | Salix       |          28 |           1.5 | -0.29 |    0.29 |
-| Salix       |          38 |             2 |  -0.3 |    0.29 |
 | Salix       |          56 |             3 | -0.21 |    0.21 |
-| Thuja       |           2 |           0.1 | -2.85 |    2.33 |
 | Thuja       |           9 |           0.5 | -0.91 |    0.71 |
-| Thuja       |          15 |           0.8 | -0.63 |    0.49 |
 | Thuja       |          19 |             1 | -0.52 |    0.43 |
 | Thuja       |          28 |           1.5 | -0.38 |    0.34 |
-| Thuja       |          38 |             2 | -0.29 |    0.28 |
 | Thuja       |          56 |             3 |  -0.2 |    0.22 |
-| Tilia       |           2 |           0.1 | -2.54 |    2.19 |
 | Tilia       |           9 |           0.5 | -0.77 |    0.59 |
-| Tilia       |          15 |           0.8 | -0.53 |    0.41 |
 | Tilia       |          19 |             1 | -0.44 |    0.35 |
 | Tilia       |          28 |           1.5 | -0.33 |    0.28 |
-| Tilia       |          38 |             2 | -0.25 |    0.23 |
 | Tilia       |          56 |             3 | -0.18 |    0.19 |
-| Ulmus       |           2 |           0.1 | -2.37 |    2.26 |
 | Ulmus       |           9 |           0.5 | -0.68 |    0.55 |
-| Ulmus       |          15 |           0.8 | -0.46 |    0.38 |
 | Ulmus       |          19 |             1 | -0.37 |    0.31 |
 | Ulmus       |          28 |           1.5 | -0.28 |    0.25 |
-| Ulmus       |          38 |             2 | -0.22 |    0.21 |
 | Ulmus       |          56 |             3 | -0.15 |    0.16 |
 #+end_example
 
@@ -10462,67 +10400,109 @@ With over half the human population living in urban areas, planting
 urban trees to provide ecosystem services is seen as a way to make the
 environment that most people interact with more pleasant and
 sustainable.  These ecosystem services include habitat for wildlife,
-stormwater runoff reduction, air quality improvement, and carbon
-sequestration citep:roy_etal_2012.  
+stormwater runoff reduction, air quality improvement, carbon
+sequestration, and aesthetics citep:roy_etal_2012.  
 
-All these services are a function of growth, either directly such as
-carbon sequestration, or indirectly such as stormwater runoff
-reduction which is a function of the result of growth: tree size
+All these services are a function of growth, either directly or
+indirectly. Carbon update occurs as a direct result of growth.
+Reductions in stormwater runoff and improvements in air quality are
+functions of tree size, which results from growth
 cite:nowak14_tree_fores_effec_air_qualit,nowak_e_2013. Therefore,
 understanding urban tree growth is essential to estimating and
 projecting ecosystem services into the future.  The factors that
 contribute to the growth of trees in general are well understood.
 What we do not understand as well is how the complex urban environment
-alters these factors thereby altering the growth of trees.
+alters these factors, thereby altering the growth of trees.
 
-Urban trees grow differently than their more rural counterparts
-because of the challenges they face surviving among urban
-infrastructure and because they are largely cultivated by humans (but
-not for their wood).  For example, street trees are subject to damage
-from vehicles, pedestrians, and poor soil conditions; urban trees tend
-to be more open grown than rural trees; urban trees are pruned to
-accommodate powerlines or for aesthetics, many urban trees are
-irrigated and fertilized; the species composition in a city is often
-different than its rural surrounding cite:zipperer_guntenspergen_2009.
-Urban conditions are not only unique, but they are also more
-heterogeneous, which creates variability in the growth of the urban
-forest at small spatial scales.
+Urban trees grow differently than their counterparts because of the
+challenges they face surviving among urban infrastructure and are
+cultivated by humans (but not for their wood).  For example, street
+trees are subject to damage from vehicles and pedestrians; urban trees
+tend to be open grown; urban trees are pruned to accommodate
+powerlines or for aesthetics, many urban trees are irrigated and
+fertilized; and the species composition in a city is often different
+cite:zipperer_guntenspergen_2009.  Urban conditions are not only
+unique, but they are also more heterogeneous, which creates
+variability in the growth of the urban forest at small spatial scales.
 
-Remote sensing technology provides an efficient way to estimate tree
-height growth for tens of thousands of trees and derive covariates
-such as canopy foliar traits to explain the growth.  Sufficient sample
-size is required to detect effect sizes that may be small relative to
-the changes induced by the urban environment.  Here we use two
+Remote sensing technology can efficiently estimate tree height growth
+and then help explain patterns in that growth for tens of thousands of
+trees.  Sufficient sample size is required to detect effect sizes that
+may be small relative to the environment.  Here we use two
 technologies that have only recently become more available, repeat
-lidar and imaging spectroscopy.  Lidar uses the reflection of laser
-pulses to create 3 dimensional point clouds of objects.  Using
+airborne laser scanning (LiDAR, also called light detection and
+ranging) and imaging spectroscopy.  
+
+Lidar has been used extensively for years in forestry applications
+citep:dubayah_2000.  Laser pulses are sent from an airborne platform
+to the ground below and, when the reflected light returns with
+sufficient intensity, the height of the objects below are recorded.
+The result is a 3 dimensional point cloud that can be used to
+characterize forest structure, including height cite:lim_e_2003.
+Repeat lidar is a promising technology for measuring tree height
+growth, but handling differences between lidar acquisitions remains a
+challenge, see for example cite:duncanson_dubayah_2018.  Our work uses
 multiple years of lidar data, in conjunction with an innovative height
-bias correction, we estimated the heights of trees and their growth
-rates.  NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
+bias correction, to estimate the heights of trees and their growth
+rates.
+
+  NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
 Generation (AVIRIS-NG) measures the reflectance of light in hundreds
 of narrow wavebands from 400 to 2500 nm.  The spectra from the imagery
 can be used to create indicies of canopy foliar traits which then in
 turn we used to explain height growth.
 
+
+Again, you are lacking a literature review.  Just a few sentences are
+needed, but tell us what spectroscopy is, how it has been used to do
+these things, and what the variables derived from it tell you about
+ecosystems (investment in growth potential vs leaf construction,
+defense) 
+
+
+
 In addition to canopy foliar traits, we also included as variables:
 topography, landcover, tree height, mean height of a tree's
 surroundings and whether or not the tree was a street tree and whether
-or not it had overhead utilities. The objectives of our study were to:
+or not it had overhead utilities. 
 
-- Evaluate the effectiveness of terrain optimized leaf-off lidar with
-  variable pulse densities to estimate urban tree height growth
-- Evaluate whether canopy foliar traits estimated from remotely sensed
-  imaging spectroscopy can explain tree height growth.
-- Evaluate how urban tree height growth is altered by environmental
+Like with hyperspectral and lidar, you need a sentence lit review (w/
+citations) on each of these variables and why you would hypothesize
+they affect tree growth
+
+
+
+The objectives of our study were to:
+
+
+
+- evaluate the effectiveness of terrain optimized leaf-off lidar with
+  variable pulse densities to estimate urban tree height growth;
+- evaluate whether canopy foliar traits estimated from remotely sensed
+  imaging spectroscopy can explain tree height growth;
+- evaluate how urban tree height growth is altered by environmental
   factors common to all trees (e.g. topography) as well as
   environmental factors specific to the urban environment (e.g. impervious
   cover, streets, and utility lines).
+
+
+Just as a note to think about, at some point, perhaps in intro and
+maybe in discussion, you will need to mention: --you are making use of
+serendipitous data with the lidar (or some term like that) and as such
+the data cannot be absolutely validated.  As well, your hyperspectral
+measurements are based on models developed in the region and
+validated, but not on your specific trees.
+
 
 ** COMMENT maybe include
 Existing methods for estimating ecosystem services are lacking.
 cite:erker_townsend_2019 address building energy use
 effects. cite:boukili_e_2017 address C sequestration from growth and
 find itree and UTD both over estimate.  
+
+Full waveform LiDAR records the
+intensity of the return continuously through time, while discrete
+return lidar, which we used here, discretizes the waveform at 
 
 ** COMMENT comments
 Understanding how trees grow in urban environments can help cities
@@ -11499,158 +11479,197 @@ bibliographystyle:apa
 
 ** bias correction
 
-All the bias correction values used to adjust heights based on pulse
-density are available in the R binary file: =no_growth_bias.rds= in
-the paper's github repository.
-| Genus       | number of pulses | pulse density (m^-2) | mean bias (m) | mean standard deviation of bootstrap bias (m) |
-|-------------+------------------+---------------------+---------------+-----------------------------------------------|
-| Abies       |                2 |                 0.1 |         -2.23 |                                          1.85 |
-| Abies       |                9 |                 0.5 |          -0.7 |                                          0.53 |
-| Abies       |               15 |                 0.8 |         -0.48 |                                          0.38 |
-| Abies       |               19 |                   1 |         -0.41 |                                          0.31 |
-| Abies       |               28 |                 1.5 |          -0.3 |                                          0.25 |
-| Abies       |               38 |                   2 |         -0.24 |                                          0.21 |
-| Abies       |               56 |                   3 |         -0.19 |                                          0.18 |
-| Acer        |                2 |                 0.1 |         -3.13 |                                          3.02 |
-| Acer        |                9 |                 0.5 |         -0.83 |                                          0.73 |
-| Acer        |               15 |                 0.8 |         -0.54 |                                          0.47 |
-| Acer        |               19 |                   1 |         -0.44 |                                          0.39 |
-| Acer        |               28 |                 1.5 |         -0.32 |                                          0.29 |
-| Acer        |               38 |                   2 |         -0.24 |                                          0.24 |
-| Acer        |               56 |                   3 |         -0.16 |                                          0.18 |
-| Betula      |                2 |                 0.1 |         -2.39 |                                          2.01 |
-| Betula      |                9 |                 0.5 |         -0.73 |                                          0.61 |
-| Betula      |               15 |                 0.8 |         -0.49 |                                          0.41 |
-| Betula      |               19 |                   1 |          -0.4 |                                          0.35 |
-| Betula      |               28 |                 1.5 |          -0.3 |                                          0.27 |
-| Betula      |               38 |                   2 |         -0.23 |                                          0.22 |
-| Betula      |               56 |                   3 |         -0.16 |                                          0.18 |
-| Carya       |                2 |                 0.1 |         -2.97 |                                          2.54 |
-| Carya       |                9 |                 0.5 |         -0.88 |                                          0.72 |
-| Carya       |               15 |                 0.8 |         -0.58 |                                          0.48 |
-| Carya       |               19 |                   1 |         -0.49 |                                          0.41 |
-| Carya       |               28 |                 1.5 |         -0.35 |                                          0.33 |
-| Carya       |               38 |                   2 |         -0.28 |                                          0.28 |
-| Carya       |               56 |                   3 |         -0.19 |                                          0.21 |
-| Catalpa     |                2 |                 0.1 |         -2.29 |                                          1.93 |
-| Catalpa     |                9 |                 0.5 |         -0.78 |                                          0.54 |
-| Catalpa     |               15 |                 0.8 |         -0.56 |                                          0.41 |
-| Catalpa     |               19 |                   1 |         -0.47 |                                          0.37 |
-| Catalpa     |               28 |                 1.5 |         -0.37 |                                          0.32 |
-| Catalpa     |               38 |                   2 |         -0.27 |                                          0.24 |
-| Catalpa     |               56 |                   3 |         -0.19 |                                           0.2 |
-| Celtis      |                2 |                 0.1 |         -2.55 |                                          2.34 |
-| Celtis      |                9 |                 0.5 |         -0.74 |                                          0.58 |
-| Celtis      |               15 |                 0.8 |         -0.52 |                                          0.39 |
-| Celtis      |               19 |                   1 |         -0.44 |                                          0.34 |
-| Celtis      |               28 |                 1.5 |         -0.33 |                                          0.28 |
-| Celtis      |               38 |                   2 |         -0.26 |                                          0.23 |
-| Celtis      |               56 |                   3 |         -0.19 |                                          0.19 |
-| Fraxinus    |                2 |                 0.1 |         -2.65 |                                          2.35 |
-| Fraxinus    |                9 |                 0.5 |         -0.79 |                                          0.61 |
-| Fraxinus    |               15 |                 0.8 |         -0.54 |                                          0.42 |
-| Fraxinus    |               19 |                   1 |         -0.45 |                                          0.36 |
-| Fraxinus    |               28 |                 1.5 |         -0.34 |                                          0.29 |
-| Fraxinus    |               38 |                   2 |         -0.27 |                                          0.24 |
-| Fraxinus    |               56 |                   3 |         -0.19 |                                          0.19 |
-| Ginkgo      |                2 |                 0.1 |         -2.89 |                                          1.73 |
-| Ginkgo      |                9 |                 0.5 |         -1.12 |                                          0.85 |
-| Ginkgo      |               15 |                 0.8 |         -0.76 |                                          0.64 |
-| Ginkgo      |               19 |                   1 |         -0.63 |                                          0.56 |
-| Ginkgo      |               28 |                 1.5 |         -0.45 |                                          0.43 |
-| Ginkgo      |               38 |                   2 |         -0.34 |                                          0.35 |
-| Ginkgo      |               56 |                   3 |         -0.22 |                                          0.26 |
-| Gleditsia   |                2 |                 0.1 |          -2.6 |                                          2.38 |
-| Gleditsia   |                9 |                 0.5 |         -0.81 |                                           0.6 |
-| Gleditsia   |               15 |                 0.8 |         -0.56 |                                          0.43 |
-| Gleditsia   |               19 |                   1 |         -0.46 |                                          0.38 |
-| Gleditsia   |               28 |                 1.5 |         -0.35 |                                           0.3 |
-| Gleditsia   |               38 |                   2 |         -0.27 |                                          0.25 |
-| Gleditsia   |               56 |                   3 |         -0.19 |                                           0.2 |
-| Gymnocladus |                2 |                 0.1 |         -2.16 |                                          1.72 |
-| Gymnocladus |                9 |                 0.5 |         -0.78 |                                          0.51 |
-| Gymnocladus |               15 |                 0.8 |         -0.55 |                                          0.39 |
-| Gymnocladus |               19 |                   1 |         -0.47 |                                          0.35 |
-| Gymnocladus |               28 |                 1.5 |         -0.36 |                                           0.3 |
-| Gymnocladus |               38 |                   2 |         -0.28 |                                          0.26 |
-| Gymnocladus |               56 |                   3 |         -0.19 |                                          0.21 |
-| Juglans     |                2 |                 0.1 |         -3.73 |                                          2.95 |
-| Juglans     |                9 |                 0.5 |         -1.14 |                                          0.93 |
-| Juglans     |               15 |                 0.8 |         -0.76 |                                          0.65 |
-| Juglans     |               19 |                   1 |         -0.63 |                                          0.54 |
-| Juglans     |               28 |                 1.5 |         -0.45 |                                          0.43 |
-| Juglans     |               38 |                   2 |         -0.34 |                                          0.35 |
-| Juglans     |               56 |                   3 |         -0.23 |                                          0.27 |
-| Picea       |                2 |                 0.1 |         -3.19 |                                          2.55 |
-| Picea       |                9 |                 0.5 |         -1.01 |                                          0.82 |
-| Picea       |               15 |                 0.8 |         -0.69 |                                           0.6 |
-| Picea       |               19 |                   1 |         -0.56 |                                           0.5 |
-| Picea       |               28 |                 1.5 |         -0.41 |                                          0.39 |
-| Picea       |               38 |                   2 |         -0.31 |                                          0.31 |
-| Picea       |               56 |                   3 |         -0.22 |                                          0.23 |
-| Pinus       |                2 |                 0.1 |         -2.65 |                                          1.93 |
-| Pinus       |                9 |                 0.5 |         -0.91 |                                          0.68 |
-| Pinus       |               15 |                 0.8 |         -0.63 |                                          0.48 |
-| Pinus       |               19 |                   1 |         -0.53 |                                          0.41 |
-| Pinus       |               28 |                 1.5 |          -0.4 |                                          0.34 |
-| Pinus       |               38 |                   2 |         -0.32 |                                          0.28 |
-| Pinus       |               56 |                   3 |         -0.24 |                                          0.23 |
-| Platanus    |                2 |                 0.1 |         -3.63 |                                          2.74 |
-| Platanus    |                9 |                 0.5 |         -1.18 |                                          0.91 |
-| Platanus    |               15 |                 0.8 |         -0.81 |                                          0.65 |
-| Platanus    |               19 |                   1 |         -0.67 |                                          0.55 |
-| Platanus    |               28 |                 1.5 |         -0.49 |                                          0.43 |
-| Platanus    |               38 |                   2 |         -0.38 |                                          0.34 |
-| Platanus    |               56 |                   3 |         -0.27 |                                          0.26 |
-| Populus     |                2 |                 0.1 |         -3.49 |                                          3.17 |
-| Populus     |                9 |                 0.5 |         -1.01 |                                          0.79 |
-| Populus     |               15 |                 0.8 |         -0.69 |                                          0.54 |
-| Populus     |               19 |                   1 |         -0.58 |                                          0.46 |
-| Populus     |               28 |                 1.5 |         -0.43 |                                          0.37 |
-| Populus     |               38 |                   2 |         -0.34 |                                          0.31 |
-| Populus     |               56 |                   3 |         -0.23 |                                          0.25 |
-| Quercus     |                2 |                 0.1 |         -2.98 |                                          2.78 |
-| Quercus     |                9 |                 0.5 |         -0.79 |                                          0.69 |
-| Quercus     |               15 |                 0.8 |         -0.52 |                                          0.44 |
-| Quercus     |               19 |                   1 |         -0.43 |                                          0.36 |
-| Quercus     |               28 |                 1.5 |         -0.31 |                                          0.28 |
-| Quercus     |               38 |                   2 |         -0.23 |                                          0.23 |
-| Quercus     |               56 |                   3 |         -0.17 |                                          0.18 |
-| Robinia     |                2 |                 0.1 |         -2.62 |                                          2.44 |
-| Robinia     |                9 |                 0.5 |         -0.79 |                                          0.59 |
-| Robinia     |               15 |                 0.8 |         -0.54 |                                          0.42 |
-| Robinia     |               19 |                   1 |         -0.46 |                                          0.36 |
-| Robinia     |               28 |                 1.5 |         -0.34 |                                          0.28 |
-| Robinia     |               38 |                   2 |         -0.27 |                                          0.24 |
-| Robinia     |               56 |                   3 |         -0.19 |                                          0.19 |
-| Salix       |                2 |                 0.1 |         -2.39 |                                          2.43 |
-| Salix       |                9 |                 0.5 |         -0.75 |                                          0.56 |
-| Salix       |               15 |                 0.8 |         -0.51 |                                          0.44 |
-| Salix       |               19 |                   1 |          -0.4 |                                          0.38 |
-| Salix       |               28 |                 1.5 |         -0.29 |                                          0.29 |
-| Salix       |               38 |                   2 |          -0.3 |                                          0.29 |
-| Salix       |               56 |                   3 |         -0.21 |                                          0.21 |
-| Thuja       |                2 |                 0.1 |         -2.85 |                                          2.33 |
-| Thuja       |                9 |                 0.5 |         -0.91 |                                          0.71 |
-| Thuja       |               15 |                 0.8 |         -0.63 |                                          0.49 |
-| Thuja       |               19 |                   1 |         -0.52 |                                          0.43 |
-| Thuja       |               28 |                 1.5 |         -0.38 |                                          0.34 |
-| Thuja       |               38 |                   2 |         -0.29 |                                          0.28 |
-| Thuja       |               56 |                   3 |          -0.2 |                                          0.22 |
-| Tilia       |                2 |                 0.1 |         -2.54 |                                          2.19 |
-| Tilia       |                9 |                 0.5 |         -0.77 |                                          0.59 |
-| Tilia       |               15 |                 0.8 |         -0.53 |                                          0.41 |
-| Tilia       |               19 |                   1 |         -0.44 |                                          0.35 |
-| Tilia       |               28 |                 1.5 |         -0.33 |                                          0.28 |
-| Tilia       |               38 |                   2 |         -0.25 |                                          0.23 |
-| Tilia       |               56 |                   3 |         -0.18 |                                          0.19 |
-| Ulmus       |                2 |                 0.1 |         -2.37 |                                          2.26 |
-| Ulmus       |                9 |                 0.5 |         -0.68 |                                          0.55 |
-| Ulmus       |               15 |                 0.8 |         -0.46 |                                          0.38 |
-| Ulmus       |               19 |                   1 |         -0.37 |                                          0.31 |
-| Ulmus       |               28 |                 1.5 |         -0.28 |                                          0.25 |
-| Ulmus       |               38 |                   2 |         -0.22 |                                          0.21 |
-| Ulmus       |               56 |                   3 |         -0.15 |                                          0.16 |
+Figure [[fig:mean_pulse_by_bias_by_genus]] shows the mean maximum height
+bias by pulse density curves by genera for an example 8 genera.  Table
+[[tab:genus_bias_corrections]] provides bias by pulse density values for
+all genera at 4 pulse density levels. 
+
+All the bias correction values
+for every genera used to adjust heights based on pulse density are
+available in the R binary file: =no_growth_bias.rds= in the paper's
+github repository, https://github.com/TedwardErker/hgt.
+
+#+name: tab:genus_bias_corrections
+#+caption: Maximum tree height bias (bias) and mean bootstrap standard deviation (sd) for all genera at varying pulse densities (dens).
+| Genus       | dens (m^-2) | bias (m) | sd (m) |   |   |   | Genus    | dens (m^-2) | bias (m) | sd (m) |
+|-------------+------------+----------+--------+---+---+---+----------+------------+----------+--------|
+| Abies       |        0.5 |     -0.7 |   0.53 |   |   |   | Picea    |        0.5 |    -1.01 |   0.82 |
+| Abies       |          1 |    -0.41 |   0.31 |   |   |   | Picea    |          1 |    -0.56 |    0.5 |
+| Abies       |        1.5 |     -0.3 |   0.25 |   |   |   | Picea    |        1.5 |    -0.41 |   0.39 |
+| Abies       |          3 |    -0.19 |   0.18 |   |   |   | Picea    |          3 |    -0.22 |   0.23 |
+| Acer        |        0.5 |    -0.83 |   0.73 |   |   |   | Pinus    |        0.5 |    -0.91 |   0.68 |
+| Acer        |          1 |    -0.44 |   0.39 |   |   |   | Pinus    |          1 |    -0.53 |   0.41 |
+| Acer        |        1.5 |    -0.32 |   0.29 |   |   |   | Pinus    |        1.5 |     -0.4 |   0.34 |
+| Acer        |          3 |    -0.16 |   0.18 |   |   |   | Pinus    |          3 |    -0.24 |   0.23 |
+| Betula      |        0.5 |    -0.73 |   0.61 |   |   |   | Platanus |        0.5 |    -1.18 |   0.91 |
+| Betula      |          1 |     -0.4 |   0.35 |   |   |   | Platanus |          1 |    -0.67 |   0.55 |
+| Betula      |        1.5 |     -0.3 |   0.27 |   |   |   | Platanus |        1.5 |    -0.49 |   0.43 |
+| Betula      |          3 |    -0.16 |   0.18 |   |   |   | Platanus |          3 |    -0.27 |   0.26 |
+| Carya       |        0.5 |    -0.88 |   0.72 |   |   |   | Populus  |        0.5 |    -1.01 |   0.79 |
+| Carya       |          1 |    -0.49 |   0.41 |   |   |   | Populus  |          1 |    -0.58 |   0.46 |
+| Carya       |        1.5 |    -0.35 |   0.33 |   |   |   | Populus  |        1.5 |    -0.43 |   0.37 |
+| Carya       |          3 |    -0.19 |   0.21 |   |   |   | Populus  |          3 |    -0.23 |   0.25 |
+| Catalpa     |        0.5 |    -0.78 |   0.54 |   |   |   | Quercus  |        0.5 |    -0.79 |   0.69 |
+| Catalpa     |          1 |    -0.47 |   0.37 |   |   |   | Quercus  |          1 |    -0.43 |   0.36 |
+| Catalpa     |        1.5 |    -0.37 |   0.32 |   |   |   | Quercus  |        1.5 |    -0.31 |   0.28 |
+| Catalpa     |          3 |    -0.19 |    0.2 |   |   |   | Quercus  |          3 |    -0.17 |   0.18 |
+| Celtis      |        0.5 |    -0.74 |   0.58 |   |   |   | Robinia  |        0.5 |    -0.79 |   0.59 |
+| Celtis      |          1 |    -0.44 |   0.34 |   |   |   | Robinia  |          1 |    -0.46 |   0.36 |
+| Celtis      |        1.5 |    -0.33 |   0.28 |   |   |   | Robinia  |        1.5 |    -0.34 |   0.28 |
+| Celtis      |          3 |    -0.19 |   0.19 |   |   |   | Robinia  |          3 |    -0.19 |   0.19 |
+| Fraxinus    |        0.5 |    -0.79 |   0.61 |   |   |   | Salix    |        0.5 |    -0.75 |   0.56 |
+| Fraxinus    |          1 |    -0.45 |   0.36 |   |   |   | Salix    |          1 |     -0.4 |   0.38 |
+| Fraxinus    |        1.5 |    -0.34 |   0.29 |   |   |   | Salix    |        1.5 |    -0.29 |   0.29 |
+| Fraxinus    |          3 |    -0.19 |   0.19 |   |   |   | Salix    |          3 |    -0.21 |   0.21 |
+| Ginkgo      |        0.5 |    -1.12 |   0.85 |   |   |   | Thuja    |        0.5 |    -0.91 |   0.71 |
+| Ginkgo      |          1 |    -0.63 |   0.56 |   |   |   | Thuja    |          1 |    -0.52 |   0.43 |
+| Ginkgo      |        1.5 |    -0.45 |   0.43 |   |   |   | Thuja    |        1.5 |    -0.38 |   0.34 |
+| Ginkgo      |          3 |    -0.22 |   0.26 |   |   |   | Thuja    |          3 |     -0.2 |   0.22 |
+| Gleditsia   |        0.5 |    -0.81 |    0.6 |   |   |   | Tilia    |        0.5 |    -0.77 |   0.59 |
+| Gleditsia   |          1 |    -0.46 |   0.38 |   |   |   | Tilia    |          1 |    -0.44 |   0.35 |
+| Gleditsia   |        1.5 |    -0.35 |    0.3 |   |   |   | Tilia    |        1.5 |    -0.33 |   0.28 |
+| Gleditsia   |          3 |    -0.19 |    0.2 |   |   |   | Tilia    |          3 |    -0.18 |   0.19 |
+| Gymnocladus |        0.5 |    -0.78 |   0.51 |   |   |   | Ulmus    |        0.5 |    -0.68 |   0.55 |
+| Gymnocladus |          1 |    -0.47 |   0.35 |   |   |   | Ulmus    |          1 |    -0.37 |   0.31 |
+| Gymnocladus |        1.5 |    -0.36 |    0.3 |   |   |   | Ulmus    |        1.5 |    -0.28 |   0.25 |
+| Gymnocladus |          3 |    -0.19 |   0.21 |   |   |   | Ulmus    |          3 |    -0.15 |   0.16 |
+| Juglans     |        0.5 |    -1.14 |   0.93 |   |   |   | Juglans  |        1.5 |    -0.45 |   0.43 |
+| Juglans     |          1 |    -0.63 |   0.54 |   |   |   | Juglans  |          3 |    -0.23 |   0.27 |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*** COMMENT old org table
+
+
+
+
+#+name: tab:genus_bias_corrections
+#+caption: Maximum tree height bias (bias) and mean bootstrap standard deviation (sd) for all genera at varying pulse densities.
+| Genus       | pulse density (m^-2) | bias (m) | sd (m) |
+|-------------+---------------------+----------+--------|
+| Abies       |                 0.5 |     -0.7 |   0.53 |
+| Abies       |                   1 |    -0.41 |   0.31 |
+| Abies       |                 1.5 |     -0.3 |   0.25 |
+| Abies       |                   3 |    -0.19 |   0.18 |
+| Acer        |                 0.5 |    -0.83 |   0.73 |
+| Acer        |                   1 |    -0.44 |   0.39 |
+| Acer        |                 1.5 |    -0.32 |   0.29 |
+| Acer        |                   3 |    -0.16 |   0.18 |
+| Betula      |                 0.5 |    -0.73 |   0.61 |
+| Betula      |                   1 |     -0.4 |   0.35 |
+| Betula      |                 1.5 |     -0.3 |   0.27 |
+| Betula      |                   3 |    -0.16 |   0.18 |
+| Carya       |                 0.5 |    -0.88 |   0.72 |
+| Carya       |                   1 |    -0.49 |   0.41 |
+| Carya       |                 1.5 |    -0.35 |   0.33 |
+| Carya       |                   3 |    -0.19 |   0.21 |
+| Catalpa     |                 0.5 |    -0.78 |   0.54 |
+| Catalpa     |                   1 |    -0.47 |   0.37 |
+| Catalpa     |                 1.5 |    -0.37 |   0.32 |
+| Catalpa     |                   3 |    -0.19 |    0.2 |
+| Celtis      |                 0.5 |    -0.74 |   0.58 |
+| Celtis      |                   1 |    -0.44 |   0.34 |
+| Celtis      |                 1.5 |    -0.33 |   0.28 |
+| Celtis      |                   3 |    -0.19 |   0.19 |
+| Fraxinus    |                 0.5 |    -0.79 |   0.61 |
+| Fraxinus    |                   1 |    -0.45 |   0.36 |
+| Fraxinus    |                 1.5 |    -0.34 |   0.29 |
+| Fraxinus    |                   3 |    -0.19 |   0.19 |
+| Ginkgo      |                 0.5 |    -1.12 |   0.85 |
+| Ginkgo      |                   1 |    -0.63 |   0.56 |
+| Ginkgo      |                 1.5 |    -0.45 |   0.43 |
+| Ginkgo      |                   3 |    -0.22 |   0.26 |
+| Gleditsia   |                 0.5 |    -0.81 |    0.6 |
+| Gleditsia   |                   1 |    -0.46 |   0.38 |
+| Gleditsia   |                 1.5 |    -0.35 |    0.3 |
+| Gleditsia   |                   3 |    -0.19 |    0.2 |
+| Gymnocladus |                 0.5 |    -0.78 |   0.51 |
+| Gymnocladus |                   1 |    -0.47 |   0.35 |
+| Gymnocladus |                 1.5 |    -0.36 |    0.3 |
+| Gymnocladus |                   3 |    -0.19 |   0.21 |
+| Juglans     |                 0.5 |    -1.14 |   0.93 |
+| Juglans     |                   1 |    -0.63 |   0.54 |
+| Juglans     |                 1.5 |    -0.45 |   0.43 |
+| Juglans     |                   3 |    -0.23 |   0.27 |
+| Picea       |                 0.5 |    -1.01 |   0.82 |
+| Picea       |                   1 |    -0.56 |    0.5 |
+| Picea       |                 1.5 |    -0.41 |   0.39 |
+| Picea       |                   3 |    -0.22 |   0.23 |
+| Pinus       |                 0.5 |    -0.91 |   0.68 |
+| Pinus       |                   1 |    -0.53 |   0.41 |
+| Pinus       |                 1.5 |     -0.4 |   0.34 |
+| Pinus       |                   3 |    -0.24 |   0.23 |
+| Platanus    |                 0.5 |    -1.18 |   0.91 |
+| Platanus    |                   1 |    -0.67 |   0.55 |
+| Platanus    |                 1.5 |    -0.49 |   0.43 |
+| Platanus    |                   3 |    -0.27 |   0.26 |
+| Populus     |                 0.5 |    -1.01 |   0.79 |
+| Populus     |                   1 |    -0.58 |   0.46 |
+| Populus     |                 1.5 |    -0.43 |   0.37 |
+| Populus     |                   3 |    -0.23 |   0.25 |
+| Quercus     |                 0.5 |    -0.79 |   0.69 |
+| Quercus     |                   1 |    -0.43 |   0.36 |
+| Quercus     |                 1.5 |    -0.31 |   0.28 |
+| Quercus     |                   3 |    -0.17 |   0.18 |
+| Robinia     |                 0.5 |    -0.79 |   0.59 |
+| Robinia     |                   1 |    -0.46 |   0.36 |
+| Robinia     |                 1.5 |    -0.34 |   0.28 |
+| Robinia     |                   3 |    -0.19 |   0.19 |
+| Salix       |                 0.5 |    -0.75 |   0.56 |
+| Salix       |                   1 |     -0.4 |   0.38 |
+| Salix       |                 1.5 |    -0.29 |   0.29 |
+| Salix       |                   3 |    -0.21 |   0.21 |
+| Thuja       |                 0.5 |    -0.91 |   0.71 |
+| Thuja       |                   1 |    -0.52 |   0.43 |
+| Thuja       |                 1.5 |    -0.38 |   0.34 |
+| Thuja       |                   3 |     -0.2 |   0.22 |
+| Tilia       |                 0.5 |    -0.77 |   0.59 |
+| Tilia       |                   1 |    -0.44 |   0.35 |
+| Tilia       |                 1.5 |    -0.33 |   0.28 |
+| Tilia       |                   3 |    -0.18 |   0.19 |
+| Ulmus       |                 0.5 |    -0.68 |   0.55 |
+| Ulmus       |                   1 |    -0.37 |   0.31 |
+| Ulmus       |                 1.5 |    -0.28 |   0.25 |
+| Ulmus       |                   3 |    -0.15 |   0.16 |
+
 
 
 ** full model
@@ -11988,3 +12007,4 @@ https://academic.oup.com/jof/article-abstract/64/10/691/4672693?redirectedFrom=f
 ** cite:reich_2012 Reich, P. B. Key canopy traits drive forest productivity. Proc Roy Soc B-Biol Sci 279, 2128-2134 (2012).
 ** https://www.sciencedirect.com/science/article/pii/S092427161500012X#f0005
 ** https://www.nature.com/articles/nature02417
+** cite:duncanson18_monit_indiv_tree_based_chang
