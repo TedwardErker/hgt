@@ -21,7 +21,7 @@
 check my paper in stat consulting office to make sure I got it all
 
 - raw data
-  - lidar
+  - LiDAR
     - lazers from a plane illustration
     - point cloud screen shot or gif
     - height difference from tree CHM.
@@ -42,7 +42,7 @@ check my paper in stat consulting office to make sure I got it all
   - summary distributions for height growth by species...
   - growth by explanatory variable plots??
   - model plots???
-- neat gifs of lidar clouds for example trees
+- neat gifs of LiDAR clouds for example trees
 - calypso catherdral photo
   
 
@@ -95,17 +95,17 @@ check my paper in stat consulting office to make sure I got it all
 This may be pretty involved.  it might be overcorrecting the bias?
 footprint size?
 
-** creating normalized lidar and also trying to create point clouds with just trees
-*** 2005 lidar
+** creating normalized LiDAR and also trying to create point clouds with just trees
+*** 2005 LiDAR
 **** create lax
 #+begin_src sh 
-cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/
+cd /media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2005/LiDAR_PointClouds_LAS/
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
 #+begin_src R
   library(lidR)
-  l <- readLAS("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/tile014.las")
+  l <- readLAS("/media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2005/LiDAR_PointClouds_LAS/tile014.las")
   plot(l, trim = 1000)
 #+end_src
 
@@ -113,7 +113,7 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 **** which have ground?
 #+begin_src R
       library(stringr)
-      f <- list.files("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/", pattern = ".*.las$", full.names = T)
+      f <- list.files("/media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2005/LiDAR_PointClouds_LAS/", pattern = ".*.las$", full.names = T)
       lapply(f, function(file) {
           i <- str_match(file, ".*tile([0-9]+).*.las$")[,2]
           l <- readLAS(file)
@@ -124,8 +124,8 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 
 **** find ground
 #+begin_src R
-    ctg2005 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClouds_LAS/")
-    opt_output_files(ctg2005) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/{ORIGINALFILENAME}_ground"
+    ctg2005 <- catalog("/media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2005/LiDAR_PointClouds_LAS/")
+    opt_output_files(ctg2005) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/ground/{ORIGINALFILENAME}_ground"
                                             #lasground(ctg2005, csf())
     ws = seq(6,24,6)
     th = seq(.1, 1.5, length.out = length(ws))
@@ -140,23 +140,23 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2005/LiDAR_PointClou
 **** normalize
 #+begin_src R 
 
-  ctg2005ground <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/ground/")
-  opt_output_files(ctg2005ground) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/{ORIGINALFILENAME}_normalized"
+  ctg2005ground <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/ground/")
+  opt_output_files(ctg2005ground) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/{ORIGINALFILENAME}_normalized"
   lasnormalize(ctg2005ground, tin())
 
 #+end_src
 
 **** make lax for normalized
 #+begin_src sh 
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
 **** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
-    ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized")
-    opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/all_chm/{ORIGINALFILENAME}_chm"
+    ctg2005norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized")
+    opt_output_files(ctg2005norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/all_chm/{ORIGINALFILENAME}_chm"
     opt_filter(ctg2005norm) <- "-drop_z_above 120 -drop_z_below 6"
     chm <- grid_canopy(ctg2005norm, res = 3, p2r(1))
 #+end_src
@@ -167,7 +167,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized
 
 
 #+BEGIN_SRC sh 
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/all_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2005.tif
 #+END_SRC
 
@@ -175,7 +175,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 **** get extents
 #+begin_src R
 
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/"
         fs <-   list.files(dir,
                    pattern = ".las",
                    full.names = F)
@@ -188,7 +188,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
     })
 
   p <- do.call("rbind", es)
-  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/lidar_extents.shp")
+  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/LiDAR_extents.shp")
 
 #+end_src
 
@@ -198,7 +198,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 **** Get tree points
 #+begin_src R
   library(lidR)
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/"
 
   tile <- "tile014_ground_normalized.las"
 
@@ -226,7 +226,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
       return(list(pct_x = sum(x == is) / length(x)))
   }
 
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/normalized/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/normalized/"
 
   tiles.w.trees <- list.files(dir, 
                               pattern = ".*.las")
@@ -258,7 +258,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
       lfl@data$building[pm$pct_x < .2] <- FALSE
       lf <- lasfilter(lfl, building == FALSE)
 
-      writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar/",tile))
+      writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/trees_LiDAR/",tile))
 
   })
 
@@ -266,7 +266,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 
 **** make lax
 #+BEGIN_SRC sh 
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/trees_LiDAR
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+END_SRC
 
@@ -275,8 +275,8 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 **** tree chm
 #+begin_src R
   library(lidR)
-    ctg2005trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar")
-    opt_output_files(ctg2005trees) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
+    ctg2005trees <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/trees_LiDAR")
+    opt_output_files(ctg2005trees) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
     chm <- grid_canopy(ctg2005trees, res = 3, p2r(1))
 #+end_src
 
@@ -285,7 +285,7 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/trees_lidar
 : Processing [>-------------------------------------------]   3% (1/34) eta:  2mProcessing [==>-----------------------------------------]   6% (2/34) eta:  2mProcessing [===>----------------------------------------]   9% (3/34) eta:  2mProcessing [====>---------------------------------------]  12% (4/34) eta:  1mProcessing [=====>--------------------------------------]  15% (5/34) eta:  1mProcessing [=======>------------------------------------]  18% (6/34) eta:  1mProcessing [========>-----------------------------------]  21% (7/34) eta:  1mProcessing [=========>----------------------------------]  24% (8/34) eta:  1mProcessing [===========>--------------------------------]  26% (9/34) eta:  1mProcessing [============>------------------------------]  29% (10/34) eta:  1mProcessing [=============>-----------------------------]  32% (11/34) eta: 50sProcessing [==============>----------------------------]  35% (12/34) eta: 46sProcessing [===============>---------------------------]  38% (13/34) eta: 45sProcessing [=================>-------------------------]  41% (14/34) eta: 45sProcessing [==================>------------------------]  44% (15/34) eta: 43sProcessing [===================>-----------------------]  47% (16/34) eta: 42sProcessing [=====================>---------------------]  50% (17/34) eta: 38sProcessing [======================>--------------------]  53% (18/34) eta: 36sProcessing [=======================>-------------------]  56% (19/34) eta: 35sProcessing [========================>------------------]  59% (20/34) eta: 33sProcessing [==========================>----------------]  62% (21/34) eta: 31sProcessing [===========================>---------------]  65% (22/34) eta: 29sProcessing [============================>--------------]  68% (23/34) eta: 27sProcessing [=============================>-------------]  71% (24/34) eta: 25sProcessing [===============================>-----------]  74% (25/34) eta: 22sProcessing [================================>----------]  76% (26/34) eta: 19sProcessing [=================================>---------]  79% (27/34) eta: 17sProcessing [==================================>--------]  82% (28/34) eta: 15sProcessing [====================================>------]  85% (29/34) eta: 13sProcessing [=====================================>-----]  88% (30/34) eta: 10sProcessing [======================================>----]  91% (31/34) eta:  8sProcessing [=======================================>---]  94% (32/34) eta:  5sProcessing [=========================================>-]  97% (33/34) eta:  2sProcessing [===========================================] 100% (34/34) eta:  0s
 
 #+BEGIN_SRC sh :session *a*
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2005_heights/tree_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2005_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2005.tif
 #+END_SRC
 
@@ -293,8 +293,8 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../t
 
 #+begin_src R
           library(lidR)
-          ctg <- catalog("~/hgt_data/madison_lidar_2005_heights/normalized")
-          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2005_heights/grid_metrics/{ORIGINALFILENAME}"
+          ctg <- catalog("~/hgt_data/madison_LiDAR_2005_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_LiDAR_2005_heights/grid_metrics/{ORIGINALFILENAME}"
         opt_select(ctg) <- ""
         opt_filter(ctg) <- "-keep_first"
           gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
@@ -338,10 +338,10 @@ keeping all
 
 .2347
 
-*** 2009 lidar
+*** 2009 LiDAR
 
 **** get tiles just over the tree inventory
-This lidar covers all of dane county.  Only get the tiles that
+This LiDAR covers all of dane county.  Only get the tiles that
 intersect with the madison tree inventory.
 
 #+name: tiles
@@ -349,7 +349,7 @@ intersect with the madison tree inventory.
     library(raster)
     library(rgeos)
     trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/dd/MadisonTrees_WithAttributes.shp")
-  tiles <- shapefile("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/TileIndex/StudyArea.shp")
+  tiles <- shapefile("/media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2009/TileIndex/StudyArea.shp")
 
   trees <- trees[!is.na(trees@data$DBH),]
   trees <- trees[as.numeric(trees@data$DBH) > 0,]
@@ -378,12 +378,12 @@ Download those tiles from ftp
 
 #+BEGIN_SRC sh :session *a*
 
-cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
+cd /media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2009/LAS/
 
 while IFS= read -r line;
 do
 tile=${line}.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2010_County_Delivery/Classified_LAS/LAS/$tile
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2010_County_Delivery/Classified_LAS/LAS/$tile
 done < ~/git/hgt/tree_tiles_2009.txt
 
 #+END_SRC
@@ -391,7 +391,7 @@ done < ~/git/hgt/tree_tiles_2009.txt
 make lax
 #+BEGIN_SRC sh :session *a*
 
-cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
+cd /media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2009/LAS/
 
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 
@@ -400,8 +400,8 @@ cd /media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS/
 **** normalize
 #+begin_src R
         library(lidR)
-          ctg2009 <- catalog("/media/erker/DATA_ERKER/data/madison_lidar/madison_lidar_2009/LAS")
-          opt_output_files(ctg2009) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
+          ctg2009 <- catalog("/media/erker/DATA_ERKER/data/madison_LiDAR/madison_LiDAR_2009/LAS")
+          opt_output_files(ctg2009) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/{ORIGINALFILENAME}_normalized"
           lasnormalize(ctg2009, tin())
 
 
@@ -426,7 +426,7 @@ There were 50 or more warnings (use warnings() to see the first 50)
 
 **** make lax for normalized
 #+begin_src sh :session b
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 #+end_src
 
@@ -434,14 +434,14 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized
 **** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
-    ctg2009norm <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
-    opt_output_files(ctg2009norm) <- "~/hgt_data/madison_lidar_2009_heights/all_chm/{ORIGINALFILENAME}_chm"
+    ctg2009norm <- catalog("~/hgt_data/madison_LiDAR_2009_heights/normalized")
+    opt_output_files(ctg2009norm) <- "~/hgt_data/madison_LiDAR_2009_heights/all_chm/{ORIGINALFILENAME}_chm"
     opt_filter(ctg2009norm) <- "-drop_z_above 120 -drop_z_below 6"
     chm <- grid_canopy(ctg2009norm, res = 3, p2r(1))
 #+end_src
 
 #+BEGIN_SRC sh
-cd ~/hgt_data/madison_lidar_2009_heights/all_chm/
+cd ~/hgt_data/madison_LiDAR_2009_heights/all_chm/
 gdalbuildvrt ../height_2009.vrt *.tif
 #+END_SRC
 
@@ -449,7 +449,7 @@ gdalbuildvrt ../height_2009.vrt *.tif
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
 
 #+BEGIN_SRC sh :session *a*
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/all_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2009.tif
 #+END_SRC
 
@@ -457,7 +457,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
 **** get extents to select a downtown tile?
 #+begin_src R
 
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/"
         fs <-   list.files(dir,
                    pattern = ".las",
                    full.names = F)
@@ -470,7 +470,7 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
     })
 
   p <- do.call("rbind", es)
-  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/lidar_extents.shp")
+  shapefile(p, "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/LiDAR_extents.shp")
 
 
 #+end_src
@@ -482,7 +482,7 @@ same area as 2016:
 "lc2t71007f_ground_normalized.las"
 #+begin_src R
 
-  l <- readLAS("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/lc2t71007f_ground_normalized.las")
+  l <- readLAS("/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/lc2t71007f_ground_normalized.las")
   plot(l)
   #chm <- grid_canopy(l, 3, p2r(1))
   #plot(chm)
@@ -540,7 +540,7 @@ testing
 
 #+end_src
 
-extract tree points from the lidar, the variable point density might
+extract tree points from the LiDAR, the variable point density might
 make this challenging....
 #+begin_src R
 
@@ -550,7 +550,7 @@ make this challenging....
         return(list(pct_x = sum(x == is) / length(x)))
     }
 
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/"
   tiles.w.trees <- list.files(dir, pattern = ".*.las")
 
     lapply(tiles.w.trees, function(tile) {
@@ -576,7 +576,7 @@ make this challenging....
         lfl@data$building[pm$pct_x < .1] <- FALSE
         lf <- lasfilter(lfl, building == FALSE)
 
-        writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/trees_lidar/",tile))
+        writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/trees_LiDAR/",tile))
 
     })
 
@@ -590,14 +590,14 @@ create lax
 
 #+begin_src R
   library(lidR)
-    ctg2009trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/trees_lidar")
-    opt_output_files(ctg2009trees) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
+    ctg2009trees <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/trees_LiDAR")
+    opt_output_files(ctg2009trees) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
     chm <- grid_canopy(ctg2009trees, res = 3, p2r(1))
 #+end_src
 
 
 #+BEGIN_SRC sh :session *a* :results verbatim
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/tree_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2009.tif
 #+END_SRC
 
@@ -621,13 +621,13 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../t
 chm, quick and easy algorithm
 #+begin_src R
   library(lidR)
-  ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/")
-  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/chm/{ORIGINALFILENAME}_chm"
+  ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/")
+  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/chm/{ORIGINALFILENAME}_chm"
   grid_canopy(ctg2009norm, 4, p2r(6)) 
 #+end_src
 
 #+BEGIN_SRC sh
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/
 
 gdalbuildvrt chm2.vrt *chm2.tif
 
@@ -641,8 +641,8 @@ gdalbuildvrt chm2.vrt *chm2.tif
 chm, pitless algoright, too slow to be worth running.
 #+begin_src R :eval no
   library(lidR)
-  ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/normalized/")
-  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2009_heights/{ORIGINALFILENAME}_chm_pitfree"
+  ctg2009norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/normalized/")
+  opt_output_files(ctg2009norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2009_heights/{ORIGINALFILENAME}_chm_pitfree"
   grid_canopy(ctg2009norm, 4, pitfree(c(0,6,12), c(0,1), subcircle = 6)) 
 #+end_src
 
@@ -652,8 +652,8 @@ chm, pitless algoright, too slow to be worth running.
 
 #+begin_src R
           library(lidR)
-          ctg <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
-          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2009_heights/grid_metrics/{ORIGINALFILENAME}"
+          ctg <- catalog("~/hgt_data/madison_LiDAR_2009_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_LiDAR_2009_heights/grid_metrics/{ORIGINALFILENAME}"
         opt_select(ctg) <- ""
         opt_filter(ctg) <- "-keep_first"
           gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
@@ -703,7 +703,7 @@ Error in unlist(v) : object 'v' not found
 :    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 :  0.0023  1.3961  2.4863  4.4320  7.4581 21.6423  0.0014
 
-*** TODO FIX THE RESOLUTION!!!!!!!  2010 lidar derived (NGA)
+*** TODO FIX THE RESOLUTION!!!!!!!  2010 LiDAR derived (NGA)
 
 **** create height tif
 There is no raw point cloud available.  It's been "destroyed"
@@ -723,7 +723,7 @@ take their difference to find the height.
 elevation
 #+begin_src R
 library(raster)
-ground <- raster("/home/erker/hgt_data/madison_2010_nga_lidar_derived/US Cities/Madison_20100409/Digital Terrain Model (DTM)/DTM - Not Specified/U_US-Cities_dtm_ns_20191101.1118_6.tif")
+ground <- raster("/home/erker/hgt_data/madison_2010_nga_LiDAR_derived/US Cities/Madison_20100409/Digital Terrain Model (DTM)/DTM - Not Specified/U_US-Cities_dtm_ns_20191101.1118_6.tif")
 
   e <- new("Extent", xmin = 827161.463391346, xmax = 828579.428253175, 
       ymin = 486162.738356131, ymax = 487289.679000948)
@@ -736,7 +736,7 @@ ge <- crop(ground, e)
 
 surface
 #+begin_src R
-first <- raster("/home/erker/hgt_data/madison_2010_nga_lidar_derived/US Cities/Madison_20100409/Digital Surface Model (DSM)/DSM - First Return/U_US-Cities_dsm_first_return_20191101.1118_5.tif")
+first <- raster("/home/erker/hgt_data/madison_2010_nga_LiDAR_derived/US Cities/Madison_20100409/Digital Surface Model (DSM)/DSM - First Return/U_US-Cities_dsm_first_return_20191101.1118_5.tif")
 #+end_src
 
 #+RESULTS:
@@ -751,7 +751,7 @@ diff <- first - ground
     diff <- projectRaster(diff, crs = CRS("+init=epsg:7599"))
   # convert to feet like all the rest of the layers
   diff <- diff * 3.28084
-    writeRaster(diff, "~/hgt_data/madison_lidar_2010_heights/height_2010.tif", overwrite = T)
+    writeRaster(diff, "~/hgt_data/madison_LiDAR_2010_heights/height_2010.tif", overwrite = T)
 #+end_src
 
 
@@ -759,18 +759,18 @@ diff <- first - ground
 #+begin_src R
   library(TileManager)
 
-  h2010 <- raster("~/hgt_data/madison_lidar_2010_heights/height_2010.tif")
+  h2010 <- raster("~/hgt_data/madison_LiDAR_2010_heights/height_2010.tif")
   ts <- TileScheme(h2010, dimByDist = 10000, buffer = 20)
 
   lapply(1:length(ts$buffPolygons), function(i) {
-      crop(h2010, ts$buffPolygons[i,], filename = paste0("~/hgt_data/madison_lidar_2010_heights/all_chm/",i,"_chm.tif"))
+      crop(h2010, ts$buffPolygons[i,], filename = paste0("~/hgt_data/madison_LiDAR_2010_heights/all_chm/",i,"_chm.tif"))
   })
 #+end_src
 
 #+RESULTS:
 
 #+BEGIN_SRC sh
-cd ~/hgt_data/madison_lidar_2010_heights/all_chm/
+cd ~/hgt_data/madison_LiDAR_2010_heights/all_chm/
 
 gdalbuildvrt ../height_2010.vrt *.tif
 
@@ -779,14 +779,14 @@ gdalbuildvrt ../height_2010.vrt *.tif
 #+RESULTS:
 : 0...10...20...30...40...50...60...70...80...90...100 - done.
 
-*** 2016 lidar
+*** 2016 LiDAR
 epsg 7599
 **** normalize
 #+begin_src R
   library(stringr)
   library(lidR)
 
-      f <- list.files("/media/erker/DATA_ERKER/data/madison_lidar_2016/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Madison_2016_City_Delivery/Classified_LAS/LAS/", 
+      f <- list.files("/media/erker/DATA_ERKER/data/madison_LiDAR_2016/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Madison_2016_City_Delivery/Classified_LAS/LAS/", 
                     pattern = ".*.las$",
                     full.names = T)
 
@@ -798,7 +798,7 @@ epsg 7599
           l <- readLAS(file)
           if(sum(l@data$Classification == 2) != 0) {                  # if there are some ground points
               ln <- lasnormalize(l, tin())
-              writeLAS(ln, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/",i,"_normalized.las"))
+              writeLAS(ln, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/",i,"_normalized.las"))
           }
       }
   })
@@ -810,7 +810,7 @@ epsg 7599
 i had to download LAStools and run make in the directory.
 
 #+BEGIN_SRC sh :session a
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/
 /home/erker/Downloads/LAStools/bin/lasindex -i *.las
 
 #+END_SRC
@@ -820,8 +820,8 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 **** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
-    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
-    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/all_chm/{ORIGINALFILENAME}_chm"
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/all_chm/{ORIGINALFILENAME}_chm"
     opt_filter(ctg2016norm) <- "-drop_z_above 120 -drop_z_below 6"
     chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
 #+end_src
@@ -830,14 +830,14 @@ cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/
 
 
 #+BEGIN_SRC sh :session *a*
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/all_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../height_norm_2016.tif
 #+END_SRC
 
 
 **** find the tiles that overlap with the madison tree inventory data
 #+begin_src R
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/"
         fs <-   list.files(dir,
                    pattern = ".las",
                    full.names = F)
@@ -850,10 +850,10 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../h
     })
 
   p <- do.call("rbind", es)
-                                          #shapefile(p, "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/lidar_extents.shp")
+                                          #shapefile(p, "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/LiDAR_extents.shp")
 
 
-  p <- shapefile("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/lidar_extents.shp")
+  p <- shapefile("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/LiDAR_extents.shp")
 
   proj4string(p) <- "+init=epsg:7599"
 
@@ -877,7 +877,7 @@ writeLines(tiles.w.trees)
 #+RESULTS:
 [[file:tiles.w.trees.txt]]
 
-**** extract tree points from the lidar
+**** extract tree points from the LiDAR
 #+begin_src R
   #   library(devtools)
   #   install_github("Jean-Romain/lidR", ref = "devel")
@@ -911,7 +911,7 @@ writeLines(tiles.w.trees)
          lfl@data$building[pm$pct_x < .1] <- FALSE
          lf <- lasfilter(lfl, building == FALSE)
 
-         writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar/",tile))
+         writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/trees_LiDAR/",tile))
 
      })
 
@@ -931,7 +931,7 @@ maybe do another clean up with point metrics.
         return(list(pct_x = sum(x == is) / length(x)))
     }
 
-    dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar/"
+    dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/trees_LiDAR/"
 
   tiles.w.trees <- readLines("tiles.w.trees.txt")
 
@@ -950,7 +950,7 @@ maybe do another clean up with point metrics.
         lsp@data$line[pm$pct_x > .4] <- TRUE
         lf <- lasfilter(lsp, Z < 140, line == FALSE)
 
-        writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar_linefiltered/",tile))
+        writeLAS(lf, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/trees_LiDAR_linefiltered/",tile))
 
     })
 
@@ -963,8 +963,8 @@ maybe do another clean up with point metrics.
 **** Create the tree chm
 #+begin_src R
   library(lidR)
-    ctg2016trees <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/trees_lidar_linefiltered/")
-    opt_output_files(ctg2016trees) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
+    ctg2016trees <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/trees_LiDAR_linefiltered/")
+    opt_output_files(ctg2016trees) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
     chm <- grid_canopy(ctg2016trees, res = 3, p2r(1))
 #+end_src
 
@@ -972,7 +972,7 @@ maybe do another clean up with point metrics.
 
 
 #+BEGIN_SRC sh :session *a*
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" grid_canopy.vrt ../tree_height_norm_2016.tif
 #+END_SRC
 
@@ -984,7 +984,7 @@ STOP here until I have a good tree chm for each year.
 
 #+begin_src R
   library(raster)
-  chm <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/102_normalized_tree_chm.tif")
+  chm <- raster("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_chm/102_normalized_tree_chm.tif")
 
   trees <- shapefile("/media/erker/DATA_ERKER/data/madison_tree_inventories/MadisonTrees.shp")
   trees <- spTransform(trees, crs("+init=epsg:7599"))
@@ -1010,7 +1010,7 @@ STOP here until I have a good tree chm for each year.
 
 #+begin_src R
 
-   l <- readLAS("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/102_normalized.las",
+   l <- readLAS("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/102_normalized.las",
                  filter = "-drop_class 9 -drop_z_above 200 -drop_z_below 0")
       chm <- grid_canopy(l, res = 3, p2r(1))
   plot(chm)
@@ -1101,8 +1101,8 @@ try voxel
 ***** CHM for just trees
 #+begin_src R
   library(lidR)
-    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
-    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_chm/{ORIGINALFILENAME}_tree_chm"
     opt_filter(ctg2016norm) <- "-keep_class 2 -drop_z_above 200 -drop_z_below 0"
     chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
 #+end_src
@@ -1112,7 +1112,7 @@ try voxel
 
 #+begin_src R
 
-  f2 <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/", ".*_normalized.las")
+  f2 <- list.files("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/", ".*_normalized.las")
 
       lapply(f2, function(file) {
             i <- str_match(file, "([0-9]+).*.las$")[,2]
@@ -1120,14 +1120,14 @@ try voxel
           if(sum(l@data$Classification == 2) != 0) {                  # if there are some ground points
             chm <- grid_canopy(l, res = 3, p2r(1))
             proj4string(chm) <- "+init=epsg:7599"
-            writeRaster(chm, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/",i,"_.tif"), overwrite = T)
+            writeRaster(chm, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/",i,"_.tif"), overwrite = T)
           }
       })
 
 
 
-  ctg <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/")
-  opt_output_files(ctg) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/pitfree/{ORIGINALFILENAME}"
+  ctg <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/")
+  opt_output_files(ctg) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/pitfree/{ORIGINALFILENAME}"
   chm.ctg <- grid_canopy(ctg, 3, pitfree(c(0,6,15,30,45), c(0,1), subcircle = 1.5))
 
 
@@ -1137,11 +1137,11 @@ try voxel
           if(sum(l@data$Classification == 2) != 0) {                  # if there are some ground points
             chm <- grid_canopy(l, 3, pitfree(c(0,6,15,30,45), c(0,1), subcircle = 1.5))
             proj4string(chm) <- "+init=epsg:7599"
-            writeRaster(chm, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/",i,"_pitfree.tif"), overwrite = T)
+            writeRaster(chm, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/",i,"_pitfree.tif"), overwrite = T)
           }
       })
 
-  f3 <- list.files("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/", ".*_pitfree.tif")
+  f3 <- list.files("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/", ".*_pitfree.tif")
 
 
 #+end_src
@@ -1150,7 +1150,7 @@ try voxel
 
 #+BEGIN_SRC sh
 
-cd /media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/
+cd /media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/
 
 gdalbuildvrt height_.vrt *_.tif
 gdalbuildvrt height_pitfree.vrt *_pitfree.tif
@@ -1168,11 +1168,11 @@ segment trees
       library(lidR)
         i <- 205
 
-      f <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/",i,"_.tif")
+      f <- paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/",i,"_.tif")
       chm <- raster(f)
 
 
-  fl <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/",i,"_normalized.las")
+  fl <- paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/",i,"_normalized.las")
   l <- readLAS(fl, filter = "-drop_z_below 0")
   proj4string(l) <- "+init=epsg:7599"
   chm <- grid_canopy(l, res = 1, pitfree(c(0,6,15,30,45), c(0,1), subcircle = 1.5))
@@ -1186,7 +1186,7 @@ segment trees
 
 
   library(raster)
-  chm <- raster("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/101_pitfree.tif")
+  chm <- raster("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/101_pitfree.tif")
 
   ttops <- tree_detection(chme, lmf(ws = function(h){h+3}, hmin = 6, shape = "circular"))
   crowns = silva2016(chme, ttops)()
@@ -1224,11 +1224,11 @@ segment trees
 
 #+begin_src R
   library(lidR)
-  ctg <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/")
+  ctg <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/")
 
 i <- 205
 
-  fl <- paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/",i,"_normalized.las")
+  fl <- paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/",i,"_normalized.las")
   fh <- 
   l <- readLAS(f) #should specify only spatial coordinates
 
@@ -1247,8 +1247,8 @@ i <- 205
 CHM for multiple returns (approximately trees)
 #+begin_src R
   library(lidR)
-    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
-    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/multiple_chm/{ORIGINALFILENAME}_tree_chm"
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/multiple_chm/{ORIGINALFILENAME}_tree_chm"
     opt_filter(ctg2016norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0"
     chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
 #+end_src
@@ -1258,11 +1258,11 @@ CHM for multiple returns (approximately trees)
 
 the multiple return approach also included building edges.  I need to find a way to just get tree points
 #+begin_src R
-      ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar")
-      opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_las/{ORIGINALFILENAME}_tree_chm"
+      ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR")
+      opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_las/{ORIGINALFILENAME}_tree_chm"
       opt_filter(ctg2016norm) <- "-drop_z_above 200 -drop_z_below 0"
 
-  dir <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar/"
+  dir <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR/"
     files <- list.files(dir, pattern = ".*.las$",
                         full.names = F)
 
@@ -1271,7 +1271,7 @@ the multiple return approach also included building edges.  I need to find a way
         ls <- lasdetectshape(l, shp_line(th1 = 10, k = 5), "Colinear")
         lsp <- lasdetectshape(ls, shp_plane(th1 = 4, th2 = 4, k = 11), "Coplanar")
         lsp@data[(!lsp@data$Coplanar) & (!lsp@data$Colinear) & (lsp@data$ReturnNumber == 1) & (lsp@data$NumberOfReturns > 1) & (lsp@data$Intensity < 100)]$Classification <- 5L
-        writeLAS(lsp, paste0("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar_wtree/",f))
+        writeLAS(lsp, paste0("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR_wtree/",f))
   })
 
 
@@ -1282,8 +1282,8 @@ the multiple return approach also included building edges.  I need to find a way
 
 #+begin_src R
   library(lidR)
-    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/normalized_lidar_wtree")
-    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_lidar_2016_heights/tree_chm/{ORIGINALFILENAME}_chm"
+    ctg2016norm <- catalog("/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/normalized_LiDAR_wtree")
+    opt_output_files(ctg2016norm) <- "/media/erker/DATA_ERKER/dd/madison_LiDAR_2016_heights/tree_chm/{ORIGINALFILENAME}_chm"
     opt_filter(ctg2016norm) <- "-drop_single -drop_z_above 200 -drop_z_below 0 -keep_class 5"
     chm <- grid_canopy(ctg2016norm, res = 3, p2r(1))
 #+end_src
@@ -1303,25 +1303,25 @@ the multiple return approach also included building edges.  I need to find a way
 
 
 
-*** 2017 lidar
+*** 2017 LiDAR
 
 **** get metadata and reports
 #+BEGIN_SRC sh :session a
-cd ~/hgt_data/dane_lidar_2017/
-wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Metadata/
-wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Reports/
+cd ~/hgt_data/dane_LiDAR_2017/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Metadata/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Reports/
 #+END_SRC
 **** download which tiles intersect with tree
 download tiles
 #+BEGIN_SRC sh
-cd /home/erker/hgt_data/dane_lidar_2017/
-wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/
+cd /home/erker/hgt_data/dane_LiDAR_2017/
+wget -r ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Tile_Index/
 #+END_SRC
 
 find tiles that intersect
 #+begin_src R
   library(raster)
-  tiles <- shapefile("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
+  tiles <- shapefile("/home/erker/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
 
   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
 
@@ -1352,23 +1352,23 @@ manually fix the header.....
 
 #+BEGIN_SRC sh :session *a*
 
-cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
+cd ~/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
 
 while IFS= read -r line;
 do
 tile=${line}_esri.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/$tile
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/$tile
 done < ~/git/hgt/tree_tiles_2017.txt
 
 #+END_SRC
 
 redoing troublesome tiles
 #+BEGIN_SRC sh :session *a*
-cd ~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
-#wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0817_esri.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0671_esri.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0724_esri.las
-wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/1121_esri.las
+cd ~/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/
+#wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0817_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0671_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0724_esri.las
+wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/1121_esri.las
 #+END_SRC
 
 
@@ -1378,7 +1378,7 @@ wget ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Deliver
 
 #+begin_src R
 library(lidR)
-l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0673_esri.las")
+l <- readLAS("/home/erker/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/0673_esri.las")
 #plot(l, trim = 900)
 plot(l, color = "Classification")
 #+end_src
@@ -1387,10 +1387,10 @@ plot(l, color = "Classification")
 
 **** think about checking out their raster dems
 #+BEGIN_SRC sh
-ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Raster_DEM_Tiles/
+ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Raster_DEM_Tiles/
 #+END_SRC
 
-**** normlalize the lidar
+**** normlalize the LiDAR
 
 #+BEGIN_SRC sh
 
@@ -1398,7 +1398,7 @@ ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Ras
 
 #+begin_src R
 library(lidR)
-#l <- readLAS("/Users/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/0523_usgs.las")
+#l <- readLAS("/Users/erker/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/USGS/0523_usgs.las")
 l <- readLAS("/Users/erker/Downloads/0523_esri.las")
 #+end_src
 
@@ -1406,12 +1406,12 @@ l <- readLAS("/Users/erker/Downloads/0523_esri.las")
 
 Reclassify water as ground so that normalization is faster.....
 #+begin_src R
-  dir <- "~/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/"
+  dir <- "~/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Classified_LAS/ESRI/"
       fs <- list.files(dir,
                        full.names = F,
                        pattern = ".las$")
 
-  out.dir <- "~/hgt_data/dane_lidar_2017/water_ground/"
+  out.dir <- "~/hgt_data/dane_LiDAR_2017/water_ground/"
 
     lapply(fs, function(f) {
       l <- readLAS(paste0(dir,f))
@@ -1423,14 +1423,14 @@ Reclassify water as ground so that normalization is faster.....
 
 #+begin_src R
   library(lidR)
-  ctg2017 <- catalog("~/hgt_data/dane_lidar_2017/water_ground/")
-  opt_output_files(ctg2017) <- "~/hgt_data/dane_lidar_2017/normalized/{ORIGINALFILENAME}_normalized"
+  ctg2017 <- catalog("~/hgt_data/dane_LiDAR_2017/water_ground/")
+  opt_output_files(ctg2017) <- "~/hgt_data/dane_LiDAR_2017/normalized/{ORIGINALFILENAME}_normalized"
   lasnormalize(ctg2017, tin())
 #+end_src
 
 #+begin_src R :session *R:hggt2:
 library(lidR)
-l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/normalized/0869_esri_normalized.las")
+l <- readLAS("/home/erker/hgt_data/dane_LiDAR_2017/normalized/0869_esri_normalized.las")
 plot(l)
 #+end_src
 
@@ -1438,14 +1438,14 @@ plot(l)
 
 **** make lax for normalized
 #+begin_src sh :session b
-cd /home/erker/hgt_data/dane_lidar_2017/normalized/
+cd /home/erker/hgt_data/dane_LiDAR_2017/normalized/
 /home/erker/LAStools/bin/lasindex -i *.las
 #+end_src
 
 **** make normalized chm (this includes buildings, but excludes some points)
 #+begin_src R
   library(lidR)
-  l <- readLAS("/home/erker/hgt_data/dane_lidar_2017/normalized_notdone/1065_esri_normalized.las",
+  l <- readLAS("/home/erker/hgt_data/dane_LiDAR_2017/normalized_notdone/1065_esri_normalized.las",
                filter = "-drop_z_above 120 -drop_z_below 6")
   plot(l)
 #+end_src
@@ -1459,12 +1459,12 @@ cd /home/erker/hgt_data/dane_lidar_2017/normalized/
 #+begin_src R
   library(lidR)
   library(stringr)
-  dir <- "~/hgt_data/dane_lidar_2017/normalized_notdone/"
+  dir <- "~/hgt_data/dane_LiDAR_2017/normalized_notdone/"
       fs <- list.files(dir,
                        full.names = F,
                        pattern = ".las$")
 
-  out.dir <- "~/hgt_data/madison_lidar_2017_heights/all_chm/"
+  out.dir <- "~/hgt_data/madison_LiDAR_2017_heights/all_chm/"
 
   lapply(fs, function(f) {
       bn <- basename(f)
@@ -1480,8 +1480,8 @@ this isn't working well.  But I don't know why?  They run really fast
 as singletons.  try just lapply through all the files
 #+begin_src R :eval no
   library(lidR)
-    ctg2017norm <- catalog("~/hgt_data/dane_lidar_2017/normalized_notdone")
-    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_lidar_2017_heights/all_chm/{ORIGINALFILENAME}_chm"
+    ctg2017norm <- catalog("~/hgt_data/dane_LiDAR_2017/normalized_notdone")
+    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_LiDAR_2017_heights/all_chm/{ORIGINALFILENAME}_chm"
     opt_filter(ctg2017norm) <- "-drop_z_above 120 -drop_z_below 6"
     chm <- grid_canopy(ctg2017norm, res = 3, p2r(1))
 #+end_src
@@ -1494,7 +1494,7 @@ as singletons.  try just lapply through all the files
 :   |                                                                              |                                                                      |   0%  |                                                                              |=                                                                     |   1%Error: filename exists; use overwrite=TRUE
 
 #+begin_src sh
-cd ~/hgt_data/madison_lidar_2017_heights/all_chm/
+cd ~/hgt_data/madison_LiDAR_2017_heights/all_chm/
 
 gdalbuildvrt height_2017.vrt *.tif
 #+end_src
@@ -1504,7 +1504,7 @@ gdalbuildvrt height_2017.vrt *.tif
 
 
 #+begin_src sh
-cd ~/hgt_data/madison_lidar_2017_heights/all_chm/
+cd ~/hgt_data/madison_LiDAR_2017_heights/all_chm/
 gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 height_2017.vrt ../height_2017.tif
 #+end_src
 
@@ -1515,14 +1515,14 @@ gdal_translate -of GTiff -co "TILED=YES" -co "COMPRESS=LZW" -a_srs EPSG:7599 hei
 **** get the pulse density 
 #+begin_src R
   library(lidR)
-    ctg2017norm <- catalog("~/hgt_data/madison_lidar_2017_heights/normalized")
-    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_lidar_2017_heights/grid_density/{ORIGINALFILENAME}_gd"
+    ctg2017norm <- catalog("~/hgt_data/madison_LiDAR_2017_heights/normalized")
+    opt_output_files(ctg2017norm) <- "~/hgt_data/madison_LiDAR_2017_heights/grid_density/{ORIGINALFILENAME}_gd"
     opt_filter(ctg2017norm) <- "-keep_first"
   gd <- grid_density(ctg2017norm, res = 100 / .3048)
 #+end_src
 
 #+begin_src sh
-cd ~/hgt_data/madison_lidar_2017_heights/grid_density/
+cd ~/hgt_data/madison_LiDAR_2017_heights/grid_density/
 
 gdalbuildvrt ../gd_2017.vrt *.tif
 #+end_src
@@ -1561,13 +1561,13 @@ gdalbuildvrt ../gd_2017.vrt *.tif
   library(lidR)
   library(raster)
 
-          ctg <- catalog("~/hgt_data/madison_lidar_2009_heights/normalized")
-          opt_output_files(ctg) <- "~/hgt_data/madison_lidar_2009_heights/grid_metrics/{ORIGINALFILENAME}"
+          ctg <- catalog("~/hgt_data/madison_LiDAR_2009_heights/normalized")
+          opt_output_files(ctg) <- "~/hgt_data/madison_LiDAR_2009_heights/grid_metrics/{ORIGINALFILENAME}"
         opt_select(ctg) <- ""
         opt_filter(ctg) <- "-keep_first"
           gm <- grid_metrics(ctg, ~length(Z), 100 / .3048)
 
-  f <- list.files("/home/erker/hgt_data/madison_lidar_2017_heights/grid_density/", full.names = T)
+  f <- list.files("/home/erker/hgt_data/madison_LiDAR_2017_heights/grid_density/", full.names = T)
   v <- lapply(f, function(p) {
       r <- raster(p)
       getValues(r)
@@ -1600,10 +1600,10 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 
 
 
-**** get lidar extents
+**** get LiDAR extents
 #+begin_src R
 
-  dir <- "~/hgt_data/madison_lidar_2017_heights/normalized/"
+  dir <- "~/hgt_data/madison_LiDAR_2017_heights/normalized/"
         fs <-   list.files(dir,
                    pattern = ".las",
                    full.names = F)
@@ -1616,7 +1616,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
     })
 
   p <- do.call("rbind", es)
-  shapefile(p, "~/hgt_data/madison_lidar_2017_heights/normalized/lidar_extents.shp")
+  shapefile(p, "~/hgt_data/madison_LiDAR_2017_heights/normalized/LiDAR_extents.shp")
 
 #+end_src
 
@@ -1666,7 +1666,7 @@ gdalbuildvrt ../gd_2017.vrt *.tif
 
  #+end_src
 
-** extract lidar clouds within tree buffers  Note: since I have tree points, I"m going to sample from the entire lidar point cloud
+** extract LiDAR clouds within tree buffers  Note: since I have tree points, I"m going to sample from the entire LiDAR point cloud
 
 I extract points at each tree from the tree point filtered point clouds, save in
 "tree _ year _ treelas".  Extract points at each tree from the
@@ -1689,7 +1689,7 @@ really tested this.
    b <- spTransform(b, crs("+init=epsg:7599"))
    b@data <- select(b@data, UID)
 
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/",
+   fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/",
                     pattern = ".*.las",
                     full.names = T)
 
@@ -1697,7 +1697,7 @@ really tested this.
    # crop the polygons so that a huge object doesn't need to be sent to each node
    tiles.w.trees.i <- unlist(lapply(str_extract_all(fl, "[0-9]{4}"), function(x) x[2]))
 
-   tiles <- shapefile("/home/erker/hgt_data/dane_lidar_2017/ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
+   tiles <- shapefile("/home/erker/hgt_data/dane_LiDAR_2017/ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2017_3DEP_Delivery/Tile_Index/DaneCo_WI_Tile_Index.shp")
    tiles <- spTransform(tiles, crs(b))
 
    tiles.w.trees <- tiles[tiles@data$Name_Final %in% tiles.w.trees.i,]
@@ -1748,7 +1748,7 @@ really tested this.
    b <- spTransform(b, crs("+init=epsg:7599"))
    b@data <- select(b@data, UID)
 
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar",
+   fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR",
                     pattern = ".*.las",
                     full.names = T)
 
@@ -1770,7 +1770,7 @@ really tested this.
 #+end_src
 
 #+begin_src R
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar",
+   fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR",
                     pattern = ".*.las",
                     full.names = T)
 
@@ -1794,7 +1794,7 @@ really tested this.
  #+end_src
 
 #+begin_src R
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/trees_lidar_linefiltered",
+   fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2016_heights/trees_LiDAR_linefiltered",
                     pattern = ".*.las",
                     full.names = T)
 
@@ -1833,7 +1833,7 @@ really tested this.
   b <- spTransform(b, crs("+init=epsg:7599"))
   b@data <- select(b@data, UID)
 
-  fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/",
+  fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/",
                    pattern = ".*.las",
                    full.names = T)
 
@@ -1858,7 +1858,7 @@ really tested this.
 
 #+begin_src R
 
-  fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/normalized",
+  fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized",
                    pattern = ".*.las",
                    full.names = T)
 
@@ -1882,10 +1882,10 @@ really tested this.
  #+end_src
 
 TREES  I need to rerun the code to separate trees from the
-renormalized data.  Do not run this code becuase "tree_lidar" is empty
-and needs to get filled with just tree lidar point clouds.
+renormalized data.  Do not run this code becuase "tree_LiDAR" is empty
+and needs to get filled with just tree LiDAR point clouds.
 #+begin_src R
-   fl <- list.files("/home/erker/hgt_data/madison_lidar_2009_heights/trees_lidar"
+   fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2009_heights/trees_LiDAR"
                     pattern = ".*.las",
                     full.names = T)
 
@@ -1922,7 +1922,7 @@ and needs to get filled with just tree lidar point clouds.
       b <- spTransform(b, crs("+init=epsg:7599"))
       b@data <- select(b@data, UID)
 
-      fl <- list.files("/home/erker/hgt_data/madison_lidar_2005_heights/trees_lidar",
+      fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2005_heights/trees_LiDAR",
                        pattern = ".*.las",
                        full.names = T)
 
@@ -1945,7 +1945,7 @@ and needs to get filled with just tree lidar point clouds.
 #+end_src
 
 #+begin_src R
-      fl <- list.files("/home/erker/hgt_data/madison_lidar_2005_heights/trees_lidar",
+      fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2005_heights/trees_LiDAR",
                        pattern = ".*.las",
                        full.names = T)
 
@@ -1971,7 +1971,7 @@ and needs to get filled with just tree lidar point clouds.
  #+end_src
 
 #+begin_src R
-      fl <- list.files("/home/erker/hgt_data/madison_lidar_2005_heights/normalized",
+      fl <- list.files("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized",
                        pattern = ".*.las",
                        full.names = T)
 
@@ -2015,8 +2015,8 @@ Some of the difference in maximum height will be due to the randomness
 of the sampling and due to the difference in the sample size across
 years. This creates a bias in maximum height estimates. To estimate
 the bias due to these factors, I selected trees with negligible growth
-and I bootstrapped the lidar point clouds.  I assume that the points
-all come from a single lidar collection over a tree tree.  That is,
+and I bootstrapped the LiDAR point clouds.  I assume that the points
+all come from a single LiDAR collection over a tree tree.  That is,
 all the points were acquired at the same time and that there was no
 growth.  I assume footprint size is the same and all other
 characteristics of the points are the same, the only difference is
@@ -2025,7 +2025,7 @@ that the number of pulses between years.
 I select trees that haven't grown
 
 
-I will then sample from the combined lidar clouds, new clouds for each
+I will then sample from the combined LiDAR clouds, new clouds for each
 year of the same size as the original data.  For example, if there
 were 200 pulses in the 2017 cloud and 50 pulses in the 2016 cloud, I
 will randomly sample with replacement 200 of the 250 pulses and assign them to a new
@@ -2036,7 +2036,7 @@ height due to differences in sample size.
 
 By repeating the sampling many times (say 1000), I can get an accurate
 estimate of the mean bias and the variance of that bias.  For example,
-there are sometimes just one or two points from a tree in 2005 lidar.
+there are sometimes just one or two points from a tree in 2005 LiDAR.
 This means that the bias estimate will be very uncertain.  But there
 is some information in those points and it is still worthwhile to keep
 them.
@@ -2118,7 +2118,7 @@ points.  But less important if averaging across many treees.
     uids2005 <- str_extract(fs2005, "^[A-Za-z0-9]+")
     head(sort(table(uids2005), decreasing = T))
 
-                                            # 2009 has more than one lidar file per tree.  around 1700- 1800 duplicates or triplicates.
+                                            # 2009 has more than one LiDAR file per tree.  around 1700- 1800 duplicates or triplicates.
 
   #  l1 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/ST01245_lc2t70836.las")
   #  l2 <- readLAS("/home/erker/hgt_data/madison_tree_inventories/hgt/trees_2009_las/ST01245_lc2t70835.las")
@@ -2574,7 +2574,7 @@ hn <- left_join(h, growth.rates)
 
 
 #+begin_src R
-saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates.rds")
+saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates.rds")
 #+end_src
 
 #+RESULTS:
@@ -2585,11 +2585,11 @@ join growth rates to trees
   library(raster)
   trees <- shapefile("/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithAttributes.shp")
 
-  hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates.rds")
+  hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates.rds")
 
   trees@data <- left_join(trees@data, hn, by = c("UID" = "uid"))
 
-  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_Withlidarextractedheights_growthrates.rds", overwrite = T)
+  shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithLiDARextractedheights_growthrates.rds", overwrite = T)
 
 #+end_src
 
@@ -2606,7 +2606,7 @@ point cloud.
 Also standard deviation?  for uncertainty.  
 
 Here i'm saying that a tree that hasn't grown can be used to find by
-how much the different lidar point densitys underestimate height.
+how much the different LiDAR point densitys underestimate height.
 
 
 **** read in extracted heights from above and find trees that haven't grown
@@ -3895,7 +3895,7 @@ with only 4 observations per tree.
 
 
 #+begin_src R
-saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+saveRDS(hn, "/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds")
 #+end_src
 
 #+RESULTS:
@@ -3909,11 +3909,11 @@ join growth rates to trees
 
   trees <- spTransform(trees, "+init=epsg:7599")
 
-    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds")
 
     trees@data <- left_join(trees@data, hn, by = c("UID" = "uid"))
 
-    shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_Withlidarextractedheights_growthrates_corrFromNoGrowth.rds", overwrite = T)
+    shapefile(trees, "/home/erker/hgt_data/madison_tree_inventories/MadisonTrees_WithLiDARextractedheights_growthrates_corrFromNoGrowth.rds", overwrite = T)
 
 #+end_src
 
@@ -3992,7 +3992,7 @@ ggplotly(p)
 
 ***** growth by species
 #+begin_src R
-    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+    hn <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds")
 
 hn <- hn[complete.cases(hn),]
 
@@ -4178,7 +4178,7 @@ hn <- hn[complete.cases(hn),]
 #+end_example
 
 ** example trees for visualization
-*** crop lidar to the tenney oak for visualization of bias situation.
+*** crop LiDAR to the tenney oak for visualization of bias situation.
 
 I could make a 2d plot of the points (z on y axis and 
 
@@ -4188,17 +4188,17 @@ print might underestimate height according to roussel (see his paper),
 it also means that the points don't penetrate as deeply.  So when I
 resample from the 2017 which has a smaller footprint and deeper
 penetration into the canopy, I can potentially sample points lower
-than I would ever get from 2005 lidar.  But maybe this doesn't matter
+than I would ever get from 2005 LiDAR.  But maybe this doesn't matter
 since I'm not interested in the mean, but rather the maximum.
 
 
 #+begin_src R
   library(lidR)
   library(dplyr)
-    l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0823_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/102_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70912f_normalized.las", select = "r")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile014_ground_normalized.las", select = "r")
+    l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/0823_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/102_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t70912f_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile014_ground_normalized.las", select = "r")
 
 
     tenney_oak <- shapefile("/home/erker/hgt_data/example_trees/tenney_oak.shp")
@@ -4412,17 +4412,17 @@ max2017 - max2005
 [1] 1.451
 #+end_example
 
-*** crop lidar to a fast growing tree for visualization of bias situation. ST42874
+*** crop LiDAR to a fast growing tree for visualization of bias situation. ST42874
 
 ST42874
 
 
 #+begin_src R
 
-  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0676_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/54_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t81028f_normalized.las", select = "r")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile007_ground_normalized.las", select = "r")
+  l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/0676_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/54_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t81028f_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile007_ground_normalized.las", select = "r")
 
 
   p <- shapefile("/home/erker/hgt_data/example_trees/ST42874.shp")
@@ -4507,10 +4507,10 @@ ST78492 - smaller honey locust, single street tree.
 
 #+begin_src R
 
-  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0777_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/85_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t81034f_normalized.las", select = "r")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile015_ground_normalized.las", select = "r")
+  l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/0777_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/85_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t81034f_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile015_ground_normalized.las", select = "r")
 
 
   p <- shapefile("/home/erker/hgt_data/ST78492.shp")
@@ -4605,10 +4605,10 @@ red <- solarized_pal("red")(1)
 :END:
 #+begin_src R
 
-  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0824_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/103_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t71007f_normalized.las", select = "r")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile014_ground_normalized.las", select = "r")
+  l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/0824_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/103_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t71007f_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile014_ground_normalized.las", select = "r")
 
 
   p <- shapefile("/home/erker/hgt_data/ST69002.shp")
@@ -4662,10 +4662,10 @@ red <- solarized_pal("red")(1)
 Why 2009 the way it is?
 #+begin_src R
 
-  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/0917_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/117_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70919f_normalized.las", select = "r")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
+  l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/0917_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/117_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t70919f_normalized.las", select = "r")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
 
 
   p <- shapefile("/home/erker/hgt_data/HF6591.shp")
@@ -4715,10 +4715,10 @@ Why 2009 the way it is?
 #+begin_src R
   library(lidR)
 
-  l2017 <- readLAS("/home/erker/hgt_data/madison_lidar_2017_heights/normalized/1019_esri_normalized.las", select = "r")
-    l2016 <- readLAS("/home/erker/hgt_data/madison_lidar_2016_heights/normalized_lidar/162_normalized.las", select = "r")
-    l2009 <- readLAS("/home/erker/hgt_data/madison_lidar_2009_heights/normalized/lc2t70933f_normalized.las", select = "r", filter = "-drop_z_below 0")
-    l2005 <- readLAS("/home/erker/hgt_data/madison_lidar_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
+  l2017 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2017_heights/normalized/1019_esri_normalized.las", select = "r")
+    l2016 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2016_heights/normalized_LiDAR/162_normalized.las", select = "r")
+    l2009 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2009_heights/normalized/lc2t70933f_normalized.las", select = "r", filter = "-drop_z_below 0")
+    l2005 <- readLAS("/home/erker/hgt_data/madison_LiDAR_2005_heights/normalized/tile020_ground_normalized.las", select = "r")
 
 
   p <- shapefile("/home/erker/hgt_data/ST45429.shp")
@@ -4792,7 +4792,7 @@ plot(to2009)
 ***** scale up to 15 ft pixels
 
 #+BEGIN_SRC sh
-cd /home/erker/hgt_data/madison_lidar_2016_heights/
+cd /home/erker/hgt_data/madison_LiDAR_2016_heights/
 gdal_edit.py -a_nodata -3.4e+38 tree_height_norm_2016_cpy.tif
 
 #+END_SRC
@@ -4801,7 +4801,7 @@ gdal_edit.py -a_nodata -3.4e+38 tree_height_norm_2016_cpy.tif
 
 Convert less than 0 to 0 for averaging
 #+BEGIN_SRC sh :session a
-cd /home/erker/hgt_data/madison_lidar_2016_heights/
+cd /home/erker/hgt_data/madison_LiDAR_2016_heights/
 gdal_calc.py -A tree_height_norm_2016.tif --outfile=tree_height_norm_2016_zeros.tif --type=Byte --calc="A*(A>0)"
 #+END_SRC
 
@@ -4810,7 +4810,7 @@ gdal_calc.py -A tree_height_norm_2016.tif --outfile=tree_height_norm_2016_zeros.
 
 Scale up with average height
 #+BEGIN_SRC sh :results verbatim
-cd /home/erker/hgt_data/madison_lidar_2016_heights/
+cd /home/erker/hgt_data/madison_LiDAR_2016_heights/
 gdalwarp -srcnodata -inf -tr 15 15 -r average -t_srs epsg:7599 -tap tree_height_norm_2016_zeros.tif tree_height_norm_2016_15ft.tif
 #+END_SRC
 
@@ -4822,7 +4822,7 @@ gdalwarp -srcnodata -inf -tr 15 15 -r average -t_srs epsg:7599 -tap tree_height_
 
 Make Mask
 #+BEGIN_SRC sh
-cd /home/erker/hgt_data/madison_lidar_2016_heights/
+cd /home/erker/hgt_data/madison_LiDAR_2016_heights/
 gdal_calc.py -A tree_height_norm_2016_15ft.tif --outfile=tree_height_norm_2016_mask.tif --type=Byte --calc="0*(A<=30)" --calc="1*(A>30)" 
 #+END_SRC
 
@@ -4906,22 +4906,22 @@ gdalwarp -tap -tr 15 15 -r cubicspline -t_srs epsg:7599 TotPhen_merged.tif TotPh
 
 #+begin_src sh :session a
 cd /home/erker/hgt_data/madison_aviris/
-gdal_merge.py -separate -o lignin_merged_7599_masked_int.tif lignin_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o lignin_merged_7599_masked_int.tif lignin_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A lignin_merged_7599_masked_int.tif -B lignin_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=lignin_merged_7599_masked.tif --calc="A*B"
 
-gdal_merge.py -separate -o N_merged_7599_masked_int.tif N_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o N_merged_7599_masked_int.tif N_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A N_merged_7599_masked_int.tif -B N_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=N_merged_7599_masked.tif --calc="A*B"
 
-gdal_merge.py -separate -o LMA_merged_7599_masked_int.tif LMA_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o LMA_merged_7599_masked_int.tif LMA_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A LMA_merged_7599_masked_int.tif -B LMA_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=LMA_merged_7599_masked.tif --calc="A*B"
 
-gdal_merge.py -separate -o chl_merged_7599_masked_int.tif chl_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o chl_merged_7599_masked_int.tif chl_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A chl_merged_7599_masked_int.tif -B chl_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=chl_merged_7599_masked.tif --calc="A*B"
 
-gdal_merge.py -separate -o Sugar_merged_7599_masked_int.tif Sugar_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o Sugar_merged_7599_masked_int.tif Sugar_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A Sugar_merged_7599_masked_int.tif -B Sugar_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=Sugar_merged_7599_masked.tif --calc="A*B"
 
-gdal_merge.py -separate -o TotPhen_merged_7599_masked_int.tif TotPhen_merged_7599.tif /home/erker/hgt_data/madison_lidar_2016_heights/tree_height_norm_2016_mask.tif
+gdal_merge.py -separate -o TotPhen_merged_7599_masked_int.tif TotPhen_merged_7599.tif /home/erker/hgt_data/madison_LiDAR_2016_heights/tree_height_norm_2016_mask.tif
 gdal_calc.py -A TotPhen_merged_7599_masked_int.tif -B TotPhen_merged_7599_masked_int.tif --A_band=1 --B_band=3 --outfile=TotPhen_merged_7599_masked.tif --calc="A*B"
 
 
@@ -4946,7 +4946,7 @@ gdal_calc.py -A TotPhen_merged_7599_masked_int.tif -B TotPhen_merged_7599_masked
 #+begin_src R
   library(raster)
   library(dplyr)
-      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds")
       uids <- h$uid
 
 
@@ -5025,7 +5025,7 @@ saveRDS(trs, "/home/erker/hgt_data/canopy_foliar_traits_scaled.rds")
 #+begin_src R
   library(rgeos)
 
-    h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds")
+    h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds")
     uids <- h$uid
 
     # make 20m buffer
@@ -5044,7 +5044,7 @@ saveRDS(trs, "/home/erker/hgt_data/canopy_foliar_traits_scaled.rds")
 
 #+RESULTS:
 
-**** Use the chm instead of the lidar clouds clipped to each tree. I'm only going to use 2016 here.  It's good quality lidar and it's closest to the aviris
+**** Use the chm instead of the LiDAR clouds clipped to each tree. I'm only going to use 2016 here.  It's good quality LiDAR and it's closest to the aviris
 
 #+begin_src R
       library(raster)
@@ -5055,7 +5055,7 @@ saveRDS(trs, "/home/erker/hgt_data/canopy_foliar_traits_scaled.rds")
          b <- spTransform(b, crs("+init=epsg:7599"))
          b@data <- select(b@data, UID)
 
-      fs <- list.files("/home/erker/hgt_data/madison_lidar_2016_heights/all_chm", full.names = T)
+      fs <- list.files("/home/erker/hgt_data/madison_LiDAR_2016_heights/all_chm", full.names = T)
 
       o <- sapply(fs, function(f) {
           v <- velox(f)
@@ -5087,7 +5087,7 @@ saveRDS(trs, "/home/erker/hgt_data/canopy_foliar_traits_scaled.rds")
                                           #  library(dynatopmodel)  I'm not going to get the topographic wetness index.  I think 2 scale apporach with terrain works fine
     library(rgeos)
 
-      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds") %>%
+      h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds") %>%
         filter(!duplicated(.))
 
       uids <- h$uid
@@ -5301,7 +5301,7 @@ saveRDS(pct_imp_df, "/home/erker/hgt_data/pct_imp_100m.rds")
                   terr <- readRDS("/home/erker/hgt_data/terrain_at_trees.rds") %>% unique()
                   imp20 <- readRDS("/home/erker/hgt_data/pct_imp_20m.rds")
                   imp100 <- readRDS("/home/erker/hgt_data/pct_imp_100m.rds")
-              h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/lidarextractedheights_growthrates_corrFromNoGrowth.rds") %>%
+              h <- readRDS("/home/erker/hgt_data/madison_tree_inventories/hgt/LiDARextractedheights_growthrates_corrFromNoGrowth.rds") %>%
                   rename(UID = uid) %>%
                   filter(!is.na(growth.rate)) %>%
                   mutate(cor_max2005 = emp_max2005 + mean_bias05,
@@ -5407,22 +5407,6 @@ dc <- filter(d, complete.cases(d))
 #+end_src
 
 #+RESULTS:
-#+begin_example
-
-Attaching package: ‘dplyr’
-
-The following object is masked from ‘package:nlme’:
-
-    collapse
-
-The following objects are masked from ‘package:stats’:
-
-    filter, lag
-
-The following objects are masked from ‘package:base’:
-
-    intersect, setdiff, setequal, union
-#+end_example
 
 ** plot data
 *** define theme
@@ -10393,7 +10377,6 @@ what i would need everything at trait map resolution
 
 - show predicted versus observed
 
-
 * Introduction
 
 With over half the human population living in urban areas, planting
@@ -10407,92 +10390,91 @@ All these services are a function of growth, either directly or
 indirectly. Carbon update occurs as a direct result of growth.
 Reductions in stormwater runoff and improvements in air quality are
 functions of tree size, which results from growth
-cite:nowak14_tree_fores_effec_air_qualit,nowak_e_2013. Therefore,
+citep:nowak14_tree_fores_effec_air_qualit,nowak_e_2013. Therefore,
 understanding urban tree growth is essential to estimating and
 projecting ecosystem services into the future.  The factors that
 contribute to the growth of trees in general are well understood.
 What we do not understand as well is how the complex urban environment
 alters these factors, thereby altering the growth of trees.
 
-Urban trees grow differently than their counterparts because of the
-challenges they face surviving among urban infrastructure and are
-cultivated by humans (but not for their wood).  For example, street
-trees are subject to damage from vehicles and pedestrians; urban trees
-tend to be open grown; urban trees are pruned to accommodate
-powerlines or for aesthetics, many urban trees are irrigated and
-fertilized; and the species composition in a city is often different
-cite:zipperer_guntenspergen_2009.  Urban conditions are not only
+Urban trees grow differently than their non-urban counterparts because
+of the challenges they face surviving among urban infrastructure and
+as a consequence of being cultivated by humans (but not for their
+wood).  For example, street trees are subject to damage from vehicles,
+pedestrians, soil compaction and poor nutrition citep:day_e_2010; urban
+trees tend to be more open grown than forest trees; urban trees are
+pruned to accommodate powerlines or for aesthetics, many urban trees
+are irrigated and/or fertilized; and the species composition in a city
+is often different than surrounding native forests
+citep:zipperer_guntenspergen_2009.  Urban conditions are not only
 unique, but they are also more heterogeneous, which creates
-variability in the growth of the urban forest at small spatial scales.
+variability in the growth of the urban forest at fine spatial scales.
 
 Remote sensing technology can efficiently estimate tree height growth
-and then help explain patterns in that growth for tens of thousands of
-trees.  Sufficient sample size is required to detect effect sizes that
-may be small relative to the environment.  Here we use two
-technologies that have only recently become more available, repeat
-airborne laser scanning (LiDAR, also called light detection and
-ranging) and imaging spectroscopy.  
+and quantify traits that explain patterns in that growth for tens of
+thousands of trees.  Sufficient sample size is required to detect
+effect sizes that may be small relative to the variability found in
+the urban environment.  Here we use two technologies that have only
+recently become more available, repeat airborne laser scanning (LiDAR,
+also called light detection and ranging) and imaging spectroscopy.
 
-Lidar has been used extensively for years in forestry applications
+LiDAR has been used extensively for years in forestry applications
 citep:dubayah_2000.  Laser pulses are sent from an airborne platform
 to the ground below and, when the reflected light returns with
 sufficient intensity, the height of the objects below are recorded.
 The result is a 3 dimensional point cloud that can be used to
-characterize forest structure, including height cite:lim_e_2003.
-Repeat lidar is a promising technology for measuring tree height
-growth, but handling differences between lidar acquisitions remains a
+characterize forest structure, including height citep:lim_e_2003.
+Repeat LiDAR is a promising technology for measuring tree height
+growth, but handling differences between LiDAR acquisitions remains a
 challenge, see for example cite:duncanson_dubayah_2018.  Our work uses
-multiple years of lidar data, in conjunction with an innovative height
-bias correction, to estimate the heights of trees and their growth
-rates.
+multiple years of historical LiDAR data, in conjunction with an
+innovative height bias correction, to estimate the heights of trees
+and their growth rates. 
 
-  NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
-Generation (AVIRIS-NG) measures the reflectance of light in hundreds
-of narrow wavebands from 400 to 2500 nm.  The spectra from the imagery
-can be used to create indicies of canopy foliar traits which then in
-turn we used to explain height growth.
+Leaf spectroscopy uses the reflectance of light to predict foliar
+traits and has been used for decades in remote sensing
+citep:martin_aber_1997,asner_1998.  These foliar canopy traits can
+help to understand ecosystem function citep:ustin_e_2004, including in
+urban environments citep:gu_e_2015,alonzo_e_2016.  NASA's Airborne
+Visible / Infrared Imaging Spectrometer - Next Generation (AVIRIS-NG)
+measures the reflectance of light in hundreds of narrow wavebands from
+400 to 2500 nm.  We used the spectra from the imagery to create
+indicies of canopy foliar traits which then in turn we used to explain
+height growth.  As the photosynthetic tissues of trees, leaves are
+responsible for capturing the carbon necessary for growth and the
+foliar traits of a species show various tradeoffs between factors such
+as photosynthetic capacity and longevity citep:wright_e_2004.  Traits
+such as percent nitrogen by mass and chlorphyll concentration are
+related to photosynthetic capacity and productivity citep:reich_2012.
+Percent lignin is related to leaf structure and recalcitrance, and
+total phenolics are related to herbivory defense
+citep:martin_aber_1997,lindroth_batzli_1984.
 
-
-Again, you are lacking a literature review.  Just a few sentences are
-needed, but tell us what spectroscopy is, how it has been used to do
-these things, and what the variables derived from it tell you about
-ecosystems (investment in growth potential vs leaf construction,
-defense) 
-
-
-
-In addition to canopy foliar traits, we also included as variables:
-topography, landcover, tree height, mean height of a tree's
-surroundings and whether or not the tree was a street tree and whether
-or not it had overhead utilities. 
-
-Like with hyperspectral and lidar, you need a sentence lit review (w/
-citations) on each of these variables and why you would hypothesize
-they affect tree growth
-
-
+In addition to canopy foliar traits, we also included variables that
+have been shown to influnce tree biology: topography, landcover, tree
+height, mean height of a tree's surroundings and whether or not the
+tree was a street tree and whether or not it had overhead
+utilities. Current tree height has a strong effect on the potential
+for the tree to continue growing upward
+citep:ryan_yoder_1997. Topographic variables such as elevation, slope,
+and aspect influence the formation of soils and the soil temperature
+and moisture, which in turn affect tree growth citep:chapin_e_2011.
+Trees continue growing upwards in response to competition for light
+citep:king_1990.  Trees surrounded by tall objects will need to grow
+tall to capture energy.  Impervious surfaces and utility presence are
+associated with poor tree growth and mortality
+citep:jim_1998,day_e_2010.
 
 The objectives of our study were to:
 
-
-
-- evaluate the effectiveness of terrain optimized leaf-off lidar with
+- evaluate the effectiveness of terrain optimized leaf-off LiDAR with
   variable pulse densities to estimate urban tree height growth;
 - evaluate whether canopy foliar traits estimated from remotely sensed
-  imaging spectroscopy can explain tree height growth;
+  imaging spectroscopy can explain tree height growth; and 
 - evaluate how urban tree height growth is altered by environmental
   factors common to all trees (e.g. topography) as well as
   environmental factors specific to the urban environment (e.g. impervious
-  cover, streets, and utility lines).
-
-
-Just as a note to think about, at some point, perhaps in intro and
-maybe in discussion, you will need to mention: --you are making use of
-serendipitous data with the lidar (or some term like that) and as such
-the data cannot be absolutely validated.  As well, your hyperspectral
-measurements are based on models developed in the region and
-validated, but not on your specific trees.
-
+  cover, streets, and utility lines) by exploiting existing datasets.
 
 ** COMMENT maybe include
 Existing methods for estimating ecosystem services are lacking.
@@ -10502,7 +10484,16 @@ find itree and UTD both over estimate.
 
 Full waveform LiDAR records the
 intensity of the return continuously through time, while discrete
-return lidar, which we used here, discretizes the waveform at 
+return LiDAR, which we used here, discretizes the waveform at 
+
+Just as a note to think about, at some point, perhaps in intro and
+maybe in discussion, you will need to mention: --you are making use of
+serendipitous data with the LiDAR (or some term like that) and as such
+the data cannot be absolutely validated.  As well, your hyperspectral
+measurements are based on models developed in the region and
+validated, but not on your specific trees.
+
+ The LiDAR we used was collected several years ago
 
 ** COMMENT comments
 Understanding how trees grow in urban environments can help cities
@@ -10515,8 +10506,8 @@ better estimate and project
 - Context
   - there is incredible variability in urban tree growth across a city
     due to variability in environment, and species
-  - Remote sensing technology, specifically repeat lidar and imaging
-    spectroscopy, allow for measurements of growth (from repeat lidar)
+  - Remote sensing technology, specifically repeat LiDAR and imaging
+    spectroscopy, allow for measurements of growth (from repeat LiDAR)
     for thousands of trees, which then can be combined with indicies
     of foliar traits (from imaging spectroscopy) to create large data
     for understanding urban tree growth
@@ -10533,86 +10524,91 @@ better estimate and project
   - trees grow faster
 * Methods
 ** Overview
-In our study city, Madison, WI, we combined several outputs of remote
-sensing technologies and several geographic information system (GIS)
-layers to explore the potential for environmental factors and remotely
-sense canopy foliar traits to explain urban tree height growth.  Using
-four years of lidar data (2005, 2009, 2016, and 2017) and an
+In our study city, Madison, WI, we combined remote sensing
+measurements of urban terrestrial vegetation with environmental
+factors derived from a geographic information system (GIS) to explore
+the potential for these to explain urban tree height growth.  Using
+four years of LiDAR data (2005, 2009, 2016, and 2017) and an
 innovative height bias correction method, we estimated the height
 growth of trees over a 12 year period.  We used two street tree
 inventories (one from the city of Madison and one from the village of
-Shorewood, which is within the city) and two complete inventories of
-the trees in Madison's Atwood and Hill Farms neighborhoods to get
-taxonomic information of trees.  In September 2015, NASA's Airborne
-Visible / Infrared Imaging Spectrometer - Next Generation (AVIRIS-NG)
-imaged the majority of Madison.  Using predictive equations developed
-following cite:singh_e_2015, we predicted canopy foliar traits:
-Nitrogen (% mass), N; leaf mass per area (g/m^2), LMA (g / m^2); lignin
-(% mass), chlorophyll (mmol / m^2), and total phenolics (% mass).  We
-converted these trait predictions to an index because of imagery
-differences between our site and where the model was built.  In
-addition to foliar traits, we calculated other covariates such as
-percent impervious cover at two scales (within 20m and within 100m),
-topographic variables, and the mean height of the surroundings within
-20 m of a tree (see table [[tab:covariates]] for all covariates).
+Shorewood Hills, which is within the city) and two complete
+inventories of the trees in Madison's Atwood and Hill Farms
+neighborhoods to provide taxonomic information of trees.  In September
+2015, NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
+Generation (AVIRIS-NG) imaged the majority of Madison.  Using
+predictive equations developed following cite:singh_e_2015, we mapped
+canopy foliar traits: Nitrogen (% mass), N; leaf mass per area (g/m^2),
+LMA (g / m^2); lignin (% mass), chlorophyll (mmol / m^2), and total
+phenolics (% mass), then converted these trait predictions to scaled
+indices.  In addition to foliar traits, we calculated other covariates
+such as percent impervious cover at two scales (within 20m and within
+100m, as derived from cite:erker_e_2019, Chapter 1), topographic
+variables, and the mean height of the surroundings within 20 m of a
+tree (see table [[tab:covariates]] for all covariates).
 
 #+name: tab:covariates
-| Covariate                                                      | Source                           |
-|----------------------------------------------------------------+----------------------------------|
-| Bias corrected height in 2005 (m)                              | lidar                            |
-| Mean Height within 20 m (m)                                    | lidar                            |
-| Genus                                                          | tree inventories                 |
-| neighborhood or street tree with or without overhead utilities | tree inventories                 |
-| slope  at 1.5 m (5 ft) scale                                   | Digital Elevation Model (DEM)    |
-| transformed aspect at 1.5 m (5 ft) scale                       | DEM                              |
-| topographic position index, TPI at 1.5m (5 ft) scale (m)       | DEM                              |
-| slope at 61 m (200 ft) scale                                   | DEM                              |
-| transformed aspect at 61 m (200 ft) scale                      | DEM                              |
-| topographic position index, TPI at 61 m (200 ft) scale (m)     | DEM                              |
-| elevation (hundreds of meters)                                 | DEM                              |
-| Sugar (standardized index)                                     | AVIRIS-NG                        |
-| lignin (standardized index)                                    | AVIRIS-NG                        |
-| chlorophyll (standardized index)                               | AVIRIS-NG                        |
-| leaf mass per area (standardized index)                        | AVIRIS-NG                        |
-| total phenolics (standardized index)                           | AVIRIS-NG                        |
-| nitrogen (standardized index)                                  | AVIRIS-NG                        |
-| percent impervious within 20 m                                 | landcover map citep:erker_e_2019 |
-| percent impervious within 100 m                                | landcover map citep:erker_e_2019 |
+#+caption: Covariates used in analysis
+#+ATTR_LATEX: :float sidewaystable :placement [h]
+| Covariate                                                      | Source                                     | method                |
+|----------------------------------------------------------------+--------------------------------------------+-----------------------|
+| Bias corrected height in 2005 (m)                              | LiDAR                                      | this paper            |
+| Mean of height within 20 m (m)                                 | 2016 LiDAR derived 1 m canopy height model | this paper            |
+| Genus                                                          | tree inventories                           |                       |
+| neighborhood or street tree with or without overhead utilities | tree inventories                           |                       |
+| slope  at 1.5 m (5 ft) scale                                   | 1.5 m Digital Elevation Model (DEM)        | citep:raster_Rpackage |
+| transformed aspect at 1.5 m (5 ft) scale                       | 1.5 m DEM                                  | citep:beers_e_1966    |
+| topographic position index, TPI at 1.5m (5 ft) scale (m)       | 1.5 m DEM                                  | citep:raster_Rpackage |
+| slope at 61 m (200 ft) scale                                   | 1.5 m DEM                                  | citep:raster_Rpackage |
+| transformed aspect at 61 m (200 ft) scale                      | 1.5 m DEM                                  | citep:beers_e_1966    |
+| topographic position index, TPI at 61 m (200 ft) scale (m)     | 1.5 m DEM                                  | citep:raster_Rpackage |
+| elevation (hundreds of meters)                                 | 1.5 m DEM                                  |                       |
+| Sugar (standardized index)                                     | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| lignin (standardized index)                                    | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| chlorophyll (standardized index)                               | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| leaf mass per area (standardized index)                        | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| total phenolics (standardized index)                           | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| nitrogen (standardized index)                                  | 4.6 m AVIRIS-NG                            | citep:singh_e_2015    |
+| percent impervious within 20 m                                 | 1 m landcover map                          | citep:erker_e_2019    |
+| percent impervious within 100 m                                | 1 m landcover map                          | citep:erker_e_2019    |
 
 For the purposes of estimating coefficients more reliably, we subset
-our data so that no two trees of the same genus were closer than 200 m
-to one another.  This reduced our sample size from about 21 thousand
-to 7 thousand, but also reduced spatial dependence that could
-potentially bias coefficient estimates or inflate confidence that
-coeffient estimates are different from zero.  We fit several multiple
-linear regressions with growth rate as a response and all covariates
-as predictors with various interactions that were reasonable given our
-objectives.  We used AIC to help with model selection, but did not
-test very many interactions, instead we were primarily guided by our
-objectives and the goal of finding a model that was straightforward to
-communicate.  Details on the selected models are in results.
+our data for statistical analyses so that no two trees of the same
+genus were closer than 200 m to one another.  This reduced our sample
+size from 21,247 to 7,124, but also reduced spatial dependence that
+could potentially bias coefficient estimates or inflate confidence
+that coeffient estimates were different from zero.  We fit several
+multiple linear regressions with growth rate as a response and all
+covariates as predictors with plausible interactions.  We used AIC to
+help with model selection, but did not test very many interactions,
+instead we were primarily guided by our objectives and the goal of
+finding a model that was straightforward to communicate.  Details on
+the selected models are in results.
 
-** Madison, WI: population and forests
-Madison is a city of about 260,000 persons ([[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][USCensus]]), located in
-south central Wisconsin.  The dominant forest type is broadleaf
-deciduous.  Pre-European settlement forests were dominated by oaks
-(Quercus), maples (Acer), and basswood (Tilia).  Now the most common
-street tree genera are Fraxinus, Acer, Gleditsia, and Tilia, making up
-over 70% of all street trees.  Other common genera in neighborhoods
-include: Picea, Thuja, Betula, and Pinus.
+*** COMMENT
+because of imagery differences
+between our site and where the model was built
+** Study Area
+Madison is a small city (population ~260,000, metropolitan ~500,000)
+in south central Wisconsin, USA, (figure [fig:studyarea]],
+[[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][cite:Madison_WI_QuickFactsUSCensus]].  The dominant forest type is
+broadleaf deciduous.  Pre-European settlement forests were dominated
+by oaks (Quercus), maples (Acer), and basswood (Tilia)
+cite:mollenhoff_2003.  Now the most common street tree genera are
+Fraxinus, Acer, Gleditsia, and Tilia, making up over 70% of all street
+trees.  Other common genera in neighborhoods include: Picea, Thuja,
+Betula, and Pinus.
 
 ** Data
 *** Tree inventories
-The genus of a tree is the sum of a suite of genetic factors that
-affect growth rates and is therefore important to know when modeling
-tree growth.  We used four tree inventories for genus information.
-The first is the city of Madison's street tree inventory from 2011;
-the second is the 2012 inventory of the Atwood neighborhood located on
-Madison's east side and the north side of lake Monona, the third is
-the 2015-2016 inventory of the Hill Farms neighborhood on Madison's
-west side, the fourth is the Village of Shorewood's 2015 street tree
-inventory.  The street tree inventories also provided information on
-presence of overhead utility lines.
+We used four tree inventories for genus information.  The first is the
+city of Madison's street tree inventory from 2011; the second is the
+2012 inventory of the Atwood neighborhood located on Madison's east
+side and the north side of lake Monona, the third is the 2015-2016
+inventory of the Hill Farms neighborhood on Madison's west side, the
+fourth is the Village of Shorewood's 2015 street tree inventory.  The
+street tree inventories also provided information on presence of
+overhead utility lines.
 
 **** COMMENT I need a figure showing the neighborhood inventories and the street tree inventories too.
 
@@ -10636,22 +10632,22 @@ There were 360 trees in need of removal and 108 trees in need of safety prunes.
 
 How did we remove trees
 
-- lidar point clouds were unreliable, too close to other trees, tall
+- LiDAR point clouds were unreliable, too close to other trees, tall
   buildings,
 - trees were removed or replanted indicated by large decreases in height
 
-*** Airborne laser scanning (lidar)
+*** Airborne laser scanning (LiDAR)
 
-We used four years of airborne laser scanning (lidar) to estimate tree
-heights for height growth rate estimation.  The lidar was acquired in
-springs of 2005, 2009, 2016, and 2017.  The intended use of lidar was
+We used four years of airborne laser scanning (LiDAR) to estimate tree
+heights for height growth rate estimation.  The LiDAR was acquired in
+springs of 2005, 2009, 2016, and 2017.  The intended use of LiDAR was
 for digital elevation modeling and so was flown in leaf-off
-conditions.  Over this 12 year period lidar technology greatly
+conditions.  Over this 12 year period LiDAR technology greatly
 improved and pulse density increased from an average of 0.20 pulses per meter
 squared in 2005 to an average of 4 pulses per meter squared in 2017.
-Lidar data is available from the wisconsinview [[ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/][ftp server]].
+LiDAR data is available from the wisconsinview [[ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/][ftp server]].
 
-We extracted lidar point clouds surrounding the tree points in the
+We extracted LiDAR point clouds surrounding the tree points in the
 tree inventories with a 2.4 m buffer.  The buffer width was selected
 to be large enough to provide enough points to estimate height, but
 also to be small enough so that points not a part of the tree were
@@ -10660,12 +10656,12 @@ tree points were in the center of the crown.  We dropped trees from
 the analysis that had been removed during the study period or that
 were too close to other trees and could cause possible confusion.  If
 two trees were within 5 m of each other we selected the tree with the
-larger diameter and dropped the other.  We analyzed the lidar data
+larger diameter and dropped the other.  We analyzed the LiDAR data
 using the R package =lidR= citep:roussel_auty_2018.
 
 **** COMMENT look at huan's dissertation.
-Lidar data
-The county-wide lidar collection was contracted by the Dane County Land Information Office
+LiDAR data
+The county-wide LiDAR collection was contracted by the Dane County Land Information Office
 to develop a high resolution county-wide digital elevation model (DEM). Ayres Associates
 (Madison, Wisconsin) used a 1064 nm Leica ALS70 laser scanner with scan rate of 69.00 Hz and
 scan angle between -17 o and +18 o , and flew at an altitude of 1750 m above ground level with
@@ -10682,7 +10678,7 @@ What instrument?
 when flown?
 altitude? avg pulse density? footprint size?
 
-2009 lidar is .75 points per square meter. 2016 lidar is 
+2009 LiDAR is .75 points per square meter. 2016 LiDAR is 
 
 2016 - 
 
@@ -10690,12 +10686,12 @@ altitude? avg pulse density? footprint size?
 I need a figure or representation of within year pulse density
 variability.  esp 2009.
 
-We clip lidar point clouds to within 2.4 m (8 ft) from the center of
+We clip LiDAR point clouds to within 2.4 m (8 ft) from the center of
 the inventoried tree as identified in the inventory point shapefile.
 Table .. shows the 
 
 
-#+name: tab:lidar_sum_stats
+#+name: tab:LiDAR_sum_stats
 #+caption: summary statistics for the number of points per tree for each year of ALS data.  Pulse density increased greatly through time, but there is also considerable intra-annual variation from tree to tree.
 |                   | 2005 | 2009 | 2016 | 2017 |
 |-------------------+------+------+------+------|
@@ -10719,8 +10715,8 @@ Table .. shows the
 
 
 
-**** COMMENT comments on lidar
-2009 lidar is not well documented.  I think it appears as 2010 lidar on
+**** COMMENT comments on LiDAR
+2009 LiDAR is not well documented.  I think it appears as 2010 LiDAR on
 the wisconsinview website.
 
 i need to get the average point density across all the tiles because
@@ -10731,7 +10727,7 @@ it varies.
 
 finding buildings: https://github.com/Jean-Romain/lidR/issues/209
 
-2005 lidar might not be good enough for a general tree canopy layer,
+2005 LiDAR might not be good enough for a general tree canopy layer,
 but it should still be reliable for tree heights if I know the trees
 location ( street trees).
 
@@ -10756,7 +10752,7 @@ by their standard deviation.
 
 We extracted the trait values at every tree.  To ensure that we did
 not include mixed pixels, we used the 2016 canopy height model derived
-from lidar to mask any pixels that had a mean height less than 8
+from LiDAR to mask any pixels that had a mean height less than 8
 meters.  This removed some of the smaller trees from our dataset, but
 was important because the relatively large spatial resolution of the
 AVIRIS-NG imagery that made distinguishing crown boundaries difficult.
@@ -10775,7 +10771,7 @@ trees in the cool wet northeast aspect had a value of 2 and trees in
 the warm dry southwest aspect had a value of 0.
 
 We created a canopy height model at 1 m spatial resolution using the
-2016 lidar.  We then found the average height of that canopy height
+2016 LiDAR.  We then found the average height of that canopy height
 model within 20 m of each tree and used this as a variable to
 approximate competition for light.
 
@@ -10784,38 +10780,38 @@ percent impervious cover within 20 m and within 100 m of each tree
 citep:erker_e_2019.
 
 **** COMMENT dem available at:
-ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/Dane_2010_WVP_Derived_Products/WisconsinView_Rasters/
+ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2010_WVP_Derived_Products/WisconsinView_Rasters/
 
 ** Height bias correction and estimation of height growth rates
 *** Corrections for maximum height and estimating tree growth
 
-The estimated maximum height of trees derived from lidar is always lower
+The estimated maximum height of trees derived from LiDAR is always lower
 than the true maximum height, that is, it is biased downward.  The
-magnitude of this bias is a function of the lidar and the tree
-architecture.  Greater density of lidar pulses will have less bias
+magnitude of this bias is a function of the LiDAR and the tree
+architecture.  Greater density of LiDAR pulses will have less bias
 since the probability of hitting a branch near the top of the tree
 increases.  Trees with less conical and flatter tops - those with weak
 apical dominance - will have less bias because there are more branches
 close to the highest branch of the tree citep:roussel_e_2017.  Twig
 size also plays a role. Generally, taxa with thinner twigs have denser
 branching so while a single twig may not reflect enough energy from a
-lidar pulse to trigger a return, there are many more twigs close
+LiDAR pulse to trigger a return, there are many more twigs close
 together.  Taxa with thicker twigs will have stronger returns, but
 since thicker twigs tend to be less dense, the probability of hitting
 a thick twig is lower.  Exactly how these negatively correlated traits
 (twig thickness and density) interact to influence the bias in maximum
 height estimates is mediated by the algorithms used to convert full
-waveform lidar into point clouds.  Thus, in our attempt to correct for
+waveform LiDAR into point clouds.  Thus, in our attempt to correct for
 the bias in maximum height estimation and - by extension across
 multiple years - tree height growth, we used a bootstrap resampling
 technique to estimate bias at different pulse densities for each
-genera in our dataset.  Other characteristics of the lidar, such as
+genera in our dataset.  Other characteristics of the LiDAR, such as
 footprint size are important in correcting bias, but we did not have
 this information for all our datasets and could not correct for it
 citep:anderson_e_2006. 
 
 
-Our goal is to estimate tree growth from multiple years of lidar.  The
+Our goal is to estimate tree growth from multiple years of LiDAR.  The
 primary issue with this endeavor is that tree growth and the size of
 the bias are confounded (figure [[fig:example_tilia]]).  In 2005, average
 pulse density was very low and so bias was large.  By 2017, average
@@ -10840,7 +10836,7 @@ genera that had essentially reached their maximum height and stopped
 growing (differences in observed maximum height between 2009, 2016,
 and 2017 were all less than 1 meter).  We then combined all returns
 across years for each tree, assuming that other than pulse density all
-else was equal across lidar acquisitions.  We then sampled 1000 times
+else was equal across LiDAR acquisitions.  We then sampled 1000 times
 with replacement from each tree's point cloud samples of size 1 to the
 original size.  For each of the 1000 samples at each sample size, we
 calculated the maximum height.  Averaging the maximum heights across
@@ -10879,7 +10875,7 @@ each bias-corrected height.  The result was an estimate of annual
 growth rate for each tree (Figure [[fig:year_by_height]]).  The advantage
 of the weighted regression is that we were able to include data points
 in the regression even if they were highly uncertain rather than
-removing them completely.  Lidar from 2005 generally is very sparse in
+removing them completely.  LiDAR from 2005 generally is very sparse in
 density, but there were some trees for which the sample size was
 sufficiently large to provide some information on growth.
 
@@ -10888,7 +10884,6 @@ bias, at times a tree's height was over or under corrected.  Over
 correction explains some of the slightly negative growth rates, while
 under correction explains some of the high growth rates.  On average
 we assume these errors cancel out.
-
 
 * Results 
 ** Tree Height Bias Correction and Growth Rate Estimation
@@ -11241,15 +11236,15 @@ association with decreased height growth (except perhaps for Pinus).
 * Discussion 
 ** Bias correction and growth rate estimates
 
-The negative bias in height estimates from lidar is well known and
-creates challenges in using multi-temporal lidar to estimate forest
+The negative bias in height estimates from LiDAR is well known and
+creates challenges in using multi-temporal LiDAR to estimate forest
 parameters citep:marinelli_e_2019.  This is especially true for
 individual trees compared to larger forest stands
 citep:paris_bruzzone_2015,roussel_e_2017.  However, the bias is not
 always corrected.
 
 cite:song_e_2016 estimated canopy height growth of urban trees in
-Osaka, Japan using repeat lidar.  Like our study their later
+Osaka, Japan using repeat LiDAR.  Like our study their later
 collections had higher pulse densities (in their case, 52 pulses/m^2
 versus 11 pulses/m^2). They found mean growth from 2008-2010 (when
 pulse density was 52 pulses / m^2) was 2 +/- 19 cm m^{-2} yr^{-1}, and from
@@ -11268,7 +11263,7 @@ resolution point cloud.  But a high resolution point cloud is usually
 not available. They proposed using an area of high pulse density as a
 reference and then applying the bias correction relationship to areas
 of low pulse density.  They pointed out that not only is there bias in
-height for multi-temporal lidar, but also within single date lidar
+height for multi-temporal LiDAR, but also within single date LiDAR
 because of the variation in pulse density across space.  They mostly
 described the nature of the bias, but leave application of correction
 to others.
@@ -11295,9 +11290,9 @@ other genera.  Populus and Quercus have generally thicker twigs and
 had greater bias.  This relationship warrants more rigorous assessement.
 
 While pulse density is a key factor in height bias, there are other
-important sources of bias that our method ignores, namely lidar pulse
+important sources of bias that our method ignores, namely LiDAR pulse
 footprint size.  We did not have footprint size information for the
-2005 lidar and future work should include it in bias corrections.
+2005 LiDAR and future work should include it in bias corrections.
 Some of the residual spatial structure in the data could be explained
 by these differences.
 
@@ -11309,7 +11304,7 @@ The relatively high pulse density across all
 their years likely means that the bias in height estimation is small,
 but very real when used to estimate height growth.  
 
-They found that lidar estimates of growth were much greater than
+They found that LiDAR estimates of growth were much greater than
 field estimates, but they didn't consider that it could be due to the
 difference in pulse density.
 
@@ -11321,7 +11316,7 @@ If their early date collections are biased low, it makes growth appear
 higher than it would be in the field.  
 
 
-cite:marinelli_e_2019 note the challenge of mulitemporal lidar
+cite:marinelli_e_2019 note the challenge of mulitemporal LiDAR
 analyses of forest parameters since as forest changes in time pulse density
 has increased in time.  Especially true for individual trees.  They
 cite: cite:paris_bruzzone_2015 and cite:zhao_e_2018.  But I don't
@@ -11338,7 +11333,7 @@ found the polynomial fit the data well over its range.
 
 This potentially large measurement error 
 
-Estimating canopy height from lidar has a greater bias over smaller
+Estimating canopy height from LiDAR has a greater bias over smaller
 areas (individual trees) compared to larger areas
 (stands) citep:song_e_2016,roussel_e_2017.
 
@@ -11431,10 +11426,10 @@ Our work has shown that urban tree height growth rates can be
 explained relatively well by variables derived from remote sensing,
 but there are several areas for improvement and future work.  First,
 while better than doing nothing, our height bias correction method
-could be improved by considering more characteristics of the lidar
+could be improved by considering more characteristics of the LiDAR
 that lead to bias.  Second, we only consider tree height growth,
 rather than some more ecologically relevant like biomass growth.
-Height growth is much easier to estimate from lidar, but provides an
+Height growth is much easier to estimate from LiDAR, but provides an
 incomplete picture, especially for taller trees or more open grown,
 which may still be growing but not allocating resources to height.
 
@@ -11451,8 +11446,8 @@ environment that we are missing in our model (e.g. soils).
 
 There are three major contributions of our work. First, we
 demonstrated a method to correct for maximum height bias that results
-from low lidar pulse density and more accurately estimate tree height
-growth with multiple years of lidar.  Second, we show that for urban
+from low LiDAR pulse density and more accurately estimate tree height
+growth with multiple years of LiDAR.  Second, we show that for urban
 trees, as for all trees, height growth is significantly related to
 height and genus.  Important for broader applications, we show that if
 genus information is not available, foliar canopy traits derived from
@@ -11739,7 +11734,7 @@ performance.
 
 #+END_QUOTE
 
-** lidar and tree growth
+** LiDAR and tree growth
 
 
 *** cite:choi_e_2019
@@ -11781,7 +11776,7 @@ small spatial extent
 
 4 years of data (2012-2015)
 
-lidar is more or less consistent from year to year.
+LiDAR is more or less consistent from year to year.
 
 their annual growth rates in "high canopy" areas is around .3 m/year.
 
@@ -11827,7 +11822,7 @@ vegetation at large spatial scales.
 #+END_QUOTE
 
 **** notes
-2010 and 2015 lidar in MKE, 2008 and 2013 lidar in denver
+2010 and 2015 LiDAR in MKE, 2008 and 2013 LiDAR in denver
 
 all years have the same nominal spacing (.7 points per m)
 
@@ -11836,7 +11831,7 @@ they had no need to do a correction for their chm
 they did what i was thinking of and created 2 chms then found their
 difference. 
 
-they didn't worry about lidar underestimating height.  While the point
+they didn't worry about LiDAR underestimating height.  While the point
 densities are on average the same across years, there is variability
 across years which could be importnat (though not for their analysis
 really I don't think since their target was mostly stems).
@@ -11897,17 +11892,17 @@ LiDAR datasets to the large-scale growth assessment.
 **** notes  
 - small geographic area in osaka
   - assess 39 trees and 19 plots
-- 3 years of lidar 2004 2008 2010
+- 3 years of LiDAR 2004 2008 2010
 - validated growth with ground measurements at plot and individual
   tree level.
 - trees grow .26 m / year
   - This is high, could it be due to underestimating height in early years?
 - great table with previous studies looking at canopy growth.
   - none of the studies in the table, except the study itself were urban.
-- note the uncertainties in estimateing height from lidar, but don't
+- note the uncertainties in estimateing height from LiDAR, but don't
   correct for it.
 
-- in 2004 lidar had 11 pulses /m^2, in 2008 and 2010 it was 52.  So
+- in 2004 LiDAR had 11 pulses /m^2, in 2008 and 2010 it was 52.  So
   there would definitely be a greater bias in 2004, which they didn't
   correct for.  BUt it might be insignificant since their point cloud
   density was so high.
@@ -11917,11 +11912,11 @@ LiDAR datasets to the large-scale growth assessment.
 
 - their table 7 doesn't show the 2004-2008 combination.  ugh.
   - "At the scale of individual trees, the growth trend was not clear for every period"
-  - field measures didn't agree with lidar measures over every period
+  - field measures didn't agree with LiDAR measures over every period
     for individual trees.
 
 - they saw trees always measure taller in 2008 than 2004.  This is
-  more evidence that there is a bias in the lidar.
+  more evidence that there is a bias in the LiDAR.
 
 - field measured growth: is much lower than they found:
 #+BEGIN_QUOTE
@@ -11939,7 +11934,7 @@ because that's for all trees not the top of canopy trees.
 *** cite:roussel_e_2017 
 *** https://www.researchgate.net/profile/Qin_Ma2/publication/317349956_Quantifying_individual_tree_growth_and_tree_competition_using_bi-temporal_airborne_laser_scanning_data_a_case_study_in_the_Sierra_Nevada_Mountains_California/links/59ed1e510f7e9bfdeb71accf/Quantifying-individual-tree-growth-and-tree-competition-using-bi-temporal-airborne-laser-scanning-data-a-case-study-in-the-Sierra-Nevada-Mountains-California.pdf
 
-an example of repeat lidar, but in sierra mountains.  they cite
+an example of repeat LiDAR, but in sierra mountains.  they cite
 cite:song_e_2016.  But not urban
 
 Quantifying individual tree growth and tree competition using
@@ -11973,7 +11968,7 @@ the compound detection that increases the overall accuracy (OA)
 up to 8.6% with respect to the single-date detection.
 #+END_QUOTE
 **** notes
-They note the issue with multi temporal lidar is that the pulse
+They note the issue with multi temporal LiDAR is that the pulse
 density increases in time and needs to be dealt with
 
 
@@ -12007,4 +12002,8 @@ https://academic.oup.com/jof/article-abstract/64/10/691/4672693?redirectedFrom=f
 ** cite:reich_2012 Reich, P. B. Key canopy traits drive forest productivity. Proc Roy Soc B-Biol Sci 279, 2128-2134 (2012).
 ** https://www.sciencedirect.com/science/article/pii/S092427161500012X#f0005
 ** https://www.nature.com/articles/nature02417
-** cite:duncanson18_monit_indiv_tree_based_chang
+** cite:duncanson_dubayah_2018
+** probably wont use: Condensed Lignins Are Synthesized in Poplar Leaves Exposed to Ozone
+http://www.plantphysiol.org/content/134/2/586.short
+** 1988 remote sensing of forest canopy foliar traits
+https://www.sciencedirect.com/science/article/abs/pii/0034425788900077
