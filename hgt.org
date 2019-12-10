@@ -56,7 +56,7 @@ check my paper in stat consulting office to make sure I got it all
 - predicted height growth map.
   - could be zoom 
 * COMMENT Phil's comments on the pdf on the first few pages of pdf, then on the google doc.
-
+https://docs.google.com/document/d/15GRRlSpMiklXP1zO9Vxaf-Ebsvxt51Pc0AJpUf7KCyI/edit
 - map of 4 panels, maybe blowup of hill farms
   - tree height at each of the 4 dates
   - could be zoom of an area.
@@ -10046,6 +10046,8 @@ saveRDS(sm, "/home/erker/hgt_data/sm.rds")
 #+RESULTS:
 
 *** fit models dropping points that are close to one another
+
+**** drop points
 #+begin_src R
   library(rgeos)
   library(dplyr)
@@ -10101,6 +10103,7 @@ saveRDS(dcs, "/home/erker/hgt_data/merged_data_200mApart.rds")
   saveRDS(dcs, "/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
 #+end_src
 
+**** fit models
 #+begin_src R
 dcs <-   readRDS("/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
     ms_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
@@ -10162,6 +10165,83 @@ vge
 :   model     psill    range
 : 1   Nug 150.28983    0.000
 : 2   Exp  37.16652 1134.327
+
+**** topography by tree type interaction?
+#+begin_src R
+dcs <-   readRDS("/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
+    ms_nogenus_stpotopoint <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + st_po * (tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft) - 1, 
+                    dcs)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R
+summary(ms_nogenus_stpotopoint)
+#+End_src
+
+#+RESULTS:
+#+begin_example
+
+Call:
+lm(formula = growth.rate ~ st_po * cor_max2005 + height2005_2 + 
+    height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * 
+    pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + 
+    st_po * (tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + 
+        elev + slope_5ft + slope_200ft) - 1, data = dcs)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-52.608  -9.126  -1.752   6.924  95.038 
+
+Coefficients:
+                                     Estimate Std. Error t value Pr(>|t|)    
+st_poneighborhood                   7.805e+01  1.274e+01   6.124 9.59e-10 ***
+st_post no util                     8.255e+01  1.082e+01   7.632 2.62e-14 ***
+st_post w util                      7.518e+01  1.400e+01   5.370 8.12e-08 ***
+cor_max2005                        -1.449e+01  2.572e+00  -5.635 1.82e-08 ***
+height2005_2                        9.477e-01  2.356e-01   4.022 5.83e-05 ***
+height2005_3                       -3.028e-02  9.220e-03  -3.284  0.00103 ** 
+height2005_4                        3.603e-04  1.301e-04   2.770  0.00562 ** 
+mean_height_wn20m                   9.089e-01  1.091e-01   8.328  < 2e-16 ***
+pct_imp_20m                         1.069e+00  2.421e+00   0.442  0.65876    
+pct_imp_100m                       -1.417e+00  2.520e+00  -0.562  0.57388    
+TotPhen                            -2.314e+00  3.371e-01  -6.865 7.20e-12 ***
+N                                  -2.778e+00  3.082e-01  -9.014  < 2e-16 ***
+Sugar                               1.481e-02  3.527e-01   0.042  0.96651    
+LMA                                -2.807e-02  2.298e-01  -0.122  0.90280    
+lignin                             -2.474e+00  3.873e-01  -6.387 1.79e-10 ***
+chl                                 2.896e+00  3.605e-01   8.035 1.09e-15 ***
+tpi_5ft                            -6.097e+00  1.855e+00  -3.287  0.00102 ** 
+aspect_trans_5ft                   -6.559e-01  5.941e-01  -1.104  0.26963    
+tpi_200ft                          -7.371e-02  1.439e-01  -0.512  0.60849    
+aspect_trans_200ft                  8.611e-01  6.297e-01   1.367  0.17152    
+elev                                6.445e+00  2.647e+00   2.435  0.01491 *  
+slope_5ft                          -9.497e+00  5.753e+00  -1.651  0.09882 .  
+slope_200ft                         1.601e+01  2.227e+01   0.719  0.47207    
+st_post no util:cor_max2005         2.812e-01  1.217e-01   2.310  0.02092 *  
+st_post w util:cor_max2005          3.034e-01  1.663e-01   1.824  0.06820 .  
+pct_imp_20m:pct_imp_100m           -1.035e+01  4.234e+00  -2.444  0.01455 *  
+st_post no util:tpi_5ft             4.779e+00  2.066e+00   2.313  0.02074 *  
+st_post w util:tpi_5ft              2.085e+00  2.748e+00   0.759  0.44809    
+st_post no util:aspect_trans_5ft    1.795e+00  6.663e-01   2.694  0.00708 ** 
+st_post w util:aspect_trans_5ft     8.414e-01  8.872e-01   0.948  0.34300    
+st_post no util:tpi_200ft          -2.711e-01  1.585e-01  -1.710  0.08730 .  
+st_post w util:tpi_200ft           -1.219e-01  2.091e-01  -0.583  0.55994    
+st_post no util:aspect_trans_200ft -1.772e+00  6.941e-01  -2.553  0.01071 *  
+st_post w util:aspect_trans_200ft  -1.366e+00  8.896e-01  -1.536  0.12459    
+st_post no util:elev               -4.985e+00  2.778e+00  -1.794  0.07280 .  
+st_post w util:elev                -1.554e+00  4.215e+00  -0.369  0.71244    
+st_post no util:slope_5ft           6.783e+00  6.776e+00   1.001  0.31682    
+st_post w util:slope_5ft           -5.242e+00  9.997e+00  -0.524  0.60006    
+st_post no util:slope_200ft        -2.347e+01  2.342e+01  -1.002  0.31629    
+st_post w util:slope_200ft         -5.173e+01  2.818e+01  -1.836  0.06642 .  
+---
+codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 14.11 on 7084 degrees of freedom
+Multiple R-squared:  0.5103,	Adjusted R-squared:  0.5075 
+F-statistic: 184.5 on 40 and 7084 DF,  p-value: < 2.2e-16
+#+end_example
 
 **** Plots of two models with spatial subsample
 ***** make dcd data.frame
@@ -10311,7 +10391,6 @@ filter(nd, fit < 1, fit > -1)
 #+end_example
 
 
-
 ***** impervious cover interaction
 #+begin_src R
   nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
@@ -10389,8 +10468,7 @@ p <- cbind(nd, p)
 [[file:figs/impervious_street_neighborhood_ribbon_200mSubsample.png]]
 
 
-
-****** topography
+***** topography
 #+begin_src R
       library(stringr)
 library(broom)
@@ -10439,6 +10517,65 @@ library(broom)
 
 #+RESULTS:
 [[file:figs/first_model_topo_coef_plots_200mSubsample.png]]
+
+****** model with interaction by tree type
+#+begin_src R
+coefplot(ms_nogenus_stpotopoint) + coord_cartesian(xlim = c(-10,10))
+#+end_src
+
+#+begin_src R
+        library(stringr)
+  library(broom)
+          topo <- c("aspect_trans_200ft", "aspect_trans_5ft", "elev", "tpi_5ft", "tpi_200ft", "slope_5ft", "slope_200ft")
+
+            mt <-   tidy(ms_nogenus_stpotopoint) %>%
+                filter(grepl("tpi|slope|aspect_trans|elev", term)) %>%
+                mutate(topo_term = str_extract(term, "tpi|slope|aspect_trans|elev"),
+                       st_po = str_extract(term, "st_post no util|st_post w util")) %>%
+                select(term, estimate, std.error, topo_term, st_po)
+
+  spread(mt, -topo_term)
+
+      mt$term[mt$term == "elev"] <- "elev_5ft"
+
+
+      mt <- mt %>%
+                mutate(scale = str_extract(term, "5ft|200ft"),
+                       scale = plyr::mapvalues(scale, c("5ft", "200ft"), c("1.5 m", "61 m")),
+                       topo_term = str_extract(term, "tpi|slope|aspect_trans|elev"),
+                       topo_term = case_when(topo_term == "tpi" ~ "Topographic position index",
+                                             topo_term == "slope" ~ "Slope",
+                                             topo_term == "aspect_trans" ~ "Transformed aspect",
+                                             topo_term == "elev" ~ "Elevation (100s m)"))
+
+
+
+#+end_src
+
+#+RESULTS:
+: 
+: Error: unexpected symbol in:
+: "
+:     mt"
+
+#+begin_src R :exports results :results graphics :file figs/first_model_topo_coef_plots_200mSubsample_stpoInt.png :width 1150 :height 300 :res 120 :bg transparent
+  red <- solarized_pal("red")(1)
+
+          ggplot(mt, aes(y = estimate, ymax = estimate + 1.96 * std.error, ymin = estimate - 1.96 * std.error, x = scale)) + geom_pointrange(position = position_dodge(width = .3)) +
+            coord_flip() +
+            geom_hline(aes(yintercept = 0), color = red) +
+            facet_wrap(~topo_term, ncol = 4, scales = "free_x") +
+              theme_tufte(base_size = 16) +
+              theme(legend.title = element_text(size = 10),
+                  legend.text = element_text(size = 8),
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05),
+                  panel.background = element_rect(size = .2)) +
+            scale_color_brewer(type = "qual", palette = "Dark2") +
+           scale_y_continuous("Estimate") +
+            scale_x_discrete("Scale")
+#+end_src
 
 ***** height by genus 
 
@@ -10653,7 +10790,6 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 #+RESULTS:
 [[file:figs/mean_height_20m_coefs_200mSubsample.png]]
 
-
 ***** TODO traits  JUST SHOW THE KEY GENERA
 #+begin_src R
       mtng <- tidy(ms_nogenus) %>% data.frame %>%
@@ -10742,7 +10878,6 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 [[file:figs/traits_coef_comparison_KEYgenus_200mSubsample.png]]
 
 
-
 ***** model with interactions
 #+begin_src R
   library(emmeans)
@@ -10798,1274 +10933,8 @@ what i would need everything at trait map resolution
 
 - show predicted versus observed
 
-* Summary
 
-Urban trees alter the urban environment, potentially providing
-important services to humans in cities.  Many of these services are a
-function of tree growth, and so better estimates of tree growth will
-lead to a better understanding of the impact trees have on our
-wellbeing.  We used 4 years of LiDAR data from 2005, 2009, 2016, and
-2017 over the city of Madison, WI to estimate 7,124 tree heights.
-Using an innovative maximum height bias correction technique, we
-corrected heights and estimated tree height growth rates for each
-tree.  We then derived indices of foliar canopy traits from imagining
-spectroscopy data and used these, along with other environmental
-covariates, to explain variation in tree height growth using multiple
-linear regression.  Genus and initial height were the strongest
-predictors of urban tree height growth, but if genus was excluded from
-the model remotely sensed foliar traits explained nearly as much
-variability in growth as genus. Trees growing near other trees and
-buildings grew higher faster than open grown trees, possibly in
-response to competition for light. Percent impervious cover interacted
-at multiple scales to affect tree height growth: while impervious
-cover was generally associated with decreased growth, trees with low
-impervious cover within 20 m maintained relatively high growth rates
-even if impervious cover was high in the surrounding 100 m. Four
-foliar canopy traits predicted from imaging spectroscopy - nitrogen,
-lignin, total phenolics, and chlorophyll were significantly related to
-growth.  Nitrogen, lignin, and total phenolics had negative
-coefficients and chlorophyll had positive coefficient.  Traits
-contribute significantly to the model that does not include
-genus. Topography is significantly related to tree height growth, but
-effects are small.
-
-* Introduction
-
-With over half the human population living in urban areas, planting
-urban trees to provide ecosystem services is seen as a way to make the
-environment that most people interact with more pleasant and
-sustainable.  These ecosystem services include habitat for wildlife,
-stormwater runoff reduction, air quality improvement, carbon
-sequestration, and aesthetics citep:roy_etal_2012.  
-
-All these services are a function of growth, either directly or
-indirectly. Carbon update occurs as a direct result of growth.
-Reductions in stormwater runoff and improvements in air quality are
-functions of tree size, which results from growth
-citep:nowak14_tree_fores_effec_air_qualit,nowak_e_2013. Therefore,
-understanding urban tree growth is essential to estimating and
-projecting ecosystem services into the future.  The factors that
-contribute to the growth of trees in general are well understood.
-What we do not understand as well is how the complex urban environment
-alters these factors, thereby altering the growth of trees.
-
-Urban trees grow differently than their non-urban counterparts because
-of the challenges they face surviving among urban infrastructure and
-as a consequence of being cultivated by humans (but not for their
-wood).  For example, street trees are subject to damage from vehicles,
-pedestrians, soil compaction and poor nutrition citep:day_e_2010; urban
-trees tend to be more open grown than forest trees; urban trees are
-pruned to accommodate powerlines or for aesthetics, many urban trees
-are irrigated and/or fertilized; and the species composition in a city
-is often different than surrounding native forests
-citep:zipperer_guntenspergen_2009.  Urban conditions are not only
-unique, but they are also more heterogeneous, which creates
-variability in the growth of the urban forest at fine spatial scales.
-
-Remote sensing technology can efficiently estimate tree height growth
-and quantify traits that explain patterns in that growth for tens of
-thousands of trees.  Sufficient sample size is required to detect
-effect sizes that may be small relative to the variability found in
-the urban environment.  Here we use two technologies that have only
-recently become more available, repeat airborne laser scanning (LiDAR,
-also called light detection and ranging) and imaging spectroscopy.
-
-LiDAR has been used extensively for years in forestry applications
-citep:dubayah_2000.  Laser pulses are sent from an airborne platform
-to the ground below and, when the reflected light returns with
-sufficient intensity, the height of the objects below are recorded.
-The result is a 3 dimensional point cloud that can be used to
-characterize forest structure, including height citep:lim_e_2003.
-Repeat LiDAR is a promising technology for measuring tree height
-growth, but handling differences between LiDAR acquisitions remains a
-challenge, see for example cite:duncanson_dubayah_2018.  Our work uses
-multiple years of historical LiDAR data, in conjunction with an
-innovative height bias correction, to estimate the heights of trees
-and their growth rates. 
-
-Leaf spectroscopy uses the reflectance of light to predict foliar
-traits and has been used for decades in remote sensing
-citep:martin_aber_1997,asner_1998.  These foliar canopy traits can
-help to understand ecosystem function citep:ustin_e_2004, including in
-urban environments citep:gu_e_2015,alonzo_e_2016.  NASA's Airborne
-Visible / Infrared Imaging Spectrometer - Next Generation (AVIRIS-NG)
-measures the reflectance of light in hundreds of narrow wavebands from
-400 to 2500 nm.  We used the spectra from the imagery to create
-indicies of canopy foliar traits which then in turn we used to explain
-height growth.  As the photosynthetic tissues of trees, leaves are
-responsible for capturing the carbon necessary for growth and the
-foliar traits of a species show various tradeoffs between factors such
-as photosynthetic capacity and longevity citep:wright_e_2004.  Traits
-such as percent nitrogen by mass and chlorphyll concentration are
-related to photosynthetic capacity and productivity citep:reich_2012.
-Percent lignin is related to leaf structure and recalcitrance, and
-total phenolics are related to herbivory defense
-citep:martin_aber_1997,lindroth_batzli_1984.
-
-In addition to canopy foliar traits, we also included variables that
-have been shown to influnce tree biology: topography, landcover, tree
-height, mean height of a tree's surroundings and whether or not the
-tree was a street tree and whether or not it had overhead
-utilities. Current tree height has a strong effect on the potential
-for the tree to continue growing upward
-citep:ryan_yoder_1997. Topographic variables such as elevation, slope,
-and aspect influence the formation of soils and the soil temperature
-and moisture, which in turn affect tree growth citep:chapin_e_2011.
-Trees continue growing upwards in response to competition for light
-citep:king_1990.  Trees surrounded by tall objects (both buildings and
-other trees) will need to grow tall to capture energy.  Impervious
-surfaces and utility presence are associated with poor tree growth and
-mortality citep:jim_1998,day_e_2010.
-
-The objectives of our study were to:
-
-- evaluate the effectiveness of terrain optimized leaf-off LiDAR with
-  variable pulse densities to estimate urban tree height growth;
-- evaluate whether canopy foliar traits estimated from remotely sensed
-  imaging spectroscopy can explain tree height growth; and 
-- evaluate how urban tree height growth is altered by environmental
-  factors common to all trees (e.g. topography) as well as
-  environmental factors specific to the urban environment (e.g. impervious
-  cover, streets, and utility lines) by exploiting existing datasets.
-
-** COMMENT maybe include
-Existing methods for estimating ecosystem services are lacking.
-cite:erker_townsend_2019 address building energy use
-effects. cite:boukili_e_2017 address C sequestration from growth and
-find itree and UTD both over estimate.  
-
-Full waveform LiDAR records the
-intensity of the return continuously through time, while discrete
-return LiDAR, which we used here, discretizes the waveform at 
-
-Just as a note to think about, at some point, perhaps in intro and
-maybe in discussion, you will need to mention: --you are making use of
-serendipitous data with the LiDAR (or some term like that) and as such
-the data cannot be absolutely validated.  As well, your hyperspectral
-measurements are based on models developed in the region and
-validated, but not on your specific trees.
-
- The LiDAR we used was collected several years ago
-
-** COMMENT comments
-Understanding how trees grow in urban environments can help cities
-better estimate and project 
-
-- Why important
-  - Urban environments are unique
-  - Trees there provide services, one of which is carbon sequestration
-    via growth
-- Context
-  - there is incredible variability in urban tree growth across a city
-    due to variability in environment, and species
-  - Remote sensing technology, specifically repeat LiDAR and imaging
-    spectroscopy, allow for measurements of growth (from repeat LiDAR)
-    for thousands of trees, which then can be combined with indicies
-    of foliar traits (from imaging spectroscopy) to create large data
-    for understanding urban tree growth
-- Questions
-  - What is the distribution of rates of urban tree height growth for different
-    species in Madison?
-    - this is the variability that I would seek to explain with
-      environmental and trait data.
-  - Do foliar trait indicies derived from imaging spectroscopy explain
-    any of the variability in tree growth rates?
-  - Do environmental factors (proximity to road, age of road?, percent
-    impervious within 100m, topographic location.
-- We hypothesize that we'll see effects expected from other studies
-  - trees grow faster
-* Methods
-** Overview
-In our study city, Madison, WI, we combined remote sensing
-measurements of urban terrestrial vegetation with environmental
-factors derived from a geographic information system (GIS) to explore
-the potential for these to explain urban tree height growth.  Using
-four years of LiDAR data (2005, 2009, 2016, and 2017) and an
-innovative height bias correction method, we estimated the height
-growth of trees over a 12 year period.  We used two street tree
-inventories (one from the city of Madison and one from the village of
-Shorewood Hills, which is within the city) and two complete
-inventories of the trees in Madison's Atwood and Hill Farms
-neighborhoods to provide taxonomic information of trees.  In September
-2015, NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
-Generation (AVIRIS-NG) imaged the majority of Madison.  Using
-predictive equations developed following cite:singh_e_2015, we mapped
-canopy foliar traits: Nitrogen (% mass), N; leaf mass per area (g m^{-2}),
-LMA (g m^{-2}); lignin (% mass), chlorophyll (mmol m^{-2}), and total
-phenolics (% mass), then converted these trait predictions to scaled
-indices.  In addition to foliar traits, we calculated other covariates
-such as percent impervious cover at two scales (within 20m and within
-100m, as derived from cite:erker_e_2019, Chapter 1), topographic
-variables, and the mean height of the surroundings within 20 m of a
-tree (see table [[tab:covariates]] for all covariates).
-
-#+name: fig:studyarea_aviris
-#+caption: AVIRIS-NG coverage overlaid on the National Land Cover Database map for Madison.
-[[file:figs/madison_nlcd_wiInset_wAviris.png]]
-
-#+name: tab:covariates
-#+caption: Covariates used in analysis
-#+ATTR_LATEX: :float sidewaystable :placement [h]
-| Covariate                                                      | pixel size (m) | Source                    | method                |
-|----------------------------------------------------------------+----------------+---------------------------+-----------------------|
-| Bias corrected height in 2005 (m)                              |              - | LiDAR                     | this paper            |
-| Mean of height within 20 m (m)                                 |              - | 2016 LiDAR                | this paper            |
-| Genus                                                          |              - | tree inventories          |                       |
-| neighborhood or street tree w/ or w/o overhead utilities       |              - | tree inventories          |                       |
-| elevation (hundreds of meters)                                 |            1.5 | Digital Elev. Model (DEM) |                       |
-| slope  at 1.5 m (5 ft) scale                                   |            1.5 | DEM                       | citep:raster_Rpackage |
-| transformed aspect at 1.5 m (5 ft) scale                       |            1.5 | DEM                       | citep:beers_e_1966    |
-| topographic position index, TPI at 1.5m (5 ft) scale (m)       |            1.5 | DEM                       | citep:raster_Rpackage |
-| slope at 61 m (200 ft) scale                                   |             61 | DEM                       | citep:raster_Rpackage |
-| transformed aspect at 61 m (200 ft) scale                      |             61 | DEM                       | citep:beers_e_1966    |
-| topographic position index, TPI at 61 m (200 ft) scale (m)     |             61 | DEM                       | citep:raster_Rpackage |
-| Sugar (standardized index)                                     |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| lignin (standardized index)                                    |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| chlorophyll (standardized index)                               |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| leaf mass per area (standardized index)                        |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| total phenolics (standardized index)                           |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| nitrogen (standardized index)                                  |            4.6 | AVIRIS-NG                 | citep:singh_e_2015    |
-| percent impervious within 20 m                                 |              1 | landcover map             | citep:erker_e_2019    |
-| percent impervious within 100 m                                |              1 | landcover map             | citep:erker_e_2019    |
-
-
-For the purposes of estimating coefficients more reliably and
-minimizing spatial dependence, we subset our data for statistical
-analyses so that no two trees of the same genus were closer than 200 m
-to one another.  This reduced our sample size from 21,247 to 7,124,
-but also reduced spatial dependence that could potentially bias
-coefficient estimates or inflate confidence that coeffient estimates
-were different from zero.  We fit several multiple linear regressions
-with growth rate as a response and all covariates as predictors with
-plausible interactions.  We used AIC to help with model selection, but
-did not test very many interactions, instead we were primarily guided
-by our objectives and the goal of finding a model that was
-straightforward to communicate.  Details on the selected models are in
-results.
-
-*** COMMENT
-because of imagery differences
-between our site and where the model was built
-** Study Area
-Madison is a small city (population ~260,000, metropolitan ~500,000)
-in south central Wisconsin, USA, (figure [[fig:studyarea_aviris]],
-[[https://www.census.gov/quickfacts/fact/table/madisoncitywisconsin/LND110210][cite:Madison_WI_QuickFactsUSCensus]].  The dominant forest type is
-broadleaf deciduous.  Pre-European settlement forests were dominated
-by oaks (Quercus), maples (Acer), and basswood (Tilia)
-cite:mollenhoff_2003.  Now the most common street tree genera are
-Fraxinus, Acer, Gleditsia, and Tilia, making up over 70% of all street
-trees.  Other common genera in neighborhoods include: Picea, Thuja,
-Betula, and Pinus.
-
-** Data
-*** Tree inventories
-We used four tree inventories in our analyses - the City of Madison's
-street tree inventory from 2011; a 2012 inventory of the Atwood
-neighborhood located on Madison's east side, a 2015-2016 inventory of
-the Hill Farms neighborhood on Madison's west side, the fourth is the
-Village of Shorewood Hills's 2015 street tree inventory (Figure
-[[fig:tree_inventories]].  The street tree inventories also provided
-information on presence of overhead utility lines.  Species were
-aggregated to genus.  Conversations with the Hill Farms inventory
-organizers suggested this was needed to increase the reliablilty of
-identification in this largely volunteer-run inventory.  Aggregating
-to genus also increases the sample size of each taxonomic unit.
-
-In our analysis below, we defined trees in our database as either
-“street trees” (those from street tree inventories), further
-subdivided as either having power utilities infrastructure overhead or
-not, or “neighborhood trees”, those growing in yards and parks (those
-from the Hill Farms and Atwood neighborhood inventories).
-
-#+name: fig:tree_inventories
-#+caption: Tree inventories of Madison.  
-[[file:figs/TreeGeneraMap2.png]]
-
-**** COMMENT I need a figure showing the neighborhood inventories and the street tree inventories too.
-
- [[http://www.hillfarms.org/documents/UHFP_Tree_Report_2016.pdf][HillFarms neighborhood]] 
-
- information on DBH and tree condition.
-
-Also shorewood's inventory. 2015.
-https://www.shorewood-hills.org/?SEC=C2F05A70-9E0E-4D5B-A596-FD0AC2F72227
-116 different tree species were found within Shorewood Hills.
-
-The top five most common tree species found were hackberry (8.7%), Norway maple (7.9%), black locust (5.7%), white oak (5.7%), and green ash (5.7%).
-
-There were 360 trees in need of removal and 108 trees in need of safety prunes.
-
-63% of the trees inventoried were considered mature or old.
-
-65% of public trees inventoried were in good or excellent condition, while 8% were rated in poor or very poor condition.
-
-872 trees were located underneath or near utility lines (14% of the trees inventoried).
-
-How did we remove trees
-
-- LiDAR point clouds were unreliable, too close to other trees, tall
-  buildings,
-- trees were removed or replanted indicated by large decreases in height
-
-*** Airborne laser scanning (LiDAR)
-
-We used four years of airborne laser scanning (LiDAR) to estimate tree
-heights for height growth rate estimation.  The LiDAR was acquired in
-springs of 2005, 2009, 2016, and 2017.  The intended use of LiDAR was
-for digital elevation modeling and so was flown in leaf-off
-conditions.  Over this 12-year period LiDAR measurement technology
-improved significantly leading to increases in pulse density from an
-average of 0.20 pulses m^{-2} in 2005 to an average of 4 pulses m^{-2} 
-in 2017.  LiDAR data were downloaded from the wisconsinview [[ftp://ftp.ssec.wisc.edu/pub/wisconsinview/lidar/Dane/][ftp server]].
-
-We extracted LiDAR point clouds surrounding the tree points in the
-tree inventories using a 2.4 m buffer.  The buffer width was selected
-to be large enough to provide enough points to estimate height, but
-also to be small enough so that points not a part of the tree were
-excluded.  This worked well for the vast majority of trees because the
-GPS locations for most of the trees were in the center of the crown.
-We dropped trees from the analysis that had been removed during the
-study period or were too close to other trees to not be readily
-distinguisable in the imagery.  If two trees were within 5 m of each
-other we selected the tree with the larger bole diameter.  
-
-We analyzed the LiDAR data using the R package =lidR=
-citep:roussel_auty_2018. To create a variable that would be related to
-light availabilty for a tree, we first created a 1 m canopy height
-model using the 2016 LiDAR (points to raster method), and then found
-the average height of that canopy height model within 20 m of each
-tree.  Trees surrounded by buildings or other trees would therefore
-have high values and open grown trees would have low values.
-
-
-**** COMMENT look at huan's dissertation.
-LiDAR data
-The county-wide LiDAR collection was contracted by the Dane County Land Information Office
-to develop a high resolution county-wide digital elevation model (DEM). Ayres Associates
-(Madison, Wisconsin) used a 1064 nm Leica ALS70 laser scanner with scan rate of 69.00 Hz and
-scan angle between -17 o and +18 o , and flew at an altitude of 1750 m above ground level with
-flight speed of 248.40 km/h during leaf-off conditions in April, 2009, producing discrete-return
-point clouds with a point density of 1 point per square meter (ppm). Ayres also processed raw
-data and generated all-return, first-return and 3m DEM data products for 1248 tiles in total. All-
-return and first-return points were stored in LAS (ASPRS, 2010)
-
-1064 nm
-
-
-**** COMMENT overview
-What instrument?
-when flown?
-altitude? avg pulse density? footprint size?
-
-2009 LiDAR is .75 points per square meter. 2016 LiDAR is 
-
-2016 - 
-
-
-I need a figure or representation of within year pulse density
-variability.  esp 2009.
-
-We clip LiDAR point clouds to within 2.4 m (8 ft) from the center of
-the inventoried tree as identified in the inventory point shapefile.
-Table .. shows the 
-
-
-#+name: tab:LiDAR_sum_stats
-#+caption: summary statistics for the number of points per tree for each year of ALS data.  Pulse density increased greatly through time, but there is also considerable intra-annual variation from tree to tree.
-|                   | 2005 | 2009 | 2016 | 2017 |
-|-------------------+------+------+------+------|
-| n min             |      |      |      |      |
-| n 25% percentile  |      |      |      |      |
-| n median          |      |      |      |      |
-| n mean            |      |      |      |      |
-| n 75th percentile |      |      |      |      |
-| n max             |      |      |      |      |
-
-
-|                                     | 2005 |        2009 | 2016 | 2017 |
-|-------------------------------------+------+-------------+------+------|
-| Instrument                           |      | Leica ALS70 |      |      |
-| wavelength (nm)                     |      |        1064 |      |      |
-| altitude (m)                        |      |        1750 |      |      |
-| scan rate (Hz)                      |      |       69.00 |      |      |
-| scan angle range (degrees)          |      |     -17, 18 |      |      |
-| Date                                |      |  April 2009 |      |      |
-| Average pulse density (pulses / m^2) |      |        1    |      |      |
-
-
-
-**** COMMENT comments on LiDAR
-2009 LiDAR is not well documented.  I think it appears as 2010 LiDAR on
-the wisconsinview website.
-
-i need to get the average point density across all the tiles because
-it varies.
-
-.07 pts per sq ft.  = .75 pts per sq meter
-.06 
-
-finding buildings: https://github.com/Jean-Romain/lidR/issues/209
-
-2005 LiDAR might not be good enough for a general tree canopy layer,
-but it should still be reliable for tree heights if I know the trees
-location ( street trees).
-
-*** Imaging Spectroscopy
-
-NASA's Airborne Visible / Infrared Imaging Spectrometer - Next
-Generation (AVIRIS-NG) collected imagery over the majority of Madison
-on Setember 3rd, 2015.  AVIRIS-NG measures reflected solar radiance in
-5 nm bands from 400 nm to 2500 nm. Images were flown at an altitude
-above mean ground level of 4,600 m resulting in a pixel size of 4.6
-m. Atmospherically corrected reflectance images were downloaded from
-[[https://aviris-ng.jpl.nasa.gov/dataportal/][AVIRIS-NG data portal]].  Data were pre-processed consistent with
-methods reported in cite:singh_e_2015.
-
-Using predictive equations developed following cite:singh_e_2015, we
-predicted canopy foliar traits: Nitrogen (% mass), N; leaf mass per
-area (g m^{-2}), LMA (g m^{-2}); lignin (% mass), chlorophyll (mmol m^{-2}),
-and total phenolics (% mass). Singh’s work included data from Madison
-and the region, but were built using AVIRIS-Classic imagery.  We
-re-developed the models to AVIRIS-NG wavelengths and added three new
-traits (sugars, phenolics, chlorophyll) for which calibrations had
-been developed since Singh et al. (2015).  Trait predictions from
-adjacent images were normalized to each other using regression on the
-overlap areas. Because we used models developed from other datasets
-(albeit with consistent processing methods) and not validated on our
-images, we converted these trait predictions to indices standardized
-by dividing by their standard deviation.
-
-We extracted the trait values at every tree.  To ensure that we did
-not include mixed pixels, we used the 2016 canopy height model derived
-from LiDAR to mask any pixels that had a mean height lower than 8
-meters.  This removed some of the smaller trees from our dataset, but
-was important because the relatively large spatial resolution of the
-AVIRIS-NG imagery that made distinguishing crown boundaries on small
-trees difficult.
-
-**** COMMENT add plot of flightlines. see uft.org
-
-*** Other covariates
-Topographic variables were derived from the 2009 Dane county digital
-elevation model (DEM).  Topographic position index, aspect, and slope
-were all calculated using the =terrain= function in the R package
-=raster= citep:raster_Rpackage.  The DEM was originally at
-approximately 1.5 m (5 ft) scale.  We calculated topographic
-covariates at this scale and also at the large aggregated scale of 61
-m (200 ft).   We transformed aspect using sin(angle + 45) + 1 so that
-trees in the cool wet northeast aspect had a value of 2 and trees in
-the warm dry southwest aspect had a value of 0.
-
-Using a 1 m landcover map for the city of Madison citep:erker_e_2019,
-we calculated the percent impervious cover within 20 m and within 100
-m of each tree.
-
-
-**** COMMENT dem available at:
-ftp://ftp.ssec.wisc.edu/pub/wisconsinview/LiDAR/Dane/Dane_2010_WVP_Derived_Products/WisconsinView_Rasters/
-
-** Height bias correction and estimation of height growth rates
-*** Corrections for maximum height and estimating tree growth
-
-The estimated maximum height of trees derived from LiDAR is always
-lower than the true maximum height, that is, it is biased downward
-cite:roussel_e_2017.  The magnitude of this bias is a function of the
-interaction between LiDAR characteristics (e.g. pulse density,
-footprint size, scan angle) and the tree architecture (e.g. branch
-leaf and gap distribution).  Greater density of LiDAR pulses will have
-less bias since the probability of hitting a branch near the top of
-the tree increases.  Trees with less conical and flatter tops
-(i.e. those with weak apical dominance) will have less bias because
-there are more branches close to the highest branch of the tree
-citep:roussel_e_2017.  Branch and twig size and distribution may also
-play a role cite:romanczyk_e_2012. Generally, taxa with thinner twigs
-have denser branching. A single twig may not reflect enough energy
-from a LiDAR pulse to trigger a return, but there may be many more
-twigs close together leading to a greater return density if the
-footprint size is large enough.  Taxa with thicker twigs will have
-stronger returns, but since thicker twigs tend to be less dense, the
-probability of hitting a thick twig is lower.  Exactly how these
-negatively correlated traits (twig thickness and density) interact to
-influence the bias in maximum height estimates is mediated by the
-algorithms used to convert full waveform LiDAR into point clouds.
-Thus, in our attempt to correct for the bias in maximum height
-estimation and - by extension across multiple years - tree height
-growth, we used a bootstrap resampling technique to estimate bias at
-different pulse densities for each genera in our dataset.  Other
-characteristics of the LiDAR, such as footprint size are important in
-correcting bias, but we did not have this information for all our
-datasets and could not correct for it citep:anderson_e_2006.
-
-
-Our goal in the bias correction is to obtain an improved estimate of
-tree growth from multiple years of data, but tree growth and the size
-of the bias are confounded (Figure [[fig:example_tilia]]).  In 2005,
-average pulse density was very low and so bias was large.  By 2017,
-average pulse density had increased and so bias decreased.  The
-challenge therefore is to identify how much of the observed maximum
-height difference is due to growth over those 12 years and how much is
-due to a decrease in bias.
-
-#+name: fig:example_tilia
-#+caption: Example Tilia tree illustrating the confounding interaction of both considerable tree growth and increased pulse density through time.
-[[file:figs/ST42874.png]]
-#+name: fig:example_tenneyoak
-#+caption: Illustration of  increasing pulse density through time on a very large Quercus tree with little or no height growth. We assume that any difference in height between years is due to measurement error primarily driven by pulse density.
-[[file:figs/tenney_oak1.png]]
-
-To do this, we estimated the bias for trees that were no longer
-growing (e.g. Figure [[fig:example_tenneyoak]]) and then applied the bias
-correction to all other trees. We selected the tallest trees of each
-genus that had essentially reached their maximum height and stopped
-growing (differences in observed maximum height between 2009, 2016,
-and 2017 were all less than 1 meter).  We then combined all returns
-across years for each tree, assuming that other than pulse density all
-else was equal across LiDAR acquisitions.  We then sampled 1000 times
-with replacement from each tree's point cloud samples of size 1 to the
-original size.  For each of the 1000 samples at each sample size, we
-calculated the maximum height.  Averaging the maximum heights across
-the 1000 samples for each sample size we estimated how bias changes
-with sample size / pulse density (Figure [[fig:pulse_by_bias_by_genus]]).
-
-We then averaged the bias curves for each genus (Figure
-[[fig:mean_pulse_by_bias_by_genus]]) and applied this mean bias correction
-to each tree by genus and number of pulses.  We also averaged the
-standard deviation of the bias estimates and assigned them to each
-tree to provide information on the amount of uncertainty in
-each correction.  Bias corrections for each genus at each pulse
-density are available in supplementary materials.
-
-This method assumes that the relationship between pulse density and
-bias is the same for large trees as it is for small trees of the same
-genus.  This assumption may not be true, but it is difficult to test
-with the existing data.  We also tested estimating the bias correction
-for each tree individually, so that the bias by sample size curve was
-specific to that tree.  This may have minimized the issue with the
-assumption that bias is not a function of tree height, but bias and
-growth were confounded.  Nevertheless, results from both corrections
-were similar, suggesting that our findings are robust to the method of
-correction.  Recognizing that there is a bias in the observed maximum
-height and that the uncertainty in the bias is a function of sample
-size is what appears to be crucial to estimation of height change
-through time. The final product of the bootstrap analysis was an
-estimation of bias corrected height per year and its uncertainty.  
-**** COMMENT pulse density varies within year too (see tree ST55248).
-
-*** Weighted regression for height growth rates
-
-To predict annual growth rate, fit a weighted linear regression for
-each tree with height as the response and year as the predictor.
-Weights were inversely proportional to the variance of each
-bias-corrected height.  The result was an estimate of annual growth
-rate for each tree (Figure [[fig:year_by_height]]).  The advantage of the
-weighted regression is that we were able to include data points in the
-regression even if they were highly uncertain rather than removing
-them completely.  LiDAR from 2005 generally is very sparse in density,
-but there were some trees for which the sample size was sufficiently
-large to provide some information on growth.
-
-Due to the nature of the measurement error and correcting for the mean
-bias, at times the height of a tree may have been over- or
-under-corrected, especially in 2005. Over-correction may explain some
-of the slightly negative growth rates, while under-correction likely
-explains some of the high growth rates.  On average we assume these
-errors cancel out.
-
-** TODO Modeling growth rates
-
-State formally what our hypotheses are (that are in line with the
-objectives above).
-
-It was
-expected that growth rates would differ between street trees and
-neighborhood trees, potentially due to greater disturbance, exposure
-to salt and herbicides, pruning and soil compaction for street trees,
-and the more open grown environment and fertilizer for neighborhood or
-yard trees.  {THIS ALSO MIGHT GO IN THE HYPOTHESIS SECTION FOR THE TO
-BE ADDED 3.4.3 BELOW.}
-
-Why do I include the interactions that I do?
-
-
-* Results 
-** Tree Height Bias Correction and Growth Rate Estimation
-
-Height bias increases in magnitude as pulse density decreases (Figure
-[[fig:pulse_by_bias_by_genus]]). Bias curves were created for 17 genera
-with sufficient sample size in our data set. All genera showed similar
-trends, but there was significant variability in the mean bias curves
-across genera (Figure [[fig:mean_pulse_by_bias_by_genus]]).  Estimated bias for
-every genus at every pulse density is available in supplementary materials.
-
-#+name: fig:pulse_by_bias_by_genus
-#+caption: Empirical height bias by pulse density curves for individual trees across 1000 bootstrapped samples of eight example genera.
-[[file:figs/ng_bias_n.png]]
-
-#+name: fig:mean_pulse_by_bias_by_genus
-#+caption: Mean height bias by pulse density curves for individual trees of eight example genera.  Colored regions are +/- 1 standard error for the mean bias curve.  Pinus has the largest standard error because of the smaller sample size.
-[[file:figs/avg_bias_focus1_otherGenera2_n.png]]
-
-Bias correction and growth rate estimation was applied on a
-tree-by-tree basis (see Figure [[fig:year_by_height]] for results from
-example trees illustrating the consequences of bias correction on
-growth estimation). The underestimation of height in 2005 due to low
-pulse density is evident in most trees by the large drop in height
-compared to the trend from the other three years ("ST89566" is a
-particularly stark example).  The red bias corrected lines appear to
-be more realistic growth rates than the gray uncorrected lines.
-However, over-correction of bias is evident (see "ST03542" and
-"ST20636" in Figure [[fig:year_by_height]]), which can result in estimates
-of negative growth rates ("ST03542" in Figure
-[[fig:year_by_height]]). Weighting years in the regression by their bias
-correction uncertainty diminished the over-correction issues, but some
-years were over-corrected (likely "ST05216") and some were be
-under-corrected). See supplementary materials for a similar plot of a
-random sample of 80 trees.
-
-#+name: fig:year_by_height
-#+caption: Heights of 5 trees in 2005, 2009, 2016, and 2017.  Grey points are observed height from LiDAR; grey line is unweighted linear regression for the observed heights.  Red points are bias-corrected heights; red line is weighted linear regression trend line for the corrected heights.  Tree "ST03542" and "ST20161" are Gleditsia, "ST20636" and "ST89566" are Acer, and "ST05216" is Fraxinus.
-[[file:figs/correction_nogrowth_m_smooth_lm_specificsample.png]]
-
-** Growth Rates
-
-The mean height growth rate of the 7,124 trees in our sample was 12.8
-cm yr^{-1} with a median of 10.1 cm yr^{-1}. Performing an unweighted
-regression for each tree with no bias correction, the growth rate was
-22.8 cm yr^{-1}.  Without the weighted regression but with the bias
-correction the mean growth rate was 8.7 cm yr^{-1}.  We only analyzed
-in depth the bias corrected weighted regression growth rate estimates,
-but the direction and significance of most model coefficient estimates
-were the same regardless of which estimates of growth rates were used
-(bias-corrected results below, results for unweighted and non-bias
-correct not shown).
-
-Figure [[fig:growthratehist]] shows the distribution of growth rates.  The
-large variability and biologically unlikely estimates (e.g. -10 cm
-yr^{-1}) point to: 1) potential LiDAR measurement error influencing
-projected growth rate; 2) overcorrection of the point density based
-bias adjustment, or 3) true declining heights, e.g. due to pruning or
-other management for which information was unavailable.
-
-#+name: fig:growthratehist
-#+caption: Histogram of estimated growth rates for over 7,124 urban trees.  The sample mean growth rate is 12.8 cm yr^{-1} with a median of 10.1 cm yr^{-1}.
-[[file:figs/growthrate_histogram_w_200mSubsample.png]]
-
-** Multiple linear regression: trait and landscape drivers of growth
-
-We tested multiple model formulations and considered several
-combinations of interacting variables before settling on two models to
-report. The first contains interactions between some covariates, but
-is remains simple. The second model adds interactions between genus
-and many of the covariates to the first model. The first model
-contained a fourth order polynomial term for the 2005 height
-covariate, an interaction between 2005 height and the
-neighborhood/street/utility line indicator variable, and an
-interaction between the two scales of percent impervious cover.  It
-identified broad patterns between covariates and growth rates for all
-trees in our sample, independent of taxonomic identity (genus)
-
-For the second model we interacted the genus covariate with the
-intercept and all the covariates except those derived from
-topography. Including genus addresses the likelihood that different
-taxa respond differently to environmental drivers, and that the
-biochemical/trait profiles important to growth also differ among
-species/genera.  The second model that included genus had a much
-improved AIC (662 lower with 315 more parameters) and a higher
-adjusted R^2 (.569 compared to .506) (Table [[tab:model_res]]).
-
-#+name: tab:model_res
-#+caption: Summary of models with and without genus
-| model      | parameters |   AIC | adj. R^2 |
-|------------+------------+-------+---------|
-| no genus   |         26 | 57978 |   0.506 |
-| with genus |        341 | 57316 |   0.569 |
-
-
-26 parameters were used in the first model (Table
-[[tab:m_nogenusInteractions_summary_coef]]). In allowing the coefficients
-of non-topographic traits to vary by genus, the second model had 342
-parameters (file:full_model_summary.txt).  The importance of including
-genus in as an interaction term was apparent not just in the lower AIC
-and higher adjusted R^2, but also in revealing variability in the
-covariate coefficients by genus.
-
-We likely could have found a model that had a lower AIC by fitting
-more interaction terms and performing exhaustive model selection, but
-we aimed to keep the model within our existing hypotheses and easily
-explainable.
-
-#+name: tab:m_nogenusInteractions_summary_coef
-#+caption: Summary of first model coefficients excluding genera.
-| term                                             | estimate | std.error | statistic | p.value | p.value |
-|--------------------------------------------------+----------+-----------+-----------+---------+---------|
-| neighborhood tree                                |    89.13 |      10.9 |       8.2 |  <0.001 |  <0.001 |
-| street tree, no utilities overhead               |    79.74 |      10.7 |       7.4 |  <0.001 |  <0.001 |
-| street tree, with utilities overhead             |    80.15 |        11 |       7.3 |  <0.001 |  <0.001 |
-| height 2005                                      |    -14.1 |       2.6 |      -5.5 |  <0.001 |  <0.001 |
-| height 2005^2                                     |     0.91 |       0.2 |       3.9 |  <0.001 |  <0.001 |
-| height 2005^3                                     |  -2.8e-2 |    9.2e-3 |      -3.1 |  <0.001 |   0.002 |
-| height 2005^4                                     |   3.3e-9 |    1.3e-4 |       2.6 |  <0.001 |   0.011 |
-| street tree, no utilities overhead:height 2005   |     0.28 |       0.1 |       2.4 |  <0.001 |   0.018 |
-| street tree, with utilities overhead:height 2005 |     0.23 |       0.2 |       1.4 |  <0.001 |    0.16 |
-| mean height within 20 m                          |      0.9 |       0.1 |       8.3 |  <0.001 |  <0.001 |
-| percent impervious within 20 m                   |     0.68 |       2.4 |       0.3 |    0.31 |    0.78 |
-| percent impervious within 100 m                  |    -2.07 |       2.5 |      -0.8 |    0.12 |   0.407 |
-| % impervious 20m : % impervious 100m             |    -9.29 |       4.2 |      -2.2 |  <0.001 |   0.027 |
-| total phenolics                                  |    -2.33 |       0.3 |      -6.9 |  <0.001 |  <0.001 |
-| nitrogen                                         |    -2.76 |       0.3 |        -9 |  <0.001 |  <0.001 |
-| sugar                                            |     0.04 |       0.4 |       0.1 |     0.4 |   0.911 |
-| leaf mass per area                               |    -0.03 |       0.2 |      -0.1 |    0.52 |     0.9 |
-| lignin                                           |    -2.56 |       0.4 |      -6.7 |  <0.001 |  <0.001 |
-| chlorophyll                                      |     2.92 |       0.4 |       8.1 |  <0.001 |  <0.001 |
-| topographic position index (1.5 m)               |    -2.52 |       0.8 |      -3.3 |  <0.001 |   0.001 |
-| transformed aspect (1.5 m)                       |     0.71 |       0.2 |       2.9 |  <0.001 |   0.004 |
-| slope (1.5 m)                                    |    -6.36 |       2.8 |      -2.2 |   0.004 |   0.025 |
-| topographic position index (61 m)                |    -0.28 |       0.1 |      -4.9 |  <0.001 |  <0.001 |
-| transformed aspect (61 m)                        |    -0.62 |       0.2 |      -2.5 |    0.38 |   0.011 |
-| slope (61 m)                                     |    -9.83 |       7.3 |      -1.3 |    0.14 |   0.177 |
-| elev                                             |     2.27 |         1 |       2.3 |    0.01 |   0.024 |
-
-*** COMMENT other stuff
-
-The first model had 26 parameters shown in table
-[[tab:m_nogenusInteractions_summary_coef]].  The second model had 342
-parameters and a summary table of coeffiecients is available in
-supplementary materials.  Coefficients or model predictions from the
-first model and (when appropriate) the second model are presented in
-figures [[fig:growthrate_byheight_byneighst]], [[fig:impervious_interactions]]
-below along with explanation.
-
-*** COMMENT make table
-#+begin_src R :exports none :eval yes
-        tidy(ms_nogenus) %>% 
-            data.frame %>% 
-            mutate(estimate = round(estimate, 2),
-                 std.error = round(std.error, 1),
-                 statistic = round(statistic, 1),
-               p.value = round(p.value, 3)) %>%
-  toOrg
-#+end_src
-
-| term                      | estimate | std.error | statistic | p.value |
-|---------------------------+----------+-----------+-----------+---------|
-| st_poneighborhood          |    89.13 |      10.9 |       8.2 |       0 |
-| st_post no util            |    79.74 |      10.7 |       7.4 |       0 |
-| st_post w util             |    80.15 |        11 |       7.3 |       0 |
-| cor_max2005                |    -14.1 |       2.6 |      -5.5 |       0 |
-| height2005_2               |     0.91 |       0.2 |       3.9 |       0 |
-| height2005_3               |    -0.03 |         0 |      -3.1 |   0.002 |
-| height2005_4               |        0 |         0 |       2.6 |   0.011 |
-| st_post no util:cor_max2005 |     0.28 |       0.1 |       2.4 |   0.018 |
-| st_post w util:cor_max2005  |     0.23 |       0.2 |       1.4 |    0.16 |
-| mean_height_wn20m           |      0.9 |       0.1 |       8.3 |       0 |
-| pct_imp_20m                 |     0.68 |       2.4 |       0.3 |    0.78 |
-| pct_imp_100m                |    -2.07 |       2.5 |      -0.8 |   0.407 |
-| pct_imp_20m:pct_imp_100m      |    -9.29 |       4.2 |      -2.2 |   0.027 |
-| TotPhen                   |    -2.33 |       0.3 |      -6.9 |       0 |
-| N                         |    -2.76 |       0.3 |        -9 |       0 |
-| Sugar                     |     0.04 |       0.4 |       0.1 |   0.911 |
-| LMA                       |    -0.03 |       0.2 |      -0.1 |     0.9 |
-| lignin                    |    -2.56 |       0.4 |      -6.7 |       0 |
-| chl                       |     2.92 |       0.4 |       8.1 |       0 |
-| tpi_5ft                    |    -2.52 |       0.8 |      -3.3 |   0.001 |
-| aspect_trans_5ft            |     0.71 |       0.2 |       2.9 |   0.004 |
-| slope_5ft                  |    -6.36 |       2.8 |      -2.2 |   0.025 |
-| tpi_200ft                  |    -0.28 |       0.1 |      -4.9 |       0 |
-| aspect_trans_200ft          |    -0.62 |       0.2 |      -2.5 |   0.011 |
-| slope_200ft                |    -9.83 |       7.3 |      -1.3 |   0.177 |
-| elev                      |     2.27 |         1 |       2.3 |   0.024 |
-#+end_example
-
-
-
-#+begin_example
-| term                        | estimate | std.error | statistic | p.value |
-|-----------------------------+----------+-----------+-----------+---------|
-| st_poneighborhood           |    77.51 |       6.1 |      12.6 |       0 |
-| st_post no util             |     66.5 |       6.1 |        11 |       0 |
-| st_post w util              |    66.82 |       6.1 |      10.9 |       0 |
-| cor_max2005                 |   -12.21 |       1.4 |      -8.6 |       0 |
-| height2005_2                |     0.82 |       0.1 |       6.5 |       0 |
-| height2005_3                |    -0.03 |         0 |      -5.7 |       0 |
-| height2005_4                |        0 |         0 |       5.1 |       0 |
-| mean_height_wn20m           |     0.85 |       0.1 |      13.6 |       0 |
-| pct_imp_20m                 |     1.41 |       1.4 |         1 |   0.307 |
-| pct_imp_100m                |     2.16 |       1.4 |       1.5 |   0.122 |
-| TotPhen                     |    -2.96 |       0.2 |     -16.8 |       0 |
-| N                           |    -2.92 |       0.2 |     -16.9 |       0 |
-| Sugar                       |    -0.17 |       0.2 |      -0.8 |   0.396 |
-| LMA                         |    -0.08 |       0.1 |      -0.6 |   0.521 |
-| lignin                      |    -3.07 |       0.2 |     -14.6 |       0 |
-| chl                         |     2.54 |       0.2 |        13 |       0 |
-| tpi_5ft                     |    -1.72 |       0.4 |      -4.3 |       0 |
-| aspect_trans_5ft            |     0.45 |       0.1 |       3.4 |   0.001 |
-| tpi_200ft                   |    -0.18 |         0 |      -5.7 |       0 |
-| aspect_trans_200ft          |    -0.11 |       0.1 |      -0.9 |   0.378 |
-| elev                        |      1.4 |       0.5 |       2.6 |   0.008 |
-| slope_5ft                   |    -4.95 |       1.7 |      -2.9 |   0.004 |
-| slope_200ft                 |    -6.06 |       4.1 |      -1.5 |    0.14 |
-| st_post no util:cor_max2005 |     0.37 |       0.1 |         5 |       0 |
-| st_post w util:cor_max2005  |     0.31 |       0.1 |       3.2 |   0.001 |
-| pct_imp_20m:pct_imp_100m    |   -12.37 |       2.5 |      -4.9 |       0 |
-#+end_example
-
-** Height in 2005 by street/neighborhood tree interaction
-
-The strongest predictor of growth rate was the initial tree height,
-i.e. the bias corrected height of a tree in 2005 (Figure
-[[fig:growthrate_byheight_byneighst]]).  Neighborhood trees grew
-significantly faster than street trees (about 3 - 8 cm more per year
-across the range of tree heights observed).  Overhead utility lines
-did not have a significant effect on growth rates when averaging
-across all genera.  At a height of 8m, neighborhood trees grew at an
-estimated 35 cm yr^{-1} and street trees at an estimated 28 cm yr^{-1}.
-Depending on the type of tree, asymptotic heights are different.  For
-street trees it occurred at heights around 25 m; for neighborhood
-trees around 27 m.  Different genera also had different asymptotic
-heights, ranging from about 25 m for Tilia to over 30 m for Pinus (low
-sample size of tall trees makes estimates of asympotitic height
-uncertain).
-
-#+name: fig:growthrate_byheight_byneighst
-#+caption: Estimated growth rate by 2005 bias corrected height for neighborhood trees and street trees with and without utility lines overhead.  All other covariates are set at median values.
-[[file:figs/first_model_predict_height_by_stpo_int_200mSubsample.png]]
-
-** Impervious surfaces
-
-There was a significant interaction between the percent of impervious
-cover within 20 m and within 100 m of a tree.  Trees with little
-impervious cover at either scales had growth rates of around 13 cm /
-year.  Trees with very high impervious cover at either scale had low
-growth rates, as low as 2.5 cm yr^{-1}.  But trees with low impervious
-cover locally were able to maintain high growth rates despite having
-over 50% impervious cover within 100m.  For example, this situation might occur for
-trees in small parks or large yards surrounded by built up surfaces. Growth
-rates of trees with little impervious cover within 100 m are similar
-regardless of the impervious cover within the nearest 20 m.  But the
-growth rates of trees with much impervious cover within 100 m are very
-strongly influenced by the local impervious cover within 20 m.
-
-#+name: fig:impervious_interactions
-#+caption: Estimated height growth rates for trees with varying percent impervious land cover within 20 m and within 100m.  All other covariates are at their median values.  Impervious cover is associated with decreased height growth rates with it is high at both scales, but trees with low impervious cover locally can maintain fast growth despite high impervious cover more broadly.
-[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample.png]]
-** Topography
-
-Topographic variables had statistically clear, but small effects on
-tree height growth rates (Figure [[fig:topography_coef]]).  Elevation in
-Madison ranges from 250 m to 350 m and had a positive association with
-growth rate. Our model estimated that trees growing in the highest
-parts of the city grew about 2.2 cm yr^{-1} more than trees growing in
-the lowest parts of the city.  While trees at higher elevations grew
-faster than trees at lower elevations, higher values of the
-topographic position index (a scale of local wetness of dryness, with
-higher values indicated higher relative topographic position) were
-associated with less growth.  At the scale of 1.5 m, for every 1m that
-trees are higher than their surroundings they grew an estimated 2.5 cm
-less per year.  Slope was not significant at the 61 m scale, but at
-the 1.5 m scale trees on steeper slopes grew more slowly than trees on
-flatter ground.  Surprisingly, aspect had opposite effects depending
-on the scale: at the 1.5 m (local) scale trees in the cooler wetter
-northeast aspect grew faster than trees in the warmer drier southwest
-aspect by almost .75 cm yr^{-1}, while at the 61 m scale the effect was
-nearly opposite.
-
-#+name: fig:topography_coef
-#+caption: Coefficient estimates for topographic covariates at two scales (pixel sizes of 1.5 m and 61 m).
-[[file:figs/first_model_topo_coef_plots_200mSubsample.png]]
-
-** Mean height within 20m
-
-We had hypothesized that trees surrounded by tall trees would have
-greater growth rates due to competition for sunlight. This was
-substantiated by mean height within 20 m of a tree having a strong
-association with growth rates and confirms that trees that must
-compete for light allocate more resources to height growth. For every
-meter increase in mean height around a tree, the growth rate increased
-by .85 cm. For example, we estimated an open grown tree in a park
-would grow about 8 cm less per year than a tree grown in an area with
-a mean height of about 10 m (for example near buildings and other
-trees).
-
-Too much competition for light would lead to a decrease in growth
-rates, but we did not see this in our data.  We tested if the
-quadratic term for mean height within 20m was significant and it was
-not.  This is likely because our sample did not include any trees that
-were suppressed or over-topped as they would not be visible to the
-imagery.
-
-Figure [[fig:mean_height_20m_coefs]] shows coefficient estimates for mean
-height within 20 m with 95% confidence intervals for the first model
-("overall") and for each genus as included in the second model.  There
-is substantial variability, but no clear difference in the effect of
-the mean height within 20 m by genus.
-
-#+name: fig:mean_height_20m_coefs
-#+caption: Coefficients for mean height within 20 m of a tree by genus and overall.
-[[file:figs/mean_height_20m_coefs_200mSubsample.png]]
-** Foliar canopy traits
-Four of the six foliar canopy traits were significantly related to
-tree height growth. Total phenolics, lignin and nitrogen had a
-negative association with growth; chlorophyll had a positive
-association, sugar and leaf mass per area (LMA) had no association.
-There is considerable variability by genus in the trait coefficients
-(Figure [[fig:trait_coefs]]).  Applying Tukey's correction for multiple
-comparisons, most of the pairwise differences are not statistically
-clear, but that there exists variability in trait coefficients by
-genus is apparent.  Since we scaled the trait values, we are not able
-to interpreet the coefficients in absolute units of the variable.
-Estimates correspond to growth rate change with one standard deviation
-change in the trait index.
-
-Growth rates are significantly related to some of the traits, but they
-have modest predictive power in our model when genus is known.
-Importantly, the contribution of traits to the model greatly depends
-on whether or not genus is included.  Including traits slightly
-increases the adjusted R^2 from 0.54 to 0.56 for the model with genus,
-but they increase the adjusted R^2 from 0.12 to 0.50 for a model
-without genus (but with other covariates).  If traits are the only
-covariates the adjusted R^2 is just 0.04.  Therefore traits alone cannot
-explain height growth, but they can explain much of the variability
-explained by genus.  This tells us that when genus is known, it can be
-generally sufficient to predict growth along with landscape
-predictors.  However, in most settings, the taxonomy of trees will not
-be known or mapped, meaning that traits are an effective surrogate for
-taxonomic classification in order to predict growth rates.
-
-#+name: fig:trait_coefs
-#+caption: Coefficients of imaging spectroscopy derived foliar traits as predictors of height growth.  Estimates from the model without genus are shown in black.  Estimates by genus are colored.
-[[file:figs/traits_coef_comparison_200mSubsample.png]]
-
-** Marginal Means by Genus
-Much of variation in height growth rates can be explained by the
-genus.  Marginal mean growth rates by genus illustrate the range of
-variation by genus (Figure [[fig:marginal_growthrate_genus]]).  The three
-gymnosperms in the dataset, Pinus, Picea and Ginkgo, have some of the
-highest estimated growth rates (all over 20 cm yr^{-1}, although Ginkgo has
-high uncertainty).  Other fast growing genera are Ulmus, Tilia,
-Populus, Catalpa and Carya (estimated marginal growth rates over 17.5
-cm yr^{-1}).  Quercus, Juglans, Celtis and Acer had slower growth
-(estimated marginal growth rates less than 12 cm yr^{-1}.
-
-#+name: fig:marginal_growthrate_genus
-#+caption:  Estimated marginal mean growth rates by genus.  Shaded bars are 95% confidence intervals and red arrows control for multiple comparisons should be used for pairwise comparison.
-[[file:figs/genus_comparisons_full model_200mSubsample.png]]
-** Genus by Height predicted growth rates
-
-Marginal mean growth rates by genera illustrate overall differences,
-but growth rates also varied with initial height (bias corrected 2005
-height) and tree type (neighborhood vs street tree) (Figures
-[[fig:growthrate_height_byGenus]] and [[fig:growthrate_height_3genera_stpo]]).
-
-Growth rate decreases with increasing height but the nature of the
-decline varies by genus (Figure [[fig:growthrate_height_byGenus]]).
-Populus has the fastest estimated growth at 8 m heights, while Pinus
--- the taxon in our data with the tallest potential height -- has the
-fastest growth at 20 m heights.  Ulmus and Quercus are fast growing
-when trees are small, but rapidly decline in growth rates as height
-increases.
-
-There is a three way interaction between genus, height, and type of
-tree (neighborhood, street with utility line, or street without
-utility line) (Figure [[fig:growthrate_height_3genera_stpo]])). For
-example, while the relationship between growth rate and height is very
-similar for Acer, Fraxinus, and Gleditisia if they are neighborhood
-trees, if the trees are planted on streets Acer differs considerably
-from Fraxinus and Gleditsia. When a tree is planted on a street growth
-rates are lower than for neighborhood trees, but the difference is
-greatest for Acer followed by Fraxinus and then Gleditsia.  Overhead
-utility lines had little association with decreased height growth
-(except perhaps for Pinus, data not shown).
-
-#+name: fig:growthrate_height_byGenus
-#+caption: Growth rate by bias corrected height in 2005 for 12 Genera.
-[[file:figs/height_genus_int_stpoNeighborhood_200mSubsample.png]]
-#+name: fig:growthrate_height_3genera_stpo
-#+caption: Growth rates are associated with a three way interaction between initial height in 2005, genus, and type of tree.  
-[[file:figs/height_genus_int_stpo_genussub1_200mSubsample.png]]
-* Discussion 
-** Bias correction and growth rate estimates
-
-There is considerable interest in the use of LiDAR data to
-characterize aboveground biomass in forests, as well as biomass
-growth, and the primary data sets available at present for such work
-are the extensive leaf-off LiDAR collections originally developed for
-topographic mapping and floodplain delineation. Time series of LiDAR
-provide an opportunity to characterize tree growth, but as LiDAR
-technologies progress and data collection becomes more dense, there
-will be a need to consider data collection characteristics when
-performing change detection.  The negative bias in height estimates
-from LiDAR is well known and creates challenges in using
-multi-temporal LiDAR citep:marinelli_e_2019, especially for individual
-trees compared to larger forest stands
-citep:paris_bruzzone_2015,roussel_e_2017.  However, the bias is not
-always corrected.
-
-cite:song_e_2016 estimated canopy height growth of urban trees in
-Osaka, Japan using repeat LiDAR.  Like our study their later
-collections had higher pulse densities (in their case, 52 pulses m^{-2}
-versus 11 pulses m^{-2}). They found mean growth from 2008-2010 (when
-pulse density was 52 pulses m^{-2}) was 2 \pm 19 cm m^{-2} yr^{-1}, and from
-2004-2008 (when pulse density increased from 11 to 52 pulses m^{-2})
-mean growth was 37 \pm 14 m m^{-2} yr^{-1}.  So when pulse density was
-constant they found almost no growth, but when pulse density increased
-growth was over a third of a meter per year.  Unfortunately the
-authors did not investigate the potential effect of pulse density
-change on growth rate and instead explained the pattern by other
-means.
-
-Our method for maximum height bias correction is similar to one
-described by cite:roussel_e_2017.  They proposed using a high
-resolution point cloud to help correct a low resolution point cloud.
-But a high resolution point cloud is usually not available. They
-proposed using an area of high pulse density as a reference and then
-applying the bias correction relationship to areas of low pulse
-density.  They pointed out that not only is there bias in height for
-multi-temporal LiDAR, but also within single date LiDAR because of the
-variation in pulse density across space due to variable overlap
-between flight lines.  They mostly described the nature of the bias,
-but leave application of correction to others.
-
-Our method assumes that point clouds from multiple years for trees
-that are likely not growing can be combined into one higher resolution
-point cloud and then resampled to estimate what the bias might be.  We
-then applied this genus specific bias curve to all trees, assuming that
-the relationship held for smaller trees that were still growing.
-
-Although we did not have validation data in the form of independently
-measured heights for trees from 2005 to 2017, from first principles
-our method appeared to be an improvement over doing nothing.  There is
-a clear negative bias in the maximum height when pulse density is low,
-especially in 2005.  Future work should use historical field data if
-it is available to validate this method, but it is worth noting that
-in application, height data will rarely be available for most
-landscape and larger scale applications of LiDAR data.
-
-Our height bias by pulse density curves showed differences across
-genera.  As expected, trees with stronger apical dominance such as
-gymnosperms, had greater bias citep:roussel_e_2017.  It also appeared
-that twig size may be related to the amount of bias.  Gleditsia and
-Ulmus have generally thinner twigs and had smaller bias than most
-other genera.  Populus and Quercus have generally thicker twigs and
-had greater bias.  This relationship warrants more rigorous assessment.
-
-While pulse density is a key factor in height bias, there are other
-important sources of bias that were not accounted for in our method,
-namely LiDAR pulse footprint size.  We did not have footprint size
-information for the 2005 LiDAR and future work should include it in
-bias corrections.  Some of the residual spatial structure in the data
-could be explained by these differences.
-
-*** COMMENT other stuff
-This has got to be due to the
-pulse density bias.
-
-The relatively high pulse density across all
-their years likely means that the bias in height estimation is small,
-but very real when used to estimate height growth.  
-
-They found that LiDAR estimates of growth were much greater than
-field estimates, but they didn't consider that it could be due to the
-difference in pulse density.
-
-Our work is therefore a contribution to the science.
-
-
-
-If their early date collections are biased low, it makes growth appear
-higher than it would be in the field.  
-
-
-cite:marinelli_e_2019 note the challenge of mulitemporal LiDAR
-analyses of forest parameters since as forest changes in time pulse density
-has increased in time.  Especially true for individual trees.  They
-cite: cite:paris_bruzzone_2015 and cite:zhao_e_2018.  But I don't
-think they performed a correction for tree height.
-
-growth rates:
-We treated it with a 4th order polynomial.  A better treatment would
-consider a more biologically realistic nonlinear growth function.
-
-If the focus of
-our study were to develop growth equations a more biologically
-realistic nonlinear function would have been more appropriate, but we
-found the polynomial fit the data well over its range. 
-
-This potentially large measurement error 
-
-Estimating canopy height from LiDAR has a greater bias over smaller
-areas (individual trees) compared to larger areas
-(stands) citep:song_e_2016,roussel_e_2017.
-
-** Traits
-
-Foliar canopy traits predicted from imaging spectroscopy were
-significantly related to tree height growth, and they appeared to
-encode much of the information included in a tree's genus.  This is
-similar to results of cite:mcneil_e_2008 who found species functional
-traits explained much of the variation in forest function (N
-cycling). Models that contained genus as a term had the greatest
-explanatory power, however taxonomic information is often not
-available when assessing tree growth in urban areas, especially for
-trees on private property, and is almost never available if a method
-such as this were applied to forests in a natural environment.  The
-foliar canopy traits show promise in improving canopy height growth
-predictions when genus is not known.
-
-Most of the coefficients of foliar canopy traits were in expected
-directions.  Chlorophyll, the key light harvesting molecule for
-photosynthesis, was positively associated with growth, which is
-consistent the reduction in chlorophyll concentrations that occurs
-when plants are stressed citep:carter_knapp_2001.
-
-Lignin and total phenolics, compounds generally associated with plant
-investment in leaf construction and defense, were negatively
-associated with growth.  This is expected since allocation of
-resources to leaf structure and defense implies less allocation to
-growth citep:stamp_2003,amthor_2003.  The urban environment contains
-numerous stressors that might increase phenolic compound production,
-making these compounds indicative of stressed trees citep:mellway_e_2009.
-
-The coefficient for nitrogen was negative, which was counter to our
-expectations.  First, about 20% - 30% of foliar nitrogen is in Rubisco
-citep:feller_e_2007, the enzyme responsible for carbon fixation.
-Plants with higher nitrogen generally grow faster (up to a point).
-Second, nitrogen had a strong positive correlation to chlorophyll,
-which had a positive coefficient.  But dropping chlorophyll or other
-traits from the model did not affect the directionsign of the nitrogen
-coefficient, suggesting that multicollinearity was not the reason for
-the negative relationship between nitrogen and height growth.
-
-Although it is possible that the predictive models from imaging
-spectroscopy are faulty, a biological explanation could be that
-nitrogen availability is very high in an urban setting due to nitrogen
-deposition (e.g. nitrogen saturation, citep:aber_e_1995 and/or excess
-fertilizer application citep:law_e_2004).  Numerous urban forest
-fertilization studies have shown no or very little increased growth in
-response to increased soil nitrogen
-citep:shoup_e_1981,neely_1980,harris_e_2008. In these cases, nitrogen
-may not be limiting growth and foliar nitrogen thus may be indicative
-of other processes affecting growth. For example, the deposition of
-nitrogen could be accompanied by other pollutants that negatively
-impact growth. The negative association of nitrogen with growth does
-not appear to be a statistical anomaly, but the driver behind the
-relationship is not clear and should be further investigated.
-
-*** COMMENT note cite:shoup_e_1981
-cite:shoup_e_1981 found no growth response to N,
-although leaves got greener
-
-another paper that i didn't cite: Response to Fertilization of Different Tree Species in the
-Urban Environment
-https://www.researchgate.net/profile/Francesco_Ferrini/publication/236606197_Response_to_Fertilization_of_Different_Tree_Species_in_the_Urban_Environment/links/57a2fbc208aeef8f31205e45/Response-to-Fertilization-of-Different-Tree-Species-in-the-Urban-Environment.pdf
-
-
-** Environmental effects on tree height growth.
-
-We tested the relationship between three groups of variables on tree
-height growth: mean height of a tree's surroundings (including trees
-and buildings), nearby impervious landcover percentage, and
-topography.  All three had statistically significant effects, though
-the effect of topography was relatively small.
-
-We found that the average height of the objects in the surrounding 20
-meters (mostly buildings and other trees) had a strong positive
-association with growth rates.  Over-topped and suppressed trees were
-not in our sample and so we did not find that being surrounded by too
-many tall objects reduced growth rates.  This is the expected response
-to trees in competition for light citep:king_1990.  Indeed, across the
-city of Madison, the tallest trees are found in dense forest patches
-where they are competing for light, but also where there is less human
-interaction.  Most trees in yards and on streets are more open grown
-and are shorter.  Future work should separate out buildings from trees
-in the surroundings of a tree and test whether the faster height
-growth is in response to nearby buildings as well as trees,
-i.e. testing competitive interactions.
-
-The association between impervious surface cover and growth rates
-shows the complex relationship between the built environment and tree
-growth.  Broadly impervious cover decreased height growth, probably
-because it is associated with a number of stressors like poor,
-compacted or insufficient soil cite:day_e_2010.  However, we found
-that trees that had little impervious cover within 20 m and much
-impervious cover within 100 m could maintain relatively fast growth.
-This could possibly be because trees had sufficient soil locally and
-may have been receiving increased water from runoff or were responding
-positively to the elevated temperatures in the broader surroundings.
-
-Topographic relationships with growth rate seem to be due to water:
-trees on less steep slopes, and lower elevation relative to their
-immediate surroundings all exhibited greater height growth. Why trees
-at higher elevations grew more than trees at lower elevations is not
-clear, but in this particular case the response may be due to a
-correlated geographic factor. This may be a surrogate for the
-variation from the relatively lower eastern half of the city to the
-relatively higher and hillier western half of the city. This variation
-is likely expressed in differences in soil properties, such as
-texture and depth.
-
-Aspect had opposite effects depending on the scale.  Trees in general
-tend to grow better in the cooler and wetter northeastern aspects
-cite:stoeckeler_e_1960.  However we did not find this was the case at
-the coarser scale.  It could be that the expected aspect-growth
-relationship is disrupted in the urban environment of a city without
-very large variation in topography.
-
-** Future work
-
-Our work has shown that urban tree height growth rates can be
-explained relatively well by variables derived from remote sensing,
-and the results provide the foundation for additional studies to
-provide new understanding or improve the analyses presented
-here. First, our height bias correction method is an improvement over
-no correction, but could be improved by considering more
-characteristics of the lidar that lead to bias. Second, we only
-consider tree height growth, rather than other ecologically relevant
-characteristics such as tree diameter incremental growth or total
-biomass growth. Height growth is much easier to estimate from lidar,
-but provides an incomplete picture, especially for taller trees or
-more open grown, which may still be growing but not allocating
-resources to height. Nevertheless, height and biomass growth are
-generally correlated until the asymptotic height maximum is achieved.
-
-Third, our subsampling of the data to remove trees of the same genus
-that were closer than 200 m to each was used to reduce spatial
-dependence in our data.  Modeling the spatial covariance structure of
-our observations could better control for this dependence. When we fit
-the model with all 21,247 available observations, we found residuals
-of the model had strong spatial structure, suggesting there remain
-important factors in the urban environment that we are missing in our
-model (e.g. soils).
-
-* Conclusion
-
-There are three major contributions of our work. First, we
-demonstrated a method to correct for maximum height bias that results
-from low LiDAR pulse density and more accurately estimate tree
-relative height growth with multiple years of LiDAR.  Second, we show
-that for urban trees, as for all trees, height growth is significantly
-related to both initial height and genus.  Important for broader
-applications, we show that if genus information is not available,
-foliar canopy traits derived from imaging spectroscopy can explain
-much of the variation in height growth rates that would otherwise be
-explained by genus.  Third, we show that the urban environment, namely
-the height of a tree's surroundings, the percent impervious, and
-topography all are associated with changes in tree height growth
-rates.
-
-Urban trees alter the urban environment, potentially providing city
-dwellers with ecosystem services.  Our work has shown that the growth
-of trees - and the growth related services - may in turn be affected
-by the urban environment designed by humans, particularly impervious
-cover.  Trees are dynamic parts of the urban ecosystem and their
-function can vary considerably, meaning managers cannot simply plant a
-tree and expect it to provide a certain benefit without considering
-the tree's context.
-
-* Acknowledgements
-Thank you to the Townsend Lab, NASA JPL, the NASA Earth and Space
-Science Fellowship (#NNX15AP02H), Marla Eddy and the city of Madison
-Forestry, Evan Slocum of the Urban Tree Alliance, and the Hill Farms,
-Shorewood Hills, and Atwood neighborhoods.
+* I have archived all the text so that I don't edit it by accident.  All editing is happening on the dissertation now and text should be copied back in here once that's done.
 
 * bibliography                                                       :ignore:
 bibliography:~/git/notes/references.bib
@@ -12610,3 +11479,6 @@ http://www.plantphysiol.org/content/134/2/586.short
 https://www.sciencedirect.com/science/article/abs/pii/0034425788900077
 ** quagmire of plant defenses https://www.journals.uchicago.edu/doi/full/10.1086/367580
 ** cite:gourlay_constabel_2019 tannins protect against oxidation
+
+
+
