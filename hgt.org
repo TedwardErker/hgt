@@ -1,7 +1,7 @@
 #+TITLE: Urban Tree Height 
 #+AUTHOR: erker
 #+email: erker@wisc.edu
-#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt2* :eval yes
+#+PROPERTY:  header-args:R :cache no :results output :exports both :comments link :session *R:hgt* :eval yes
 #+PROPERTY:  header-args:sh :eval yes
 #+startup: indent entitiespretty
 #+FILETAGS: work allo
@@ -5768,6 +5768,18 @@ dc <- filter(d, complete.cases(d))
 #+end_src
 
 #+RESULTS:
+#+begin_example
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+#+end_example
 
 ** plot data
 *** define theme
@@ -10006,7 +10018,6 @@ library(gstat)
 : 
 : Error in fit.variogram(vg.rd, model = vgm("Exp")) : 
 :   object 'vg.rd' not found
-
 *** with spatial errors?
 #+begin_src R
 
@@ -10044,6 +10055,31 @@ saveRDS(sm, "/home/erker/hgt_data/sm.rds")
 #+end_src
 
 #+RESULTS:
+
+*** GAM with genus random effect?, smooth x and y
+#+begin_src R
+    library(mgcv)
+
+  #    mg_genus <- gam(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+  #                    data = dc)
+
+
+
+#takes forever:
+#      mg_genus <- gamm(growth.rate ~ st_po:cor_max2005 + st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+ #                      random = list(Genus = ~ st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl),
+  #                    data = dc)
+
+      mg_genus <- gam(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1 + s(x,y,bs="gp"), 
+                      data = dc)
+
+
+
+#+end_src
+
+#+RESULTS:
+: 
+: Error in eval(predvars, data, env) : object 'fac' not found
 
 *** fit models dropping points that are close to one another
 
@@ -10446,7 +10482,7 @@ p <- cbind(nd, p)
             geom_line(aes(color = pct_imp_20m * 100), size = .8) +
             scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
             scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
-            scale_y_continuous("Growth rate (cm yr)") +
+            scale_y_continuous(bquote('Growth rate ('*cm~yr^-1*')')) +
             scale_x_continuous("Percent impervious within 100 m") +
           theme_tufte(base_size = 16) +
             theme(legend.title = element_text(size = 15, ),
