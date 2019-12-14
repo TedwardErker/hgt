@@ -4335,3 +4335,87 @@ Tree Alliance; and the Hill Farms, Shorewood Hills, and Atwood
 neighborhoods.
 
 
+
+
+* impervious, just neighborhood trees
+:PROPERTIES:
+:ARCHIVE_TIME: 2019-12-13 Fri 19:58
+:ARCHIVE_FILE: ~/git/hgt/hgt.org
+:ARCHIVE_OLPATH: COMMENT work/modeling/fit models dropping points that are close to one another/Plots of two models with spatial subsample
+:ARCHIVE_CATEGORY: hgt
+:ARCHIVE_ITAGS: work allo
+:END:
+#+begin_src R
+  nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+      mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+             pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+      unique()
+
+        ndm <- dcd %>%
+            select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+  ndm$st_po <- "neighborhood"
+  ndm$st_po <- "st no util"
+
+  nd <- cbind(nd, ndm)
+
+      
+  p <- predict(ms_nogenus_neigh, nd, interval = "confidence")
+p <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood__200mSubsample_neigh.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood__200mSubsample_neigh.png]]
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png :width 1000 :res 120
+          ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+            geom_ribbon(alpha = .1) +
+            geom_line(aes(color = pct_imp_20m * 100), size = .8) +
+            scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_y_continuous(bquote('Growth rate ('*cm~yr^-1*')')) +
+            scale_x_continuous("Percent impervious within 100 m") +
+          theme_tufte(base_size = 16) +
+            theme(legend.title = element_text(size = 15, ),
+                  legend.text = element_text(size = 13),
+                  legend.position = c(.18, .45),
+                  legend.direction = "horizontal",
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05)) +
+              guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2),
+                     fill = F)
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png]]
+

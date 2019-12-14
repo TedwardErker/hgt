@@ -5310,6 +5310,32 @@ saveRDS(pct_imp_df, "/home/erker/hgt_data/pct_imp_100m.rds")
 #+end_src
 
 #+RESULTS:
+#+begin_example
+
+Loading required package: ggplot2
+Use suppressPackageStartupMessages() to eliminate package startup
+messages.
+Google's Terms of Service: https://cloud.google.com/maps-platform/terms/.
+Please cite ggmap if you use it! See citation("ggmap") for details.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:raster’:
+
+    intersect, select, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Regions defined for each Polygons
+
+Regions defined for each Polygons
+#+end_example
 
 #+begin_src R
   tdf <- data.frame(tree) %>%
@@ -5334,8 +5360,22 @@ mptb <- get_map(location = c(-89.55,43.01, -89.28, 43.147), maptype = "toner-bac
 #+end_src
 
 #+RESULTS:
-: maptype = "toner-background" is only available with source = "stamen".
-: resetting to source = "stamen"...
+#+begin_example
+maptype = "toner-background" is only available with source = "stamen".
+resetting to source = "stamen"...
+Source : http://tile.stamen.com/terrain/12/1029/1502.png
+Source : http://tile.stamen.com/terrain/12/1030/1502.png
+Source : http://tile.stamen.com/terrain/12/1031/1502.png
+Source : http://tile.stamen.com/terrain/12/1032/1502.png
+Source : http://tile.stamen.com/terrain/12/1029/1503.png
+Source : http://tile.stamen.com/terrain/12/1030/1503.png
+Source : http://tile.stamen.com/terrain/12/1031/1503.png
+Source : http://tile.stamen.com/terrain/12/1032/1503.png
+Source : http://tile.stamen.com/terrain/12/1029/1504.png
+Source : http://tile.stamen.com/terrain/12/1030/1504.png
+Source : http://tile.stamen.com/terrain/12/1031/1504.png
+Source : http://tile.stamen.com/terrain/12/1032/1504.png
+#+end_example
 
 #+begin_src R :exports results :results graphics :file figs/tree_inventory.png :height 400 :width 800
   ggmap(mptb) +
@@ -5442,6 +5482,12 @@ o$Genus <- factor(o$Genus, levels = o$Genus[c(3,10,9,8,7,6,5,4,2,1)])
 #+end_src
 
 #+RESULTS:
+: 
+: Attaching package: ‘tidyr’
+: 
+: The following object is masked from ‘package:raster’:
+: 
+:     extract
 
 #+begin_src R :exports results :results graphics :file figs/Tree_Genus_hist.png :height 200 :width 230
                                             library(RColorBrewer)
@@ -5449,6 +5495,8 @@ o$Genus <- factor(o$Genus, levels = o$Genus[c(3,10,9,8,7,6,5,4,2,1)])
   acc <- brewer.pal(n = 8, name = "Accent")[c(5,2)]
 
   tpal <- c(dk[1], acc, dk[2:8])
+  tpal <- c(dk[1], acc, dk[2:8])
+  tpal[-1] <- NA
 
     k <-     ggplot(o, aes(x = Genus, y = Proportion*100, fill = Genus)) + geom_col() +
             coord_flip() +
@@ -5595,33 +5643,12 @@ Regions defined for each Polygons
 
 #+begin_src R
 library(grid)
-leg <- viewport(width = 0.18, height = 0.46, x = 0.078, y = 0.76)
-hfpos <- viewport(width = 0.45, height = 0.4, x = 0.375, y = 0.79)
-atpos <- viewport(width = 0.4, height = 0.4, x = 0.795, y = 0.2)
-
-#Just draw the plot twice
-png("figs/TreeGeneraMap2.png", width = 1500, height = 900, bg = "white", res = 150)
-print(mp)
-print(k, vp = leg)
-print(hfmp, vp = hfpos)
-print(atmp, vp = atpos)
-dev.off()
-#+end_src
-
-#+RESULTS:
-: 
-: png 
-:   2
-
-[[file:figs/TreeGeneraMap2.png]]
-#+begin_src R
-library(grid)
 leg <- viewport(width = 0.15, height = 0.38, x = 0.073, y = 0.82)
 hfpos <- viewport(width = 0.45, height = 0.4, x = 0.375, y = 0.79)
 atpos <- viewport(width = 0.4, height = 0.4, x = 0.795, y = 0.2)
 
 #Just draw the plot twice
-png("figs/TreeGeneraMap3.png", width = 1500, height = 900, bg = "white", res = 120)
+png("figs/TreeGeneraMap3_other.png", width = 1500, height = 900, bg = "white", res = 120)
 print(mp)
 print(k, vp = leg)
 print(hfmp, vp = hfpos)
@@ -5630,9 +5657,22 @@ dev.off()
 #+end_src
 
 #+RESULTS:
-: 
-: null device 
-:           1
+#+begin_example
+
+Warning message:
+Removed 91778 rows containing missing values (geom_point).
+
+Warning message:
+Removed 14115 rows containing missing values (geom_point).
+
+Warning message:
+Removed 5448 rows containing missing values (geom_point).
+
+null device 
+          1
+#+end_example
+
+[[file:figs/TreeGeneraMap3.png]]
 
 #+begin_src R
 tdf.majorGenera.20dbh <- tdf.majorGenera %>% filter(as.numeric(DBH) >= 20)
@@ -10141,14 +10181,35 @@ saveRDS(dcs, "/home/erker/hgt_data/merged_data_200mApart.rds")
 
 **** fit models
 #+begin_src R
-dcs <-   readRDS("/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
-    ms_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
-                    dcs)
-      ms_genus <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
-                     dcs)
+  library(dplyr)
+  dcs <-   readRDS("/home/erker/hgt_data/merged_data_byGenus_200mApart.rds")
+      ms_nogenus <- lm(growth.rate ~ st_po * cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                      dcs)
+        ms_genus <- lm(growth.rate ~ st_po:cor_max2005 + Genus + Genus : (st_po + cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl) + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                       dcs)
+      ms_nogenus_neigh <- lm(growth.rate ~ cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                             filter(dcs@data, st_po == "neighborhood"))
+      ms_nogenus_street <- lm(growth.rate ~ cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + pct_imp_20m * pct_imp_100m + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                             filter(dcs@data, st_po != "neighborhood"))
+
+
 #+end_src
 
 #+RESULTS:
+#+begin_example
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: sp
+#+end_example
 
 #+begin_src R
 AIC(ms_genus, ms_nogenus)
@@ -10172,6 +10233,7 @@ library(gstat)
 library(raster)
 
     dcs$resid <- resid(ms_genus)
+    dcs$predicted <- predict(ms_genus)
 
 shapefile(dcs, "test_byGenus_200msubset.shp", overwrite = T)
 
@@ -10180,6 +10242,9 @@ shapefile(dcs, "test_byGenus_200msubset.shp", overwrite = T)
 #+end_src
 
 #+RESULTS:
+: Registered S3 method overwritten by 'xts':
+:   method     from
+:   as.zoo.xts zoo
 : 
 : Warning message:
 : In rgdal::writeOGR(x, filename, layer, driver = "ESRI Shapefile",  :
@@ -10283,6 +10348,9 @@ F-statistic: 184.5 on 40 and 7084 DF,  p-value: < 2.2e-16
 ***** make dcd data.frame
 #+begin_src R
 dcd <- dcs@data 
+
+dcd$x <- coordinates(dcs)[,1]
+dcd$y <- coordinates(dcs)[,2]
 
   library(ggplot2)
   library(ggthemes)
@@ -10445,7 +10513,6 @@ filter(nd, fit < 1, fit > -1)
 
       
   p <- predict(ms_nogenus, nd, interval = "confidence")
-
 p <- cbind(nd, p)
 
 #+end_src
@@ -10476,7 +10543,7 @@ p <- cbind(nd, p)
 
 #+RESULTS:
 [[file:figs/impervious_street_neighborhood__200mSubsample.png]]
-#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample.png :width 1000 :res 120
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png :width 1000 :res 120
           ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
             geom_ribbon(alpha = .1) +
             geom_line(aes(color = pct_imp_20m * 100), size = .8) +
@@ -10501,8 +10568,323 @@ p <- cbind(nd, p)
 #+end_src
 
 #+RESULTS:
-[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample.png]]
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png]]
 
+***** impervious, just neighborhood trees
+#+begin_src R
+      nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+          mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+                 pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+          unique() %>%
+          filter(!(pct_imp_20m < .3 & pct_imp_100m > .6)) %>% # drop unrealistic values, bad to extrapolate to
+          filter(!(pct_imp_20m < .2 & pct_imp_100m > .5)) %>% # drop unrealistic values, bad to extrapolate to
+          filter(!(pct_imp_20m > .2 & pct_imp_100m < .01))# drop unrealistic values, bad to extrapolate to
+
+            ndm <- dcd %>%
+                select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+                summarize_all(median)
+
+      ndm$st_po <- "neighborhood"
+      ndm$st_po <- "st no util"
+
+      nd <- cbind(nd, ndm)
+
+
+      p <- predict(ms_nogenus_neigh, nd, interval = "confidence")
+    p <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood__200mSubsample_neigh.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood__200mSubsample_neigh.png]]
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png :width 1000 :res 120
+          ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+            geom_ribbon(alpha = .1) +
+            geom_line(aes(color = pct_imp_20m * 100), size = .8) +
+            scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_y_continuous(bquote('Growth rate ('*cm~yr^-1*')')) +
+            scale_x_continuous("Percent impervious within 100 m") +
+          theme_tufte(base_size = 16) +
+            theme(legend.title = element_text(size = 15, ),
+                  legend.text = element_text(size = 13),
+                  legend.position = c(.18, .45),
+                  legend.direction = "horizontal",
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05)) +
+              guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2),
+                     fill = F)
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample_neighborhood.png]]
+
+****** impervious gam
+#+begin_src R
+  msg_nogenus_neigh <- gam(growth.rate ~ cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + s(pct_imp_20m, pct_imp_100m) + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                          data = filter(dcs@data, st_po == "neighborhood"))
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/gam_impervious_neighborhood_subset.png :res 120 :height 600 :width 630
+plot(msg_nogenus_neigh, se = F, scheme = 2, residuals = T)
+#+end_src
+
+#+RESULTS:
+[[file:figs/gam_impervious_neighborhood_subset.png]]
+#+begin_src R :exports results :results graphics :file figs/gam_impervious_neighborhood_subset_2.png :res 120 :height 600 :width 630
+plot(msg_nogenus_neigh, se = F, residuals = T, rug = T)
+#+end_src
+
+#+RESULTS:
+[[file:figs/gam_impervious_neighborhood_subset_2.png]]
+
+#+begin_src R
+  nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+      mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+             pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+      unique()
+
+        ndm <- dcd %>%
+            select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+  ndm$st_po <- "neighborhood"
+  ndm$st_po <- "st no util"
+
+  nd <- cbind(nd, ndm)
+
+      
+  fit <- predict(msg_nogenus_neigh, nd, interval = "confidence", se.fit = T)
+p <- cbind(nd, fit)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_GAM_200mSubsample_neigh.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = fit - 2 * se.fit, ymax = fit + 2 * se.fit, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_GAM_200mSubsample_neigh.png]]
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample_GAM__neighborhood.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = fit - se.fit, ymax = fit +  se.fit, group = pct_imp_20m * 100)) + 
+            geom_ribbon(alpha = .1, aes(fill = pct_imp_20m * 100)) +
+            geom_line(aes(color = pct_imp_20m * 100), size = .8) +
+            scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+            scale_y_continuous(bquote('Growth rate ('*cm~yr^-1*')')) +
+            scale_x_continuous("Percent impervious within 100 m") +
+          theme_tufte(base_size = 16) +
+            theme(legend.title = element_text(size = 15, ),
+                  legend.text = element_text(size = 13),
+                  legend.position = c(.18, .45),
+                  legend.direction = "horizontal",
+                  axis.ticks = element_line(size = .3), 
+                  panel.grid.major = element_line(color = "#839496", size = .1),
+                  panel.grid.minor = element_line(color = "#839496", size = .05)) +
+              guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2),
+                     fill = F)
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample_GAM__neighborhood.png]]
+
+***** impervious, just street trees
+#+begin_src R
+  nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+      mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+             pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+      unique()
+
+        ndm <- dcd %>%
+            select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+  ndm$st_po <- "neighborhood"
+  ndm$st_po <- "st no util"
+
+  nd <- cbind(nd, ndm)
+
+      
+  p <- predict(ms_nogenus_street, nd, interval = "confidence")
+p <- cbind(nd, p)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_200mSubsample_street.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_200mSubsample_street.png]]
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_ribbon_200mSubsample_street.png :width 1000 :res 120
+  ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = lwr, ymax = upr, fill = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+    geom_ribbon(alpha = .1) +
+    geom_line(aes(color = pct_imp_20m * 100), size = .8) +
+    scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+    scale_fill_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+      scale_y_continuous(bquote('Growth rate ('*cm~yr^-1*')')) +
+    scale_x_continuous("Percent impervious within 100 m") +
+  theme_tufte(base_size = 16) +
+    theme(legend.title = element_text(size = 15, ),
+          legend.text = element_text(size = 13),
+          legend.position = c(.18, .45),
+          legend.direction = "horizontal",
+          axis.ticks = element_line(size = .3), 
+          panel.grid.major = element_line(color = "#839496", size = .1),
+          panel.grid.minor = element_line(color = "#839496", size = .05)) +
+      guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2),
+             fill = F)
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_ribbon_200mSubsample_street.png]]
+
+****** impervious gam
+#+begin_src R
+  msg_nogenus_street <- gam(growth.rate ~ cor_max2005 + height2005_2 + height2005_3 + height2005_4 + mean_height_wn20m + s(pct_imp_20m, pct_imp_100m) + TotPhen + N + Sugar + LMA + lignin + chl + tpi_5ft + aspect_trans_5ft + tpi_200ft + aspect_trans_200ft + elev + slope_5ft + slope_200ft - 1, 
+                          data = filter(dcs@data, st_po != "neighborhood"))
+
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/gam_impervious_street_subset.png :res 120 :height 600 :width 630
+plot(msg_nogenus_street, se = F, scheme = 2, residuals = T)
+#+end_src
+
+#+RESULTS:
+[[file:figs/gam_impervious_street_subset.png]]
+
+#+begin_src R
+  nd <- select(dcd, pct_imp_20m, pct_imp_100m) %>%
+      mutate(pct_imp_20m = round(pct_imp_20m, digits = 1),
+             pct_imp_100m = round(pct_imp_100m, digits = 1)) %>%
+      unique()
+
+        ndm <- dcd %>%
+            select(cor_max2005, height2005_2, height2005_3, height2005_4,mean_height_wn20m, TotPhen , N , Sugar , LMA , lignin , chl , tpi_5ft , aspect_trans_5ft , tpi_200ft , aspect_trans_200ft , elev, slope_5ft, slope_200ft) %>%
+            summarize_all(median)
+
+  ndm$st_po <- "neighborhood"
+  ndm$st_po <- "st no util"
+
+  nd <- cbind(nd, ndm)
+
+      
+  fit <- predict(msg_nogenus_street, nd, interval = "confidence", se.fit = T)
+p <- cbind(nd, fit)
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :exports results :results graphics :file figs/impervious_street_neighborhood_GAM_200mSubsample_street.png :width 1000 :res 120
+        ggplot(data = p, aes(x = pct_imp_100m * 100, y = fit, ymin = fit - 2 * se.fit, ymax = fit + 2 * se.fit, color = pct_imp_20m * 100, group = pct_imp_20m * 100)) + 
+          geom_line(aes(color = pct_imp_20m * 100)) +
+#          geom_ribbon(alpha = .1) +
+          scale_color_distiller("Percent impervious\nwithin 20 m", palette = "RdYlGn") +
+          scale_y_continuous("Growth rate (cm yr)") +
+          scale_x_continuous("Percent impervious within 100 m") +
+        theme_tufte(base_size = 16) +
+          theme(legend.title = element_text(size = 15, ),
+                legend.text = element_text(size = 13),
+                legend.position = c(.18, .45),
+                legend.direction = "horizontal",
+                axis.ticks = element_line(size = .3), 
+                panel.grid.major = element_line(color = "#839496", size = .1),
+                panel.grid.minor = element_line(color = "#839496", size = .05)) +
+            guides(colour = guide_colourbar(title.position="top", title.hjust = 0.2))
+
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/impervious_street_neighborhood_GAM_200mSubsample_street.png]]
 
 ***** topography
 #+begin_src R
@@ -10901,12 +11283,19 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
           geom_pointrange(data = mtg, aes(color = Genus), position = position_dodge2(width = .6, reverse = TRUE)) +
           geom_pointrange() +
           coord_flip() +
-        terk +
         scale_color_manual(values = tpal) +
         scale_y_continuous(limits = c(-12, 12)) +
        geom_hline(yintercept = 0, size = .2) +
       scale_y_continuous("Estimate", limits = c(-12, 12))  +
-      scale_x_discrete("Trait")
+      scale_x_discrete("Trait") +
+  theme_tufte(base_size = 16) +
+      theme(legend.title = element_text(size = 15),
+            legend.text = element_text(size = 13),
+            legend.position = c(.9, .4),
+            axis.ticks = element_line(size = .3), 
+            panel.grid.major = element_line(color = "#839496", size = .1),
+            panel.grid.minor = element_line(color = "#839496", size = .05))
+
 
 #+end_src
 
@@ -10944,6 +11333,84 @@ tpal <- c(brewer.pal(n = 8, name = "Dark2"), brewer.pal(n = 8, name = "Accent")[
 [[file:figs/genus_comparisons_full model_200mSubsample.png]]
 
 ** TODO map predicted growth rate
+#+begin_src R
+
+p <- predict(ms_genus, dcd)
+
+dcd$predicted <- p
+
+#+end_src
+
+#+RESULTS:
+: 
+: Warning message:
+: In predict.lm(ms_genus, dcd) :
+:   prediction from a rank-deficient fit may be misleading
+#+begin_src R
+
+mptb <- get_map(location = c(-89.55,43.01, -89.28, 43.147), maptype = "toner-background", color = "bw")
+  ggmap(mptb) +
+  geom_point(data = tdf, aes(x = X, y = Y), size = .05, color = "#00A08A") +
+  theme_void()
+
+#+end_src
+
+#+RESULTS:
+: 
+: maptype = "toner-background" is only available with source = "stamen".
+: resetting to source = "stamen"...
+: 
+: Warning message:
+: Removed 2611 rows containing missing values (geom_point).
+
+#+begin_src R
+library(broom)
+lakes <- shapefile("~/hgt_data/YaharaLakes/mendota_monona.shp")
+lakes <- spTransform(lakes, CRS("+init=epsg:7599"))
+lakes <- crop(lakes, extent(dcs))
+
+lakes.df <- tidy(lakes)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+Regions defined for each Polygons
+Warning messages:
+1: In bind_rows_(x, .id) : Unequal factor levels: coercing to character
+2: In bind_rows_(x, .id) :
+  binding character and factor vector, coercing into character vector
+3: In bind_rows_(x, .id) :
+  binding character and factor vector, coercing into character vector
+4: In bind_rows_(x, .id) : Unequal factor levels: coercing to character
+5: In bind_rows_(x, .id) :
+  binding character and factor vector, coercing into character vector
+6: In bind_rows_(x, .id) :
+  binding character and factor vector, coercing into character vector
+#+end_example
+
+#+begin_src R :exports results :results graphics :file figs/pred_ms_nogenus_200mspatialsub.png :width 1000 :height 700 :res 130
+  dcd$predquantiles <- base::cut(dcd$predicted, breaks = round(quantile(dcd$predicted, c(0,.2, .4, .6, .8,1)), 0))
+  dcdpf <- filter(dcd, !is.na(predquantiles))
+
+          ggplot(dcdpf, aes(x = x, y = y)) + 
+              geom_point(aes(color = predquantiles), size = .7, alpha = .8) + coord_equal() +
+              geom_polygon(data = lakes.df, aes(x = long, y = lat, group = id), fill = "#6699CC") +
+            scale_color_viridis_d(bquote('Growth rate ('*cm~yr^-1*')')) +
+              theme_map(base_size = 16) +
+            theme(legend.title = element_text(size = 15),
+                  legend.position = c(.05, .55),
+                  legend.background = element_rect(fill = NA)) +
+             guides(colour = guide_legend(override.aes = list(size=2)))
+
+
+
+#+end_src
+
+#+RESULTS:
+[[file:figs/pred_ms_nogenus_200mspatialsub.png]]
+
 - plotting
 - plot residual in space
 
